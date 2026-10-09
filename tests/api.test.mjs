@@ -1,0 +1,71 @@
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {readFile,readdir} from 'node:fs/promises';
+import path from 'node:path';
+import {realpathSync} from 'node:fs';
+const root=process.cwd();
+const {build}=createRequire(realpathSync(path.join(root,'node_modules/wrangler/package.json')))('esbuild');
+const {Miniflare}=createRequire(realpathSync(path.join(root,'node_modules/wrangler/package.json')))('miniflare');
+const compiled=await build({stdin:{contents:`import { AsyncLocalStorage } from 'node:async_hooks'; import {GET,POST} from './app/api/household/route'; const context=new AsyncLocalStorage(); globalThis.__requestContext=context; export default {fetch(request){return context.run(request.headers,()=>request.method==='GET'?GET():POST(request))}};`,resolveDir:root,loader:'ts'},bundle:true,format:'esm',platform:'neutral',external:['cloudflare:workers','node:async_hooks'],write:false,plugins:[{name:'request-headers-for-isolated-api-test',setup(b){b.onResolve({filter:/^next\/(headers|navigation)$/},args=>({path:args.path,namespace:'test-next'}));b.onLoad({filter:/.*/,namespace:'test-next'},args=>({contents:args.path.endsWith('headers')?'export const headers=async()=>globalThis.__requestContext.getStore();':'export function redirect(){throw new Error("unused in API")}'}));}}]});
+const mf=new Miniflare({modules:true,script:compiled.outputFiles[0].text,compatibilityDate:'2026-05-15',compatibilityFlags:['nodejs_compat'],d1Databases:{DB:'test-household-db'}});
+try{
+ const db=await mf.getD1Database('DB');
+ for(const migration of (await readdir('drizzle')).filter(n=>n.endsWith('.sql')).sort()){
+  const sql=await readFile('drizzle/'+migration,'utf8');
+  for(const statement of sql.split('--> statement-breakpoint').map(x=>x.trim()).filter(Boolean))await db.prepare(statement).run();
+ }
+ const headers=(user)=>user?{'oai-authenticated-user-id':user,'oai-authenticated-user-email':user+'@example.test'}:{};
+ const get=async(user='account-a')=>{const r=await mf.dispatchFetch('https://unit.test/api/household',{headers:headers(user)});return {status:r.status,body:await r.json()};};
+ const post=async(action,payload,user='account-a',extra={})=>{const r=await mf.dispatchFetch('https://unit.test/api/household',{method:'POST',headers:{...headers(user),'content-type':'application/json',origin:'https://unit.test',...extra},body:JSON.stringify({action,payload})});return {status:r.status,body:await r.json()};};
+ assert.equal((await get(null)).status,401);assert.equal((await post('entry',{},null)).status,401);
+ const home={first:'Alex',second:'Camille',name:'Maison test',budget:80000,version:0};
+ assert.equal((await post('household',home)).status,200);assert.equal((await post('household',home)).status,409);
+ assert.equal((await get()).body.household.first,'Alex');assert.equal((await get('account-b')).body.household,null);
+ const expense={id:crypto.randomUUID(),kind:'expense',title:'Courses',cents:10000,member:0,category:'Courses',date:'2026-10-07',note:'',version:0};
+ assert.equal((await post('entry',expense)).status,200);
+ assert.equal((await get()).body.entries.length,1);assert.equal((await get('account-b')).body.entries.length,0);
+ assert.equal((await post('entry',expense)).status,409);
+ for(const change of [{cents:0},{cents:-10},{cents:12.2},{member:2},{date:'2026-02-30'},{title:'   '}])assert.equal((await post('entry',{...expense,...change,id:crypto.randomUUID()})).status,400);
+ assert.equal((await post('household',home,'account-b')).status,200);
+ assert.equal((await post('entry',{...expense,version:1,cents:90000},'account-b')).status,409);
+ assert.equal((await post('delete-entry',{id:expense.id,version:1},'account-b')).status,409);
+ assert.equal((await post('entry',{...expense,version:1,cents:20000})).status,200);
+ assert.equal((await post('entry',{...expense,version:1,cents:30000})).status,409);
+ assert.equal((await get()).body.entries[0].cents,20000);
+ const item={id:crypto.randomUUID(),kind:'task',title:'Arroser les plantes',quantity:'',assignee:1,due:'2026-10-08',priority:1,done:false,version:0};
+ assert.equal((await post('item',item)).status,200);assert.equal((await post('item',{...item,version:1,done:true})).status,200);
+ assert.equal((await post('item',{...item,version:1,done:false})).status,409);assert.equal((await get()).body.items[0].done,true);
+ assert.equal((await post('item',{...item,id:crypto.randomUUID(),assignee:4})).status,400);
+ assert.equal((await post('item',{...item,id:crypto.randomUUID()},'account-a',{origin:'https://foreign.test'})).status,403);
+ assert.equal((await post('delete-item',{id:item.id,version:2})).status,200);
+ assert.equal((await post('delete-entry',{id:expense.id,version:2})).status,200);
+ const cleared=await get();assert.equal(cleared.body.entries.length,0);assert.equal(cleared.body.items.length,0);
+ assert.equal((await post('household',{...home,version:1,name:'Nouveau nom'})).status,200);
+ assert.equal((await post('household',{...home,version:1,name:'Stale'})).status,409);
+ const appointment={id:crypto.randomUUID(),title:'Contrôle chez le dentiste',category:'medical',person:0,status:'to_book',date:'',time:'',bookBy:'2026-10-15',location:'Cabinet du centre',note:'Téléphoner le matin',version:0};
+ assert.equal((await post('appointment',appointment,null)).status,401);
+ assert.equal((await post('appointment',appointment)).status,200);
+ assert.equal((await get()).body.appointments[0].status,'to_book');
+ assert.equal((await get()).body.appointments[0].note,'Téléphoner le matin');
+ assert.equal((await get('account-b')).body.appointments.length,0);
+ assert.equal((await post('appointment',appointment)).status,409);
+ assert.equal((await post('appointment',{...appointment,version:1},'account-b')).status,409);
+ assert.equal((await post('delete-appointment',{id:appointment.id,version:1},'account-b')).status,409);
+ for(const change of [{status:'scheduled'},{date:'2026-10-20'},{time:'14:30'},{person:3},{bookBy:'2026-02-30'},{title:'   '},{category:'unknown'}]){
+  assert.equal((await post('appointment',{...appointment,...change,id:crypto.randomUUID()})).status,400,JSON.stringify(change));
+ }
+ const scheduled={...appointment,status:'scheduled',date:'2026-10-21',time:'09:30',bookBy:'',version:1};
+ assert.equal((await post('appointment',scheduled)).status,200);
+ const latest=(await get()).body.appointments[0];
+ assert.equal(latest.date,'2026-10-21');assert.equal(latest.time,'09:30');assert.equal(latest.note,appointment.note);assert.equal(latest.version,2);
+ assert.equal((await post('appointment',{...scheduled,time:'10:30'})).status,409);
+ assert.equal((await post('delete-appointment',{id:appointment.id,version:1})).status,409);
+ for(const change of [{time:'25:00'},{time:'12:65'},{time:'9:30'},{date:'2026-02-30'}])assert.equal((await post('appointment',{...scheduled,...change,id:crypto.randomUUID(),version:0})).status,400);
+ assert.equal((await post('appointment',{...scheduled,status:'done',version:2})).status,200);
+ assert.equal((await get()).body.appointments[0].status,'done');
+ assert.equal((await post('appointment',{...scheduled,status:'to_book',date:'',time:'',bookBy:'2026-11-01',version:3})).status,200);
+ const unscheduled=(await get()).body.appointments[0];assert.equal(unscheduled.date,'');assert.equal(unscheduled.status,'to_book');
+ assert.equal((await post('delete-appointment',{id:appointment.id,version:4})).status,200);
+ assert.equal((await get()).body.appointments.length,0);
+ console.log('PASS: D1 CRUD, shared-account reads, isolation, stale writes, validation, appointment scheduling/completion/reopening/deletion.');
+}finally{await mf.dispose();}

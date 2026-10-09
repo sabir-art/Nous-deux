@@ -1,0 +1,73 @@
+'use client';
+import {useState,type FormEvent} from 'react';
+import {CalendarDays,ChevronLeft,ChevronRight,Plus,Clock3,MapPin,Stethoscope,Phone,Check,Trash2,LoaderCircle,ArrowUpRight,ChevronDown} from 'lucide-react';
+import {today,type Appointment} from '../lib/domain';
+import {calendarDays,shiftMonth,sortAppointments,appointmentCategories} from '../lib/calendar';
+const longDate=(date:string)=>new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z'));
+const shortDate=(date:string)=>new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z'));
+const monthName=(month:string)=>new Intl.DateTimeFormat('fr-FR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(month+'-01T12:00:00Z'));
+export type OpenAppointment={appointment?:Appointment;initialDate?:string;initialStatus?:'to_book'|'scheduled'};
+type CalendarProps={appointments:Appointment[];names:string[];onOpen:(options:OpenAppointment)=>void};
+function AppointmentRow({appointment:a,names,onClick,showDate=false}:{appointment:Appointment;names:string[];onClick:()=>void;showDate?:boolean}){
+ return <button className={`appointment-row ${a.status==='done'?'appointment-done':''}`} onClick={onClick}>
+  <span className={`appointment-icon appointment-${a.category}`}>{a.category==='medical'?<Stethoscope size={20}/>:a.status==='to_book'?<Phone size={20}/>:<CalendarDays size={20}/>}</span>
+  <span className="appointment-content"><strong>{a.title}</strong><span>{a.person===-1?'Nous deux':names[a.person]}<span>·</span>{appointmentCategories[a.category]}</span>
+   {a.status==='to_book'&&a.bookBy&&<span className={a.bookBy<today()?'overdue':''}>À prendre avant le {shortDate(a.bookBy)}</span>}
+   {a.location&&<span className="appointment-location"><MapPin size={12}/>{a.location}</span>}
+  </span>
+  <span className="appointment-when">{a.status==='to_book'?<span className="booking-pill">À prendre</span>:<>{showDate&&<span>{shortDate(a.date)}</span>}<strong>{a.time||'Sans heure'}</strong>{a.status==='done'&&<small><Check size={12}/>Terminé</small>}</>}</span>
+ </button>;
+}
+export function CalendarSummary({appointments,names,onOpen,onCalendar}:CalendarProps&{onCalendar:()=>void}){
+ const pending=appointments.filter(a=>a.status==='to_book');
+ const upcoming=appointments.filter(a=>a.status==='scheduled'&&a.date>=today()).sort(sortAppointments).slice(0,3);
+ return <section className="panel calendar-summary"><div className="section-title"><h2><CalendarDays size={18}/>Nos prochaines dates</h2><button className="text-link" onClick={onCalendar}>Le calendrier <ArrowUpRight size={15}/></button></div>
+  {upcoming.length?upcoming.map(a=><AppointmentRow key={a.id} appointment={a} names={names} onClick={()=>onOpen({appointment:a})} showDate/>):<div className="calendar-summary-empty"><p>Un rendez-vous, une date importante… gardons-les au même endroit.</p><button className="text-link" onClick={()=>onOpen({initialStatus:'scheduled',initialDate:today()})}><Plus size={15}/>Ajouter une date</button></div>}
+  {pending.length>0&&<button className="booking-summary" onClick={onCalendar}><Phone size={16}/>{pending.length} rendez-vous à prendre<ArrowUpRight size={16}/></button>}
+ </section>;
+}
+export default function HouseCalendar({appointments,names,onOpen}:CalendarProps){
+ const[month,setMonth]=useState(today().slice(0,7));
+ const[selected,setSelected]=useState(today());const[person,setPerson]=useState('all');
+ const filtered=appointments.filter(a=>person==='all'||a.person===Number(person));
+ const booked=filtered.filter(a=>a.status!=='to_book').sort(sortAppointments);
+ const toBook=filtered.filter(a=>a.status==='to_book').sort((a,b)=>(a.bookBy||'9999').localeCompare(b.bookBy||'9999')||a.createdAt.localeCompare(b.createdAt));
+ const byDay=new Map<string,Appointment[]>();booked.forEach(a=>byDay.set(a.date,[...(byDay.get(a.date)||[]),a]));
+ const dayAppointments=byDay.get(selected)||[];const inMonth=booked.filter(a=>a.date.startsWith(month));
+ function changeMonth(step:number){const next=shiftMonth(month,step);setMonth(next);setSelected(next===today().slice(0,7)?today():next+'-01');}
+ function selectDate(date:string){setSelected(date);setMonth(date.slice(0,7));}
+ return <div className="calendar-page">
+  <div className="calendar-toolbar"><div className="calendar-person-filter"><label htmlFor="calendar-person">Pour qui ?</label><select id="calendar-person" value={person} onChange={e=>setPerson(e.target.value)}><option value="all">Tout le monde</option><option value="-1">Nous deux</option>{names.map((name,i)=><option key={i} value={i}>{name}</option>)}</select></div><button className="secondary" onClick={()=>onOpen({initialStatus:'to_book'})}><Phone size={16}/>Noter un RDV à prendre</button></div>
+  <div className="calendar-layout"><div className="calendar-main"><section className="panel calendar-panel" aria-label="Calendrier mensuel">
+   <div className="calendar-month-header"><div className="calendar-month-controls"><button className="icon-button" onClick={()=>changeMonth(-1)} aria-label="Mois précédent"><ChevronLeft size={20}/></button><label className="calendar-month-title"><span>{monthName(month)}</span><input aria-label="Choisir le mois du calendrier" type="month" value={month} onChange={e=>{if(e.target.value){setMonth(e.target.value);setSelected(e.target.value+'-01');}}}/></label><button className="icon-button" onClick={()=>changeMonth(1)} aria-label="Mois suivant"><ChevronRight size={20}/></button></div><button className="calendar-today" onClick={()=>selectDate(today())}>Aujourd’hui</button></div>
+   <div className="calendar-weekdays" aria-hidden="true">{['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map(d=><span key={d}>{d}</span>)}</div>
+   <div className="calendar-grid">{calendarDays(month).map(date=>{const events=byDay.get(date)||[];return <button key={date} className={`calendar-day ${!date.startsWith(month)?'outside-month':''} ${date===selected?'selected':''} ${date===today()?'is-today':''}`} aria-pressed={date===selected} aria-current={date===today()?'date':undefined} aria-label={`${longDate(date)}, ${events.length} rendez-vous`} onClick={()=>selectDate(date)}><span className="calendar-day-number">{Number(date.slice(-2))}</span><span className="calendar-day-events">{events.slice(0,2).map(a=><span className={`calendar-event-chip appointment-${a.category} ${a.status==='done'?'calendar-event-done':''}`} key={a.id}>{a.time&&<b>{a.time} </b>}{a.title}</span>)}{events.length>2&&<span className="calendar-more">+{events.length-2}</span>}</span><span className="calendar-mobile-dots" aria-hidden="true">{events.slice(0,3).map(a=><i className={`appointment-${a.category}`} key={a.id}/>)}{events.length>3&&<small>+</small>}</span></button>;})}</div>
+   <div className="calendar-legend"><span><i className="appointment-medical"/>Médical</span><span><i className="appointment-personal"/>Personnel</span><span><i className="appointment-admin"/>Administratif</span><span><i className="appointment-other"/>Autre</span></div>
+  </section>
+  <section className="panel calendar-day-panel"><div className="section-title"><h2>{longDate(selected)}</h2><button className="icon-button" aria-label={`Ajouter un rendez-vous le ${longDate(selected)}`} onClick={()=>onOpen({initialStatus:'scheduled',initialDate:selected})}><Plus size={20}/></button></div>
+   {dayAppointments.length?dayAppointments.map(a=><AppointmentRow key={a.id} appointment={a} names={names} onClick={()=>onOpen({appointment:a})}/>):<div className="calendar-empty"><CalendarDays size={25}/><p>Aucun rendez-vous ce jour-là{person!=='all'?' pour cette sélection':''}.</p><button className="text-link" onClick={()=>onOpen({initialStatus:'scheduled',initialDate:selected})}>Ajouter à cette date <Plus size={15}/></button></div>}
+  </section>
+  {inMonth.length>0&&<details className="panel calendar-month-list"><summary>Tous les rendez-vous du mois · {inMonth.length}<ChevronDown size={16}/></summary>{inMonth.map(a=><AppointmentRow key={a.id} appointment={a} names={names} onClick={()=>onOpen({appointment:a})} showDate/>)}</details>}
+  </div>
+  <aside className="panel booking-panel"><div className="section-title"><h2><Phone size={17}/>À prendre<span className="count-badge">{toBook.length}</span></h2></div><p className="booking-intro">Les rendez-vous à organiser, même sans date pour le moment.</p>
+   {toBook.length?toBook.map(a=><div className="booking-card" key={a.id}><AppointmentRow appointment={a} names={names} onClick={()=>onOpen({appointment:a})}/><button className="booking-plan" onClick={()=>onOpen({appointment:a,initialStatus:'scheduled'})}>La date est fixée <ArrowUpRight size={15}/></button></div>):<div className="calendar-empty"><Check size={25}/><p>Aucun rendez-vous à prendre{person!=='all'?' pour cette sélection':''}.</p></div>}
+   <button className="add-row" onClick={()=>onOpen({initialStatus:'to_book'})}><Plus size={18}/>Ajouter un RDV à prendre</button>
+  </aside></div>
+ </div>;
+}
+export function AppointmentForm({appointment,initialDate,initialStatus,names,busy,error,onSave,onDelete}:{appointment?:Appointment;initialDate?:string;initialStatus?:'to_book'|'scheduled';names:string[];busy:boolean;error:string;onSave:(payload:unknown)=>Promise<boolean>;onDelete?:()=>void}){
+ const[id]=useState(()=>appointment?.id||crypto.randomUUID());
+ const[status,setStatus]=useState<Appointment['status']>(initialStatus||appointment?.status||'scheduled');
+ const[date,setDate]=useState(appointment?.date||initialDate||today());const[time,setTime]=useState(appointment?.time||'');const[bookBy,setBookBy]=useState(appointment?.bookBy||'');
+ async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();const f=new FormData(e.currentTarget);await onSave({id,version:appointment?.version||0,title:String(f.get('title')).trim(),category:String(f.get('category')),person:Number(f.get('person')),status,date:status==='to_book'?'':date,time:status==='to_book'?'':time,bookBy:status==='to_book'?bookBy:'',location:String(f.get('location')||'').trim(),note:String(f.get('note')||'').trim()});}
+ return <form className="form appointment-form" onSubmit={submit}>
+  <label>Quel rendez-vous ?<input autoFocus name="title" maxLength={100} required defaultValue={appointment?.title||''} placeholder="Dentiste, contrôle médical, rendez-vous important…"/></label>
+  <label>Où en est-on ?<select value={status} onChange={e=>setStatus(e.target.value as Appointment['status'])}><option value="scheduled">Planifié · la date est fixée</option><option value="to_book">À prendre · pas encore de date</option>{appointment&&<option value="done">Terminé</option>}</select></label>
+  <div className="form-grid"><label>Pour qui ?<select name="person" defaultValue={appointment?.person??-1}><option value={-1}>Nous deux</option>{names.map((n,i)=><option key={i} value={i}>{n}</option>)}</select></label><label>Catégorie<select name="category" defaultValue={appointment?.category||'medical'}>{Object.entries(appointmentCategories).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label></div>
+  {status==='to_book'?<label>À prendre avant le <span className="optional">(facultatif)</span><input type="date" value={bookBy} onChange={e=>setBookBy(e.target.value)}/><small>Une date limite pour penser à appeler. Ce n’est pas la date du rendez-vous.</small></label>:<div className="form-grid"><label>Date<input type="date" value={date} required onChange={e=>setDate(e.target.value)}/></label><label>Heure <span className="optional">(facultatif)</span><input type="time" value={time} onChange={e=>setTime(e.target.value)}/></label></div>}
+  <label>Lieu ou praticien <span className="optional">(facultatif)</span><input name="location" maxLength={150} defaultValue={appointment?.location||''} placeholder="Cabinet, adresse, nom du médecin…"/></label>
+  <label>Notes <span className="optional">(facultatif)</span><textarea name="note" rows={3} maxLength={500} defaultValue={appointment?.note||''} placeholder="Numéro à appeler, documents à apporter…"/></label>
+  {error&&<p className="form-error" role="alert">{error}</p>}
+  <div className="dialog-actions">{onDelete&&<button type="button" className="icon-button delete-button" disabled={busy} onClick={onDelete} aria-label="Supprimer ce rendez-vous"><Trash2 size={19}/></button>}<button type="submit" className="primary grow" disabled={busy}>{busy?<LoaderCircle size={18} className="spin"/>:<Check size={18}/>} {busy?'Enregistrement…':appointment?'Enregistrer le rendez-vous':status==='to_book'?'Ajouter aux rendez-vous à prendre':'Ajouter au calendrier'}</button></div>
+ </form>;
+}
