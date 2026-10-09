@@ -97,3 +97,56 @@ input::-webkit-date-and-time-value{text-align:left;min-width:0}
 .budget-overview>section{display:grid;gap:16px}.budget-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.budget-charts>*{min-width:0}.bill-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}.nd-chart table{width:100%}.nd-chart .nd-table-wrap{overflow:auto;max-width:100%}@media(max-width:700px){.budget-charts,.bill-grid{grid-template-columns:minmax(0,1fr)}}
 
 .week-date{padding:0}.month-label,.calendar-month-title{flex:1;min-width:0}.month-label .temporal-field,.calendar-month-title .temporal-field{padding:8px 10px;border-radius:var(--radius-pill);font-size:14px}.month-picker{max-width:100%;min-width:0}.nd-chart-table{overflow:auto;max-width:100%;overscroll-behavior:contain}.nd-food-name,.nd-recipe-row-name{overflow-wrap:anywhere}.photo-upload:focus-within{outline:2px solid var(--focus);outline-offset:2px}.ai-settings .settings-icon{margin-bottom:8px}
+
+/* October mobile layout polish: keep the design-system source unchanged. */
+.budget-category-section{display:flex!important;flex-direction:column;gap:0!important;border-radius:var(--radius-lg);background:var(--surface);box-shadow:var(--shadow-card);overflow:hidden}
+.budget-category-section>.nd-chart{margin:0;box-shadow:none;border-bottom-left-radius:0;border-bottom-right-radius:0}
+.budget-category-actions{display:flex;justify-content:flex-end;padding:0 var(--space-5) var(--space-5);background:var(--surface)}
+.budget-category-actions .secondary{width:100%}
+.budget-images-toggle{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;min-height:72px;padding:16px 20px;border:1.5px solid var(--line);border-radius:var(--radius-lg);background:var(--surface);text-align:left;box-shadow:var(--shadow-card)}
+.budget-images-toggle>span{display:flex;flex-direction:column;gap:4px;min-width:0}
+.budget-images-toggle strong{font-size:16px;line-height:22px}
+.budget-images-toggle small{font-size:13px;color:var(--ink-muted);font-weight:400}
+.budget-images-toggle svg{flex-shrink:0;transition:transform 250ms ease}
+.budget-images-toggle svg.is-open{transform:rotate(180deg)}
+.budget-charts>*{animation:budget-chart-reveal 430ms cubic-bezier(.2,.8,.2,1) both}
+.budget-charts>*:nth-child(2){animation-delay:65ms}
+.budget-charts>*:nth-child(3){animation-delay:125ms}
+.budget-charts>*:nth-child(4){animation-delay:185ms}
+@keyframes budget-chart-reveal{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+/* Heatmap: always seven complete and separated columns, also on narrow iPhones. */
+.budget-charts .nd-chart,.budget-charts .nd-chart-plot{min-width:0;max-width:100%}
+.budget-charts .nd-heat,.budget-charts .nd-heat-dows{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:clamp(5px,1.8vw,12px);min-width:0;width:100%;max-width:100%;justify-items:stretch}
+.budget-charts .nd-heat-cell{width:100%;min-width:0;min-height:0;aspect-ratio:1/1;border-radius:50%;font-size:clamp(10px,2.9vw,13px)}
+.budget-charts .nd-heat-dows{margin-bottom:12px}
+.budget-charts .nd-heat-scale{margin-top:24px;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.budget-charts .nd-heat-scale i{flex:0 0 13px;width:13px;height:13px}
+/* Month input takes the central space instead of collapsing into a tiny pill. */
+.calendar-panel .calendar-month-header{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.calendar-panel .calendar-month-controls{display:flex;flex:1 1 225px;min-width:0;max-width:100%;justify-content:flex-start;gap:6px}
+.calendar-panel .calendar-month-controls>.icon-button{flex:0 0 42px;width:42px;height:44px}
+.calendar-panel .calendar-month-title{display:block;flex:1 1 auto;min-width:145px;max-width:310px}
+.calendar-panel .calendar-month-title .temporal-field{position:relative;display:flex;justify-content:center;align-items:center;gap:6px;width:100%;min-width:0;min-height:44px;white-space:nowrap}
+.calendar-panel .calendar-month-title .temporal-value{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.calendar-panel .calendar-month-title input[type=month]{position:absolute;inset:0;width:100%;min-width:0;height:100%;opacity:0}
+.calendar-panel .calendar-today{margin-left:auto}
+.calendar-month-list>summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.calendar-month-list>summary>span:first-child{flex:1 1 180px}
+.calendar-event-count{flex-shrink:0;font-size:13px;font-weight:700;line-height:24px;padding:3px 12px;border-radius:var(--radius-pill);background:var(--lilas);color:var(--ink)}
+.calendar-month-list>summary>svg{margin-left:auto}
+.history-title{align-items:center!important}
+.history-export{margin-left:auto;flex:0 0 44px}
+.history-filters{margin-bottom:12px}
+.history-controls{display:flex;justify-content:flex-end;margin-bottom:var(--space-3)}
+.history-settle{min-width:0;max-width:100%;display:inline-flex;gap:8px}
+@media(max-width:420px){
+ .budget-charts .nd-chart{padding-inline:clamp(12px,4vw,20px)}
+ .budget-charts .nd-heat,.budget-charts .nd-heat-dows{gap:5px}
+ .budget-charts .nd-heat-cell{font-size:11px}
+ .budget-charts .nd-heat-scale{margin-top:20px}
+ .calendar-panel .calendar-month-title{min-width:0}
+ .calendar-panel .calendar-month-controls{flex-basis:100%}
+ .calendar-panel .calendar-today{margin-left:auto}
+ .history-settle{width:100%;justify-content:center}
+}
+@media(prefers-reduced-motion:reduce){.budget-images-toggle svg,.budget-charts>*{animation:none!important;transition:none!important}}
