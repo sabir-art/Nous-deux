@@ -1,5 +1,5 @@
 import {useRef,type ReactNode} from 'react';
-import {X} from 'lucide-react';
+import {X} from './icons';
 import {useDialog} from './use-dialog';
 export default function LifeDialog({title,children,onClose,busy=false,className=''}:{title:string;children:ReactNode;onClose:()=>void;busy?:boolean;className?:string}){
  const ref=useRef<HTMLDialogElement>(null);

@@ -1,7 +1,7 @@
 'use client';
 import {apiFetch,APP_BASE} from '../lib/api-client';
 import {useEffect,useState,useCallback} from 'react';
-import {Bell,BellOff,Check,RefreshCw} from 'lucide-react';
+import {Bell,BellOff,Check,RefreshCw} from './icons';
 import {defaultPreferences,notificationCategories,type Preferences} from '../lib/communication';
 import {deviceId} from '../lib/device';
 type Event={id:number;actor:number;category:string;message:string;createdAt:string};
@@ -25,7 +25,7 @@ export default function HouseNotifications({active,names,onNavigate}:{active:num
  async function change(next:Preferences){await jsonPost({action:'preferences',deviceId:deviceId(),member:active,preferences:next});setPreferences(next);}
  const markRead=()=>{const latest=events[0]?.id||0;setSeen(latest);try{localStorage.setItem('adeux-seen-'+active,String(latest));}catch{}};
  return <div className="communication-grid"><section className="panel settings-panel"><span className="settings-icon"><Bell size={23}/></span><h2>À votre rythme</h2><p>Recevez les nouveautés ajoutées par votre moitié. Ce réglage concerne uniquement cet appareil, identifié comme <strong>{names[active]}</strong>.</p>
- {!supported&&<div className="info-box">Sur iPhone ou iPad, ajoutez À deux à l’écran d’accueil depuis Safari, puis ouvrez l’application depuis son icône pour activer les notifications.</div>}
+ {!supported&&<div className="info-box">Sur iPhone ou iPad, ajoutez Nous deux à l’écran d’accueil depuis Safari, puis ouvrez l’application depuis son icône pour activer les notifications.</div>}
  {supported&&<button className={enabled?'secondary wide':'primary wide'} disabled={busy||!ready||!key} onClick={()=>run(enabled?disable:enable)}>{enabled?<BellOff size={18}/>:<Bell size={18}/>} {enabled?'Désactiver sur cet appareil':'Activer sur cet appareil'}</button>}
  <fieldset className="notification-options" disabled={!enabled||busy}><legend>Je souhaite être prévenu pour</legend>{notificationCategories.map(k=><label className="check-label" key={k}><input type="checkbox" checked={preferences[k]} onChange={e=>run(()=>change({...preferences,[k]:e.target.checked}))}/>{labels[k]}</label>)}</fieldset>
  {enabled&&<button className="text-link" disabled={busy} onClick={()=>run(async()=>{await jsonPost({action:'test',deviceId:deviceId()});setMessage('Notification de test envoyée. Vérifiez votre centre de notifications.');})}><Bell size={16}/>Envoyer une notification de test</button>}

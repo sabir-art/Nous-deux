@@ -1,4 +1,4 @@
-import {Sparkles,RefreshCw} from 'lucide-react';
+import {Sparkles,RefreshCw} from './icons';
 import type {RecipeDiscovery} from './use-recipe-library';
 export default function RecipeDiscoveryStatus({discovery,loading,error,onDiscover,onToggle}:{discovery:RecipeDiscovery|null;loading:boolean;error:string;onDiscover:()=>void;onToggle:(enabled:boolean)=>void}){
  if(error)return <p role="status" className="ai-status">{error}</p>;

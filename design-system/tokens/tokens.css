@@ -1,0 +1,220 @@
+/* Nous deux, tokens */
+@import url("https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght,SOFT@0,9..144,400..900,100;1,9..144,400..900,100&display=swap");
+:root,[data-theme="light"] {
+  --canvas: #f6f3ef;
+  --surface: #ffffff;
+  --surface-sunken: #efebe6;
+  --line: #e3ded8;
+  --ink: #1d1a23;
+  --ink-muted: #655f6e;
+  --on-ink: #ffffff;
+  --action: #0a66cc;
+  --on-action: #ffffff;
+  --action-soft: #e2eefc;
+  --marque: #d60b52;
+  --heart: #d60b52;
+  --on-heart: #ffffff;
+  --heart-soft: #fce3e8;
+  --lavande: #cdcdf5;
+  --rose: #fbc2da;
+  --lilas: #eac4ee;
+  --menthe: #b0ead5;
+  --beurre: #faec94;
+  --peche: #ffd4ba;
+  --citron: #cbef5c;
+  --sapin: #1e4d3b;
+  --on-sapin: #fff7e3;
+  --eye: #ffffff;
+  --pupil: #1d1a23;
+  --buddy-lavande: #cdcdf5;
+  --buddy-rose: #fbc2da;
+  --buddy-lilas: #eac4ee;
+  --buddy-menthe: #b0ead5;
+  --buddy-beurre: #faec94;
+  --buddy-peche: #ffd4ba;
+  --buddy-citron: #cbef5c;
+  --leaf: #8fd16f;
+  --leaf-deep: #3f8f45;
+  --leaf-dry: #c9cc62;
+  --leaf-wilt: #c4a067;
+  --water: #5aa8ff;
+  --partner-a: var(--lavande);
+  --partner-b: var(--peche);
+  --together: var(--rose);
+  --success: #18714a;
+  --warning: #9a5200;
+  --danger: #b8301c;
+  --focus: #0a66cc;
+  --data-1: #6a5fd8;
+  --data-2: #d4701c;
+  --data-3: #167a5a;
+  --data-4: #2f86d6;
+  --data-5: #d9487a;
+  --data-6: #8f830a;
+  --seq-1: #e1f4ea;
+  --seq-2: #a9e3c8;
+  --seq-3: #5cbf93;
+  --seq-4: #1f8058;
+  --seq-5: #11573d;
+  --div-pos: var(--data-4);
+  --div-neg: var(--data-2);
+  --chart-grid: #ebe7e2;
+  --chart-muted: #9a93a3;
+  --shadow-card: 0 1px 2px rgba(29,26,35,0.04), 0 8px 24px rgba(29,26,35,0.06);
+  --shadow-lift: 0 12px 32px rgba(29,26,35,0.16);
+}
+[data-theme="dark"] {
+  --canvas: #131116;
+  --surface: #1e1b22;
+  --surface-sunken: #29252e;
+  --line: #3a3541;
+  --ink: #f4f1f6;
+  --ink-muted: #ada6b6;
+  --on-ink: #131116;
+  --action: #5aa8ff;
+  --on-action: #0a1626;
+  --action-soft: #172a42;
+  --marque: #d60b52;
+  --heart: #ff6b9b;
+  --on-heart: #2a0a12;
+  --heart-soft: #3b1b23;
+  --lavande: #302e55;
+  --rose: #4b2439;
+  --lilas: #41294b;
+  --menthe: #183f33;
+  --beurre: #3f3816;
+  --peche: #4a2d1c;
+  --citron: #3b4712;
+  --sapin: #2c6a50;
+  --on-sapin: #fff7e3;
+  --eye: #ffffff;
+  --pupil: #1d1a23;
+  --buddy-lavande: #cdcdf5;
+  --buddy-rose: #fbc2da;
+  --buddy-lilas: #eac4ee;
+  --buddy-menthe: #b0ead5;
+  --buddy-beurre: #faec94;
+  --buddy-peche: #ffd4ba;
+  --buddy-citron: #cbef5c;
+  --leaf: #8fd16f;
+  --leaf-deep: #3f8f45;
+  --leaf-dry: #c9cc62;
+  --leaf-wilt: #c4a067;
+  --water: #5aa8ff;
+  --partner-a: var(--lavande);
+  --partner-b: var(--peche);
+  --together: var(--rose);
+  --success: #62d6a2;
+  --warning: #ffb866;
+  --danger: #ff8c78;
+  --focus: #5aa8ff;
+  --data-1: #7f74e6;
+  --data-2: #d27426;
+  --data-3: #1b9470;
+  --data-4: #3a8ae0;
+  --data-5: #d9578a;
+  --data-6: #9d9016;
+  --seq-1: #1d2a25;
+  --seq-2: #1f4a3a;
+  --seq-3: #2c7a5a;
+  --seq-4: #4fb487;
+  --seq-5: #a3e8c8;
+  --div-pos: var(--data-4);
+  --div-neg: var(--data-2);
+  --chart-grid: #2f2b35;
+  --chart-muted: #6f6878;
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+  --shadow-lift: 0 12px 32px rgba(0,0,0,0.5);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --canvas: #131116;
+  --surface: #1e1b22;
+  --surface-sunken: #29252e;
+  --line: #3a3541;
+  --ink: #f4f1f6;
+  --ink-muted: #ada6b6;
+  --on-ink: #131116;
+  --action: #5aa8ff;
+  --on-action: #0a1626;
+  --action-soft: #172a42;
+  --marque: #d60b52;
+  --heart: #ff6b9b;
+  --on-heart: #2a0a12;
+  --heart-soft: #3b1b23;
+  --lavande: #302e55;
+  --rose: #4b2439;
+  --lilas: #41294b;
+  --menthe: #183f33;
+  --beurre: #3f3816;
+  --peche: #4a2d1c;
+  --citron: #3b4712;
+  --sapin: #2c6a50;
+  --on-sapin: #fff7e3;
+  --eye: #ffffff;
+  --pupil: #1d1a23;
+  --buddy-lavande: #cdcdf5;
+  --buddy-rose: #fbc2da;
+  --buddy-lilas: #eac4ee;
+  --buddy-menthe: #b0ead5;
+  --buddy-beurre: #faec94;
+  --buddy-peche: #ffd4ba;
+  --buddy-citron: #cbef5c;
+  --leaf: #8fd16f;
+  --leaf-deep: #3f8f45;
+  --leaf-dry: #c9cc62;
+  --leaf-wilt: #c4a067;
+  --water: #5aa8ff;
+  --partner-a: var(--lavande);
+  --partner-b: var(--peche);
+  --together: var(--rose);
+  --success: #62d6a2;
+  --warning: #ffb866;
+  --danger: #ff8c78;
+  --focus: #5aa8ff;
+  --data-1: #7f74e6;
+  --data-2: #d27426;
+  --data-3: #1b9470;
+  --data-4: #3a8ae0;
+  --data-5: #d9578a;
+  --data-6: #9d9016;
+  --seq-1: #1d2a25;
+  --seq-2: #1f4a3a;
+  --seq-3: #2c7a5a;
+  --seq-4: #4fb487;
+  --seq-5: #a3e8c8;
+  --div-pos: var(--data-4);
+  --div-neg: var(--data-2);
+  --chart-grid: #2f2b35;
+  --chart-muted: #6f6878;
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+  --shadow-lift: 0 12px 32px rgba(0,0,0,0.5);
+} }
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+  --font-sans: Figtree, "Avenir Next", system-ui, sans-serif;
+  --font-fun: Fraunces, Georgia, serif;
+}
+.display { font-family: var(--font-sans); font-size: 40px; line-height: 44px; font-weight: 800; letter-spacing: -0.02em; }
+.title { font-family: var(--font-sans); font-size: 28px; line-height: 32px; font-weight: 700; letter-spacing: -0.01em; }
+.headline { font-family: var(--font-sans); font-size: 22px; line-height: 28px; font-weight: 700; }
+.body-lg { font-family: var(--font-sans); font-size: 18px; line-height: 26px; font-weight: 500; }
+.body { font-family: var(--font-sans); font-size: 16px; line-height: 22px; font-weight: 400; }
+.label { font-family: var(--font-sans); font-size: 14px; line-height: 18px; font-weight: 600; }
+.caption { font-family: var(--font-sans); font-size: 13px; line-height: 16px; font-weight: 500; }
+.amount { font-family: var(--font-sans); font-size: 44px; line-height: 48px; font-weight: 800; letter-spacing: -0.02em; }
+.amount-sm { font-family: var(--font-sans); font-size: 22px; line-height: 28px; font-weight: 700; }
+.romance { font-family: var(--font-fun); font-size: 34px; line-height: 38px; font-weight: 500; font-style: italic; }
+.sticker { font-family: var(--font-fun); font-size: 30px; line-height: 34px; font-weight: 800; font-style: italic; }
+.hero { font-family: var(--font-sans); font-size: 44px; line-height: 44px; font-weight: 800; letter-spacing: -0.02em; }

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nous deux, composants</title>
+<link rel="stylesheet" href="tokens/tokens.css"><link rel="stylesheet" href="components/bundle.css">
+<style>body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font-sans)}header{display:flex;align-items:center;gap:16px;padding:24px 16px}header img{height:56px}header h1{margin:0;font:800 32px/1 var(--font-sans)}main{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px;padding:0 16px 48px;align-items:start}section{background:var(--surface-sunken);border-radius:24px;overflow:hidden}section h2{margin:0;padding:12px 16px;font:700 14px/1 var(--font-sans);color:var(--ink-muted)}.thm{margin-left:auto}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--space-6) var(--space-4);align-items:end}.cap{font:600 13px/16px var(--font-sans);color:var(--ink-muted);text-align:center;margin-top:var(--space-1)}</style>
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="components/bundle.js"></script>
+</head>
+<body>
+<header><img src="logos/nous-deux-symbole.svg" alt=""><h1>Nous deux</h1><button class="nd-btn nd-btn-secondary thm" onclick="var r=document.documentElement;r.dataset.theme=r.dataset.theme==='dark'?'light':'dark'">Clair / sombre</button></header>
+<main id="g"></main>
+<script>
+var N=window.NousDeux,h=React.createElement;
+var ITEMS=[
+["Avatar",function(){
+  
+  return (h('div',{className:'nd-row'},h(N.Avatar,{name:'Inès',partner:'a',size:44}),h(N.Avatar,{name:'Karim',partner:'b',size:44}),h(N.AvatarPair,{a:'Inès',b:'Karim',size:44})));
+}],
+["AvatarPair",function(){
+  
+  return (h('div',{className:'nd-row'},h(N.AvatarPair,{a:'Inès',b:'Karim'}),h(N.AvatarPair,{a:'Inès',b:'Karim',size:48})));
+}],
+["BarChart",function(){
+  
+  return (h(N.BarChart,{title:'Dépenses par mois',subtitle:'Ce que chacun a payé',emoji:'💸',badge:{text:'-12 % vs sept.',tone:'citron'},series:[{name:'Inès',who:'a'},{name:'Karim',who:'b'}],data:[{label:'Mai',values:[620,540]},{label:'Juin',values:[580,610]},{label:'Juil.',values:[740,690]},{label:'Août',values:[910,820]},{label:'Sept.',values:[650,700]},{label:'Oct.',values:[600,684]}],summary:'Dépenses mensuelles de mai à octobre, août est le mois le plus élevé.'}));
+}],
+["BillCard",function(){
+  
+  return (h(React.Fragment,null,h(N.BillCard,{label:'Factures 💸',amount:'700 €',status:'unpaid',statusText:'2 à payer'}),h(N.BillCard,{label:'Électricité',amount:'86 €',status:'soon',statusText:'Dans 2 jours'}),h(N.BillCard,{label:'Abonnements',amount:'54 € / mois',status:'paid'})));
+}],
+["Buddy",function(){
+  
+  return (h('div',{className:'nd-row',style:{gap:16,alignItems:'flex-end'}},h(N.Buddy,{shape:'blob',tone:'citron',mood:'wow'}),h(N.Buddy,{shape:'pill',tone:'lavande',mood:'love',look:'right'}),h(N.Buddy,{shape:'flower',tone:'peche',mood:'happy'}),h(N.Buddy,{shape:'dome',tone:'menthe',mood:'wow',look:'up'}),h(N.Buddy,{shape:'pot',tone:'rose',mood:'sleepy'})));
+}],
+["Button",function(){
+  
+  return (h('div',{className:'nd-row'},h(N.Button,{variant:'primary'},'Ajouter'),h(N.Button,{variant:'love',icon:'heart'},'On matche ?'),h(N.Button,{variant:'secondary'},'Plus tard'),h(N.Button,{variant:'ghost'},'Voir tout')));
+}],
+["CalendarHeatmap",function(){
+  
+  return (h(N.CalendarHeatmap,{title:'Calendrier des dépenses',subtitle:'Octobre, plus c\'est foncé, plus on a dépensé',month:'octobre',startDow:2,days:Array.from({length:31},function(_,i){var v=[0,24,0,86,12,0,140,32,0,9,210,64,0,18,45,0,0,120,30,0,76,15,0,0,98,40,0,12,0,160,22][i];return {day:i+1,value:v,today:i===8}})}));
+}],
+["CategoryTile",function(){
+  
+  return (h('div',{className:'nd-grid2'},h(N.CategoryTile,{title:'Courses',count:12,tone:'menthe'}),h(N.CategoryTile,{title:'Factures',count:2,tone:'rose'}),h(N.CategoryTile,{title:'Corvées',count:4,tone:'lilas'}),h(N.CategoryTile,{title:'Idées sorties',count:0,tone:'beurre'})));
+}],
+["ChatThread",function(){
+  
+  return (h(N.ChatThread,{messages:[{from:'them',text:'Tu rentres à quelle heure ce soir ?',time:'18:02'},{from:'me',text:'Vers 19h30. On a matché sur les lasagnes 😄',time:'18:04'},{from:'them',text:'Parfait, je lance le tirage pour savoir qui cuisine',time:'18:05'}]}));
+}],
+["DayStrip",function(){
+  
+  return (h(N.DayStrip,{selected:6,days:[{dow:'Mer',day:5,who:['a']},{dow:'Jeu',day:6,who:['a','nous']},{dow:'Ven',day:7,who:['b']},{dow:'Sam',day:8,who:['nous']},{dow:'Dim',day:9},{dow:'Lun',day:10,who:['a','b']},{dow:'Mar',day:11}]}));
+}],
+["DishCard",function(){
+  
+  return (h('div',{className:'nd-row',style:{gap:16,alignItems:'flex-start'}},h(N.DishCard,{name:'Lasagnes maison',tone:'peche',tags:['Dîner','1 h 15']}),h(N.DishCard,{name:'Riz cantonais',tone:'beurre',tags:['Dîner','25 min'],actions:false}),h(N.DishCard,{name:'Smoothie banane',tone:'citron',tags:['Petit-déj','5 min'],actions:false})));
+}],
+["DivergingBars",function(){
+  
+  return (h(N.DivergingBars,{title:'Ce qu\'il reste chaque mois',subtitle:'Revenus moins dépenses communes',emoji:'🐷',data:[{label:'Mai',value:420},{label:'Juin',value:180},{label:'Juil.',value:-120},{label:'Août',value:-260},{label:'Sept.',value:310},{label:'Oct.',value:380}]}));
+}],
+["EventCard",function(){
+  
+  return (h(React.Fragment,null,h(N.EventCard,{dow:'Sam.',day:1,title:'Course sur la côte 🏃',meta:'11:00 - 11:30',who:'a',names:['Inès','Karim']}),h(N.EventCard,{dow:'Jeu.',day:6,today:true,title:'Dîner chez tes parents',meta:'20:00 - 23:00',who:'nous',names:['Inès','Karim']}),h(N.EventCard,{title:'Loyer',meta:'850 €',tone:'neutre'}),h(N.EventCard,{dow:'Ven.',day:7,title:'Courses de la semaine 🛒',meta:'11:00 - 11:30',who:'b',names:['Inès','Karim']})));
+}],
+["FoodItem",function(){
+  
+  return (h(React.Fragment,null,h(N.FoodItem,{name:'Riz basmati',qty:'1 kg',tone:'beurre'}),h(N.FoodItem,{name:'Bananes',qty:'6',tone:'beurre'}),h(N.FoodItem,{name:'Tomates',qty:'500 g',tone:'rose'}),h(N.FoodItem,{name:"Lait d'avoine",qty:'2 L',tone:'lavande',done:true})));
+}],
+["GaugeTile",function(){
+  
+  return (h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(170px,1fr))',gap:12}},h(N.GaugeTile,{tone:'menthe',label:'Budget courses',emoji:'🛒',value:386,max:400,display:'386 € / 400 €',caption:'Il reste 14 €'}),h(N.GaugeTile,{tone:'peche',label:'Vacances',emoji:'🏝️',value:62,display:'3 100 € / 5 000 €',caption:'Encore 1 900 €'}),h(N.GaugeTile,{tone:'lavande',label:'Repas maison',emoji:'🍳',value:18,max:24,display:'18 sur 24',caption:'Objectif du mois'})));
+}],
+["HeroCard",function(){
+  
+  return (h('div',{style:{display:'grid',gap:12}},h(N.HeroCard,{tone:'citron',title:h(React.Fragment,null,'On garde le ',h('em',null,'cap'),' cette semaine'),text:'4 tâches restantes, dont 2 pour toi',action:'Voir les tâches',buddy:{shape:'flower',tone:'lavande',mood:'happy'}}),h(N.HeroCard,{tone:'sapin',title:h(React.Fragment,null,'Prêts à ',h('em',null,'planter'),' ?'),text:'3 plantes à arroser avant dimanche',action:'C\'est parti',buddy:{shape:'dome',tone:'lilas',mood:'wow',look:'up'}})));
+}],
+["Icon",function(){
+  
+  return (h('div',{className:'nd-row',style:{gap:20}},['home','calendar','plus','wallet','chat','heart','check','x','cart','meal','send','sparkle'].map(function(n){return h(N.Icon,{key:n,name:n,label:n})})));
+}],
+["LineChart",function(){
+  
+  return (h(N.LineChart,{title:'Épargne commune',subtitle:'Pour les vacances',emoji:'🏝️',badge:{text:'+300 € ce mois',tone:'menthe'},goal:5000,labels:['Mai','Juin','Juil.','Août','Sept.','Oct.'],series:[{name:'Épargne',values:[2400,2750,3100,3350,3950,4250]}],summary:"L'épargne monte de 2 400 € à 4 250 €, l'objectif est à 5 000 €."}));
+}],
+["MatchSticker",function(){
+  
+  return (h('div',{className:'nd-row',style:{justifyContent:'center',gap:24}},h(N.MatchSticker,{subtitle:'lasagnes ce soir'}),h(N.MatchSticker,{title:'Karim cuisine !',subtitle:'Inès fait la vaisselle',toneA:'citron',toneB:'rose'})));
+}],
+["PaydayCard",function(){
+  
+  return (h(N.PaydayCard,{total:30,elapsed:15}));
+}],
+["PiggyBank",function(){
+  
+  return (h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:16}},h(N.PiggyBank,{label:'Classique',value:445,goal:800,envelopes:[{label:'Courses',pct:84,tone:'menthe'},{label:'Sorties',pct:41,tone:'rose'},{label:'Maison',pct:95,tone:'peche'},{label:'Plantes',pct:30,tone:'citron'}]}),h(N.PiggyBank,{variant:'bulle',label:'Bulle',value:290,goal:300}),h(N.PiggyBank,{variant:'geo',label:'Géo, épargne vacances',mode:'epargne',value:3100,goal:5000}),h(N.PiggyBank,{variant:'pieces',label:'Pièces',value:520,goal:800})));
+}],
+["Pill",function(){
+  
+  return (h('div',{className:'nd-row'},h(N.Pill,{selected:true},'Agenda'),h(N.Pill,null,'Jour'),h(N.Pill,null,'3 jours'),h(N.Pill,{icon:'sparkle'},'Résume ma semaine')));
+}],
+["PillGroup",function(){
+  
+  return (h(N.PillGroup,{label:'Personne',options:[{value:'nous',label:'Nous deux'},{value:'ines',label:'Inès'},{value:'karim',label:'Karim'}]}));
+}],
+["PlantBuddy",function(){
+  
+  var items = [
+    ['feuille','love','Fifi','Vient d\'être arrosée','peche'],
+    ['pousse','happy','Pouss','En pleine forme','lilas'],
+    ['monstera','ok','Mona','Ça va','rose'],
+    ['cactus','thirsty','Piquant','A soif','lavande'],
+    ['feuille','sad','Fifi','Fane','beurre'],
+    ['pousse','sleep','Pouss','La nuit','menthe']
+  ];
+  return (h('div',{className:'grid'}, items.map(function(it,i){
+    return h('div',{key:i}, h(N.PlantBuddy,{species:it[0],mood:it[1],name:it[2],potTone:it[4],size:110,interactive:true,waterButton:i===3}), h('div',{className:'cap'},it[2]+' · '+it[3]));
+  })));
+}],
+["PlantCard",function(){
+  
+  return (h('div',{className:'nd-row',style:{gap:16,alignItems:'flex-start'}},h(N.PlantCard,{species:'monstera',name:'Mona la monstera',every:7,daysSinceWater:2,next:'Arroser dans 5 jours',who:{name:'Karim',partner:'b'},potTone:'rose',week:[{dow:'L',day:6,state:'done'},{dow:'M',day:7},{dow:'M',day:8,today:true},{dow:'J',day:9},{dow:'V',day:10},{dow:'S',day:11},{dow:'D',day:12,state:'due'}]}),h(N.PlantCard,{species:'pousse',name:'Pouss le basilic',every:2,daysSinceWater:3,potTone:'lilas',next:"À arroser aujourd'hui",who:{name:'Inès',partner:'a'},week:[{dow:'L',day:6},{dow:'M',day:7},{dow:'M',day:8,state:'due',today:true},{dow:'J',day:9},{dow:'V',day:10,state:'due'},{dow:'S',day:11},{dow:'D',day:12,state:'due'}]})));
+}],
+["RankedBars",function(){
+  
+  return (h(N.RankedBars,{title:'Budget par catégorie',subtitle:'Octobre',emoji:'🧺',items:[{label:'Courses',emoji:'🛒',value:386,budget:400,tone:'menthe'},{label:'Restos',emoji:'🍝',value:214,budget:150,tone:'rose'},{label:'Maison',emoji:'🏠',value:168,budget:200,tone:'peche'},{label:'Sorties',emoji:'🎬',value:96,budget:120,tone:'lavande'},{label:'Plantes',emoji:'🪴',value:42,budget:50,tone:'beurre'},{label:'Cadeaux',emoji:'🎁',value:30,budget:80,tone:'lilas'}]}));
+}],
+["RecipeRow",function(){
+  
+  return (h('div',{style:{display:'flex',flexDirection:'column',gap:12}},h(N.PillGroup,{label:'Moment',options:[{value:'all',label:'Tout'},{value:'b',label:'Petit-déj'},{value:'l',label:'Déjeuner'},{value:'d',label:'Dîner'}]}),h(N.RecipeRow,{name:'Tajine de poulet',tone:'beurre',time:'1 h',rating:'4,8',by:{name:'Inès',partner:'a'}}),h(N.RecipeRow,{name:'Salade grecque',tone:'menthe',time:'15 min',rating:'4,3',by:{name:'Karim',partner:'b'}}),h(N.RecipeRow,{name:'Omelette aux champignons',tone:'peche',time:'10 min',rating:'4,1',by:{name:'Karim',partner:'b'}}),h(N.RecipeRow,{name:'Soupe de potiron',tone:'beurre',emoji:'🎃',time:'40 min',rating:'4,6',by:{name:'Inès',partner:'a'}})));
+}],
+["RecipeView",function(){
+  
+  return (h(N.RecipeView,{recipe:{name:'Tajine de poulet',tone:'beurre',matched:true,by:{name:'Inès',partner:'a'},time:'1 h',difficulty:'Facile',servings:2,ingredients:[{name:'Cuisses de poulet',qty:'4',tone:'rose'},{name:'Oignons',qty:'2',tone:'lilas'},{name:'Citron confit',qty:'1',tone:'beurre'},{name:'Olives vertes',qty:'100 g',tone:'menthe'},{name:'Gingembre',qty:'1 c. à café',tone:'peche'},{name:'Couscous',qty:'200 g',tone:'beurre'}],steps:[{title:'Faire revenir',text:'Fais dorer le poulet 5 minutes de chaque côté dans un filet d\'huile, puis réserve.'},{title:'Mijoter',text:'Ajoute les oignons émincés, le gingembre et 20 cl d\'eau. Remets le poulet, couvre et laisse mijoter.',timer:35,timerLabel:'mijotage 35 min'},{title:'Finir',text:'Ajoute le citron confit et les olives 10 minutes avant la fin. Sers avec le couscous.',timer:10,timerLabel:'citron 10 min'}]}}));
+}],
+["SplitBar",function(){
+  
+  return (h(N.SplitBar,{title:'Qui a payé quoi',subtitle:'Dépenses communes d\'octobre',items:[{name:'Inès',value:742},{name:'Karim',value:542}]}));
+}],
+["StatTile",function(){
+  
+  return (h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(170px,1fr))',gap:12}},h(N.StatTile,{tone:'lavande',label:'Dépensé',emoji:'💸',value:'1 284 €',delta:{value:'12 %',up:false,good:true,vs:'vs sept.'},trend:[1420,1390,1510,1460,1350,1284]}),h(N.StatTile,{tone:'menthe',label:'Courses',emoji:'🛒',value:'386 €',delta:{value:'8 %',up:true,good:false,vs:'vs sept.'},trend:[320,340,330,350,357,386]}),h(N.StatTile,{tone:'beurre',label:'Épargne',emoji:'🐷',value:'4 250 €',delta:{value:'300 €',up:true,good:true,vs:'ce mois'}}),h(N.StatTile,{label:'Repas maison',emoji:'🍳',value:'18',delta:{value:'4',up:true,good:true,vs:'vs sept.'},trend:[10,12,11,14,14,18]})));
+}],
+["Sticker",function(){
+  
+  return (h('div',{className:'nd-row',style:{gap:14}},h(N.Sticker,{tone:'citron'},'miam !'),h(N.Sticker,{tone:'lilas',rotate:5},'à deux'),h(N.Sticker,{tone:'heart',rotate:-3},'match'),h(N.Sticker,{tone:'sapin',size:'sm',rotate:8},'arrosé'),h(N.Sticker,{tone:'ink',size:'sm'},'ce soir')));
+}],
+["StickerStack",function(){
+  
+  return (h('div',{className:'nd-row',style:{gap:32}},h(N.StickerStack,{words:[{text:'on mange',tone:'rose'},{text:'quoi',tone:'citron'},{text:'ce soir ?',tone:'lavande'}]}),h(N.StickerStack,{size:'sm',words:[{text:'planter',tone:'menthe'},{text:'arroser',tone:'beurre'},{text:'hey !',tone:'lilas'}]})));
+}],
+["SwipeDeck",function(){
+  
+  return (h(N.SwipeDeck,{dishes:[{name:'Lasagnes maison',tone:'peche',tags:['Dîner','1 h 15']},{name:'Tajine de poulet',tone:'beurre',tags:['Dîner','1 h']},{name:'Sushi maison',tone:'menthe',tags:['Dîner','45 min']},{name:'Pancakes',tone:'rose',tags:['Brunch','20 min']},{name:'Curry de lentilles',tone:'citron',tags:['Végé','35 min']}],partner:{name:'Inès',partner:'a'},partnerDone:true,partnerLikes:['Tajine de poulet','Curry de lentilles','Pancakes']}));
+}],
+["TabBar",function(){
+  
+  return (h(N.TabBar,{active:'home'}));
+}],
+["TodoItem",function(){
+  
+  return (h(React.Fragment,null,h(N.TodoItem,{title:'Acheter du lait',note:"Lait d'avoine, pas le classique",assignee:{name:'Karim',partner:'b'}}),h(N.TodoItem,{title:'Mettre la table 🍽️',points:'10 points',assignee:{name:'Inès',partner:'a'}}),h(N.TodoItem,{title:'Lessive',done:true,points:'50 points',assignee:{name:'Karim',partner:'b'}})));
+}],
+["WhoDoesItGame",function(){
+  
+  return (h(N.WhoDoesItGame,{players:[{name:'Inès',partner:'a'},{name:'Karim',partner:'b'}],otherDoesNext:true,tasks:[{name:'Cuisine',emoji:'🍳'},{name:'Vaisselle',emoji:'🧽'},{name:'Courses',emoji:'🛒'}]}));
+}]
+];
+ITEMS.forEach(function(it){var s=document.createElement("section");s.innerHTML="<h2>"+it[0]+"</h2><div class=\"nd-stage\"></div>";document.getElementById("g").appendChild(s);ReactDOM.createRoot(s.lastChild).render(it[1]());});
+</script>
+</body>
+</html>

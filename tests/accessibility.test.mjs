@@ -1,22 +1,28 @@
-// Regression checks for the design system, NOT a declaration of RGAA compliance.
+// Targeted accessibility regressions; these checks do not certify RGAA compliance.
 import assert from 'node:assert/strict';
 import {readFileSync,realpathSync} from 'node:fs';
 import {createRequire} from 'node:module';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
 const require=createRequire(import.meta.url),postcss=createRequire(realpathSync('node_modules/next/package.json'))('postcss');
-const files=['app/globals.css','app/design.css','app/life.css','app/warm.css','app/polish.css'];
-const css=files.map(f=>readFileSync(f,'utf8')).join('\n'),root=postcss.parse(css),tokens={};
-root.walkDecls(d=>{if(d.prop.startsWith('--'))tokens[d.prop]=d.value;});
-function color(v){v=v.replace(/var\((--[\w-]+)\)/g,(_,n)=>tokens[n]);if(v==='white')v='#ffffff';if(v==='black')v='#000000';if(/^#[0-9a-f]{3}$/i.test(v))v='#'+[...v.slice(1)].map(c=>c+c).join('');assert(/^#[0-9a-f]{6}$/i.test(v),'Opaque sRGB colour expected: '+v);return [1,3,5].map(i=>parseInt(v.slice(i,i+2),16)/255);}
-const lum=v=>color(v).map(c=>c<=.04045?c/12.92:((c+.055)/1.055)**2.4).reduce((s,c,i)=>s+c*[.2126,.7152,.0722][i],0);
-const contrast=(a,b)=>(Math.max(lum(a),lum(b))+.05)/(Math.min(lum(a),lum(b))+.05);
-let count=0,min=99;function check(fg,bg,label,threshold=4.5){const r=contrast(fg,bg);assert(r>=threshold,`${label}: ${r.toFixed(2)} < ${threshold}`);count++;if(threshold===4.5)min=Math.min(min,r);}
-const surfaces=['--paper','--bg','--rose','--apricot','--lilac','--leaf'];
-for(const surface of surfaces){for(const text of ['--ink','--muted','--berry'])check(tokens[text],tokens[surface],text+' on '+surface);check(tokens['--focus'],tokens[surface],'Focus on '+surface,3);check(tokens['--control-border'],tokens[surface],'Control boundary on '+surface,3);}
-check('#ffffff',tokens['--berry'],'Primary button / selected week / tab');check('#ffffff',tokens['--berry-hover'],'Primary hover');check(tokens['--ink'],'#fae9dd','Balance gradient start');check(tokens['--ink'],'#f6e8ee','Balance gradient end');
-// All 18 calendar categories: names stay visible, colour is never the only cue.
-const categoryPairs=new Map();root.walkRules(rule=>{if(/^\.appointment-[a-z]+$/.test(rule.selector)){const props={};rule.walkDecls(d=>props[d.prop]=d.value);if(props.color&&props.background)categoryPairs.set(rule.selector,props);}});
-assert.equal(categoryPairs.size,18);for(const [name,p]of categoryPairs)check(p.color,p.background,name);
-for(const [fg,bg,label]of [['#34563e','#edf3e9','Plant status'],['#4d6556','#edf3e9','Plant metadata'],['#665868','#f8f4fa','Calendar row'],['#665868','#fcf3eb','Calendar row alternate'],['#9c2340','#fff0f1','Validation error'],['#59442f','#ffffff','Photo caption'],['#623e58','#f9eff5','Sync status']])check(fg,bg,label);
+const tokenCss=readFileSync('design-system/tokens/tokens.css','utf8'),root=postcss.parse(tokenCss);
+let count=0,min=99;
+for(const theme of ['light','dark']){
+ const tokens={};root.walkRules(rule=>{if(rule.parent.type==='root'&&(theme==='light'?rule.selector.includes('[data-theme="light"]'):rule.selector==='[data-theme="dark"]'))rule.walkDecls(d=>tokens[d.prop]=d.value);});
+ function rgb(v){if(v.startsWith('var('))return rgb(tokens[v.slice(4,-1)]);assert(/^#[0-9a-f]{6}$/i.test(v),v);return [1,3,5].map(i=>parseInt(v.slice(i,i+2),16)/255);}
+ const lum=v=>rgb(v).map(c=>c<=.04045?c/12.92:((c+.055)/1.055)**2.4).reduce((s,c,i)=>s+c*[.2126,.7152,.0722][i],0);
+ const contrast=(a,b)=>(Math.max(lum(a),lum(b))+.05)/(Math.min(lum(a),lum(b))+.05);
+ function check(fg,bg,label,threshold=4.5){const r=contrast(tokens[fg],tokens[bg]);assert(r>=threshold,`${theme}: ${label}: ${r.toFixed(2)} < ${threshold}`);count++;if(threshold===4.5)min=Math.min(min,r);}
+ for(const bg of ['--canvas','--surface','--surface-sunken','--action-soft']){for(const fg of ['--ink','--ink-muted'])check(fg,bg,fg+' on '+bg);check('--focus',bg,'Keyboard focus',3);}
+ for(const bg of ['--lavande','--rose','--lilas','--menthe','--beurre','--peche','--citron','--heart-soft'])check('--ink',bg,'Text on '+bg);
+ check('--on-action','--action','Action button');check('--on-heart','--heart','Love button');check('--on-ink','--ink','Own message');check('--on-sapin','--sapin','Plant card');check('--pupil','--buddy-citron','Plant care button');
+ for(const status of ['--success','--warning','--danger'])check(status,'--surface','Status '+status);
+}
+// Every supplied design file remains byte-for-byte identical, including the logos.
+const manifest=JSON.parse(readFileSync('design-system/source-integrity.json','utf8'));
+for(const [path,hash] of Object.entries(manifest))assert.equal(createHash('sha256').update(readFileSync('design-system/'+path)).digest('hex'),hash,'Supplied file changed: '+path);
+assert.equal(readFileSync('public/favicon.svg','utf8'),readFileSync('design-system/logos/nous-deux-icone-app.svg','utf8'));
+const entry=readFileSync('web/main.tsx','utf8');assert(entry.includes('design-system/components/bundle.css'));assert(!/globals\.css|design\.css|warm\.css|polish\.css|life\.css/.test(entry));
 // Render actual interactive components with synthetic data, without credentials,
 // a browser, production household state or any network calls.
 const {build}=createRequire(realpathSync('node_modules/wrangler/package.json'))('esbuild');
@@ -28,6 +34,7 @@ assert(views.garden.includes('aria-label="Nos plantes, liste défilante" tabinde
 assert(views.shopping.includes('aria-label="Rechercher un article"'));assert(views.shopping.includes('aria-label="Fermer"'));assert(views.shopping.includes('aria-label="Articles disponibles" tabindex="0"'));
 assert(views.calendar.includes('aria-label="Semaine précédente"'));assert(views.calendar.includes('aria-pressed="true"'));assert(views.swipe.includes('aria-keyshortcuts="ArrowLeft ArrowRight"'));assert(views.swipe.includes('Une autre envie')&&views.swipe.includes('Oh oui, miam !'));
 assert(views.purchased.includes('lucide-undo-2')||views.purchased.includes('lucide-undo2'));assert(!views.purchased.includes('↩'));
-const polish=readFileSync('app/polish.css','utf8');assert(polish.includes('prefers-reduced-motion:reduce'));assert(polish.includes('repeat(2,minmax(0,1fr))'));assert(polish.includes('overscroll-behavior-x:contain'));assert(polish.includes('html[data-modal-open] .workspace{overflow:hidden'));assert(polish.includes('--dialog-viewport'));
+const integration=readFileSync('app/application.css','utf8');postcss.parse(integration);
+assert(integration.includes('prefers-reduced-motion:reduce'));assert(integration.includes('repeat(2,minmax(0,1fr))'));assert(integration.includes('overscroll-behavior-x:contain'));assert(integration.includes('html[data-modal-open] .workspace{overflow:hidden'));assert(integration.includes('--dialog-viewport'));
 const html=readFileSync('index.html','utf8');assert(!/user-scalable=no|maximum-scale=1/.test(html));assert(html.includes('lang="fr"'));assert(readFileSync('app/house-app.tsx','utf8').includes('className="skip-link"'));
-console.log(`PASS: ${count} text/control contrast pairs (minimum normal text ${min.toFixed(2)}:1), 18 categories, semantic component rendering, keyboard alternatives and reduced-motion/reflow guards. Manual RGAA audit still required.`);
+console.log(`PASS: ${count} text/control contrast pairs (minimum normal text ${min.toFixed(2)}:1), both delivered themes, source fidelity, semantic component rendering, keyboard alternatives and reduced-motion/reflow guards. Manual RGAA audit still required.`);

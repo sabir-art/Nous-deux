@@ -1,7 +1,7 @@
 'use client';
 import {apiFetch,APP_BASE} from '../lib/api-client';
 import {useState,useEffect,useRef} from 'react';
-import {Phone,PhoneOff,Mic,MicOff,Volume2} from 'lucide-react';
+import {Phone,PhoneOff,Mic,MicOff,Volume2} from './icons';
 type Call={id:string;caller:number;callerDevice:string;calleeDevice:string;offer:string;answer:string;state:string;expiresAt:number};
 const iceServers=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}];
 export default function HouseCalls({active,names,expanded,onOpen}:{active:number;names:string[];expanded:boolean;onOpen:()=>void}){
@@ -52,9 +52,9 @@ export default function HouseCalls({active,names,expanded,onOpen}:{active:number
  const mine=!!call&&(call.callerDevice===session.current||call.calleeDevice===session.current),incoming=!!call&&call.caller!==active&&call.state==='ringing';
  const time=`${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}`;
  return <><audio ref={audio} autoPlay playsInline/>{!expanded&&(incoming||mine)&&<div className="call-banner" role="status"><Phone size={18}/><span>{incoming?`${names[call!.caller]} vous appelle`:connected?`Appel · ${time}`:'Appel en cours'}</span><button className="secondary" onClick={onOpen}>{incoming?'Répondre':'Ouvrir'}</button></div>}
- {expanded&&<section className="panel call-panel"><div className="call-avatar"><Phone size={35}/></div><span className="eyebrow">JUSTE ENTRE VOUS DEUX · BÊTA</span><h2>{incoming?`${names[call!.caller]} vous appelle`:connected?names[1-active]:`Un appel à ${names[1-active]}`}</h2><p role="status">{connected?time:status||'Un moment pour se parler, directement dans votre maison.'}</p>
- {!available&&<p className="form-error">Les appels audio ne sont pas disponibles dans ce navigateur. Ouvrez À deux dans Safari ou Chrome.</p>}
+ {expanded&&<section className="panel call-panel"><div className="call-avatar"><Phone size={35}/></div><span className="eyebrow">Juste entre nous · bêta</span><h2>{incoming?`${names[call!.caller]} vous appelle`:connected?names[1-active]:`Un appel à ${names[1-active]}`}</h2><p role="status">{connected?time:status||'Un moment pour se parler, directement dans votre maison.'}</p>
+ {!available&&<p className="form-error">Les appels audio ne sont pas disponibles dans ce navigateur. Ouvrez Nous deux dans Safari ou Chrome.</p>}
  <div className="call-actions">{incoming&&!mine?<><button className="primary" disabled={busy||!available} onClick={()=>dial(true)}><Phone size={19}/>Répondre</button><button className="danger" disabled={busy} onClick={end}><PhoneOff size={19}/>Refuser</button></>:mine||busy?<><button className="secondary" disabled={!stream.current} aria-pressed={muted} onClick={()=>{stream.current?.getAudioTracks().forEach(t=>t.enabled=muted);setMuted(!muted);}}>{muted?<MicOff size={19}/>:<Mic size={19}/>} {muted?'Réactiver le micro':'Couper le micro'}</button><button className="danger" onClick={end}><PhoneOff size={19}/>Raccrocher</button></>:<button className="primary" disabled={!available||!!call||busy} onClick={()=>dial()}><Phone size={19}/>{call?'Appel ouvert sur un autre appareil':`Appeler ${names[1-active]}`}</button>}</div>
  {audioBlocked&&<button className="secondary" onClick={()=>audio.current?.play().then(()=>setAudioBlocked(false)).catch(()=>setStatus('Touchez à nouveau pour activer le son.'))}><Volume2 size={19}/>Activer le son</button>}
- <div className="call-help"><p>Gardez l’application ouverte pendant l’appel. Si votre moitié a activé les invitations aux appels, une notification lui propose d’ouvrir À deux.</p><p>Cette première version utilise une connexion directe : certains réseaux mobiles ou Wi-Fi peuvent empêcher l’appel. La sonnerie sur écran verrouillé n’est pas prise en charge. Aucun son n’est enregistré.</p></div></section>}</>;
+ <div className="call-help"><p>Gardez l’application ouverte pendant l’appel. Si votre moitié a activé les invitations aux appels, une notification lui propose d’ouvrir Nous deux.</p><p>Cette première version utilise une connexion directe : certains réseaux mobiles ou Wi-Fi peuvent empêcher l’appel. La sonnerie sur écran verrouillé n’est pas prise en charge. Aucun son n’est enregistré.</p></div></section>}</>;
 }

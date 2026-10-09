@@ -32,6 +32,7 @@ jobs:
       - run: node tests/interaction.test.mjs
       - run: node tests/recipe-discovery.test.mjs
       - run: node tests/accessibility.test.mjs
+      - run: node tests/design-system.test.mjs
       - run: pnpm run build:web
       - uses: actions/upload-pages-artifact@v3
         with:

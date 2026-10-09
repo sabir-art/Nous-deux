@@ -1,0 +1,770 @@
+{
+  "Clair": {
+    "canvas": {
+      "value": "#f6f3ef",
+      "type": "color",
+      "description": "Fond d'écran de toutes les pages."
+    },
+    "surface": {
+      "value": "#ffffff",
+      "type": "color",
+      "description": "Cartes, feuilles, barre d'onglets."
+    },
+    "surface-sunken": {
+      "value": "#efebe6",
+      "type": "color",
+      "description": "Cartes neutres (factures, recettes), champs de saisie, pastilles non sélectionnées."
+    },
+    "line": {
+      "value": "#e3ded8",
+      "type": "color",
+      "description": "Filets, bordures de pastilles et de champs."
+    },
+    "ink": {
+      "value": "#1d1a23",
+      "type": "color",
+      "description": "Texte principal sur canvas, surface, surface-sunken et sur toutes les couleurs pastel. Remplit la pastille sélectionnée."
+    },
+    "ink-muted": {
+      "value": "#655f6e",
+      "type": "color",
+      "description": "Texte secondaire (heures, métadonnées) sur canvas, surface et surface-sunken."
+    },
+    "on-ink": {
+      "value": "#ffffff",
+      "type": "color",
+      "description": "Texte sur un fond ink (pastille sélectionnée, bulle sombre)."
+    },
+    "action": {
+      "value": "#0a66cc",
+      "type": "color",
+      "description": "Action principale : bouton primaire, bouton +, coche validée, date du jour. Texte action sur canvas et surface."
+    },
+    "on-action": {
+      "value": "#ffffff",
+      "type": "color",
+      "description": "Texte et icônes posés sur action."
+    },
+    "action-soft": {
+      "value": "#e2eefc",
+      "type": "color",
+      "description": "Fond teinté derrière une info liée à une action (rappel, lien)."
+    },
+    "marque": {
+      "value": "#d60b52",
+      "type": "color",
+      "description": "Magenta exact du logo Nous deux, identique dans les deux thèmes. Réservé au logo et à l'icône d'app ; dans l'interface, utilise heart."
+    },
+    "heart": {
+      "value": "#d60b52",
+      "type": "color",
+      "description": "Le couple et la marque : magenta du logo. Match, coeur, moments à deux, bouton « On matche ? ». Jamais pour une erreur. Texte heart sur canvas et surface (4,7:1 et plus)."
+    },
+    "on-heart": {
+      "value": "#ffffff",
+      "type": "color",
+      "description": "Texte posé sur heart."
+    },
+    "heart-soft": {
+      "value": "#fce3e8",
+      "type": "color",
+      "description": "Fond des messages du partenaire et des bandeaux de match."
+    },
+    "lavande": {
+      "value": "#cdcdf5",
+      "type": "color",
+      "description": "Catégorie Sport et loisirs, partenaire A. Texte ink."
+    },
+    "rose": {
+      "value": "#fbc2da",
+      "type": "color",
+      "description": "Catégorie Repas et sorties à deux. Texte ink."
+    },
+    "lilas": {
+      "value": "#eac4ee",
+      "type": "color",
+      "description": "Catégorie Famille et enfants. Texte ink."
+    },
+    "menthe": {
+      "value": "#b0ead5",
+      "type": "color",
+      "description": "Catégorie Courses et maison. Texte ink."
+    },
+    "beurre": {
+      "value": "#faec94",
+      "type": "color",
+      "description": "Catégorie Notes et idées, tirelire, mise en avant légère. Texte ink."
+    },
+    "peche": {
+      "value": "#ffd4ba",
+      "type": "color",
+      "description": "Partenaire B, catégorie Voyages. Texte ink."
+    },
+    "citron": {
+      "value": "#cbef5c",
+      "type": "color",
+      "description": "Énergie, bonne nouvelle, cartes héros et stickers. Texte ink."
+    },
+    "sapin": {
+      "value": "#1e4d3b",
+      "type": "color",
+      "description": "Module Plantes : panneaux et cartes plante. Texte on-sapin."
+    },
+    "on-sapin": {
+      "value": "#fff7e3",
+      "type": "color",
+      "description": "Texte crème posé sur sapin."
+    },
+    "eye": {
+      "value": "#ffffff",
+      "type": "color",
+      "description": "Blanc des yeux des mascottes, identique dans les deux thèmes."
+    },
+    "pupil": {
+      "value": "#1d1a23",
+      "type": "color",
+      "description": "Pupilles et sourcils des mascottes, identique dans les deux thèmes."
+    },
+    "buddy-lavande": {
+      "value": "#cdcdf5",
+      "type": "color",
+      "description": "Corps des mascottes (Buddy) et de la tirelire en lavande, identique dans les deux thèmes pour garder des mascottes vives en sombre."
+    },
+    "buddy-rose": {
+      "value": "#fbc2da",
+      "type": "color",
+      "description": "Corps des mascottes (Buddy) et de la tirelire en rose, identique dans les deux thèmes pour garder des mascottes vives en sombre."
+    },
+    "buddy-lilas": {
+      "value": "#eac4ee",
+      "type": "color",
+      "description": "Corps des mascottes (Buddy) et de la tirelire en lilas, identique dans les deux thèmes pour garder des mascottes vives en sombre."
+    },
+    "buddy-menthe": {
+      "value": "#b0ead5",
+      "type": "color",
+      "description": "Corps des mascottes (Buddy) et de la tirelire en menthe, identique dans les deux thèmes pour garder des mascottes vives en sombre."
+    },
+    "buddy-beurre": {
+      "value": "#faec94",
+      "type": "color",
+      "description": "Corps des mascottes (Buddy) et de la tirelire en beurre, identique dans les deux thèmes pour garder des mascottes vives en sombre."
+    },
+    "buddy-peche": {
+      "value": "#ffd4ba",
+      "type": "color",
+      "description": "Corps des mascottes (Buddy) et de la tirelire en peche, identique dans les deux thèmes pour garder des mascottes vives en sombre."
+    },
+    "buddy-citron": {
+      "value": "#cbef5c",
+      "type": "color",
+      "description": "Corps des mascottes (Buddy) et de la tirelire en citron, identique dans les deux thèmes pour garder des mascottes vives en sombre."
+    },
+    "leaf": {
+      "value": "#8fd16f",
+      "type": "color",
+      "description": "Feuillage des mascottes plantes en forme. Identique dans les deux thèmes, décoratif."
+    },
+    "leaf-deep": {
+      "value": "#3f8f45",
+      "type": "color",
+      "description": "Tiges, nervures et petites feuilles des mascottes plantes. Identique dans les deux thèmes, décoratif."
+    },
+    "leaf-dry": {
+      "value": "#c9cc62",
+      "type": "color",
+      "description": "Feuillage d'une plante qui a soif. Identique dans les deux thèmes, décoratif."
+    },
+    "leaf-wilt": {
+      "value": "#c4a067",
+      "type": "color",
+      "description": "Feuillage d'une plante qui fane, pas arrosée depuis trop longtemps. Identique dans les deux thèmes, décoratif."
+    },
+    "water": {
+      "value": "#5aa8ff",
+      "type": "color",
+      "description": "Gouttes d'eau et de sueur des mascottes. Identique dans les deux thèmes, décoratif."
+    },
+    "partner-a": {
+      "value": "#cdcdf5",
+      "type": "color",
+      "description": "Couleur de la personne A : avatar, événements perso dans l'agenda partagé."
+    },
+    "partner-b": {
+      "value": "#ffd4ba",
+      "type": "color",
+      "description": "Couleur de la personne B : avatar, événements perso dans l'agenda partagé."
+    },
+    "together": {
+      "value": "#fbc2da",
+      "type": "color",
+      "description": "Ce qui concerne les deux : événements communs, dépenses partagées."
+    },
+    "success": {
+      "value": "#18714a",
+      "type": "color",
+      "description": "Statut Payé, tâche faite. Toujours accompagné du mot."
+    },
+    "warning": {
+      "value": "#9a5200",
+      "type": "color",
+      "description": "Échéance proche (moins de 3 jours). Toujours accompagné du délai."
+    },
+    "danger": {
+      "value": "#b8301c",
+      "type": "color",
+      "description": "Retard, erreur. Toujours accompagné du mot."
+    },
+    "focus": {
+      "value": "#0a66cc",
+      "type": "color",
+      "description": "Anneau de focus clavier, 2px plein, décalé de 2px."
+    },
+    "data-1": {
+      "value": "#6a5fd8",
+      "type": "color",
+      "description": "Série 1 des graphiques, et toujours la personne A (lavande). Ordre fixe, jamais permuté. Marques uniquement, jamais du texte."
+    },
+    "data-2": {
+      "value": "#d4701c",
+      "type": "color",
+      "description": "Série 2, et toujours la personne B (pêche). Ordre fixe, jamais permuté. Marques uniquement, jamais du texte."
+    },
+    "data-3": {
+      "value": "#167a5a",
+      "type": "color",
+      "description": "Série 3 (vert). Ordre fixe, jamais permuté. Marques uniquement, jamais du texte."
+    },
+    "data-4": {
+      "value": "#2f86d6",
+      "type": "color",
+      "description": "Série 4 (bleu), pôle positif des graphiques divergents. Ordre fixe, jamais permuté. Marques uniquement, jamais du texte."
+    },
+    "data-5": {
+      "value": "#d9487a",
+      "type": "color",
+      "description": "Série 5 (rose). Ordre fixe, jamais permuté. Marques uniquement, jamais du texte."
+    },
+    "data-6": {
+      "value": "#8f830a",
+      "type": "color",
+      "description": "Série 6 (olive). Au-delà de 6 séries, regrouper en « Autres ». Ordre fixe, jamais permuté. Marques uniquement, jamais du texte."
+    },
+    "seq-1": {
+      "value": "#e1f4ea",
+      "type": "color",
+      "description": "Échelle séquentielle (intensité), pas 1 sur 5, du plus faible au plus fort. Calendrier de dépenses."
+    },
+    "seq-2": {
+      "value": "#a9e3c8",
+      "type": "color",
+      "description": "Échelle séquentielle (intensité), pas 2 sur 5, du plus faible au plus fort. Calendrier de dépenses."
+    },
+    "seq-3": {
+      "value": "#5cbf93",
+      "type": "color",
+      "description": "Échelle séquentielle (intensité), pas 3 sur 5, du plus faible au plus fort. Calendrier de dépenses."
+    },
+    "seq-4": {
+      "value": "#1f8058",
+      "type": "color",
+      "description": "Échelle séquentielle (intensité), pas 4 sur 5, du plus faible au plus fort. Calendrier de dépenses."
+    },
+    "seq-5": {
+      "value": "#11573d",
+      "type": "color",
+      "description": "Échelle séquentielle (intensité), pas 5 sur 5, du plus faible au plus fort. Calendrier de dépenses."
+    },
+    "div-pos": {
+      "value": "#2f86d6",
+      "type": "color",
+      "description": "Graphique divergent : côté positif (épargné, sous le budget)."
+    },
+    "div-neg": {
+      "value": "#d4701c",
+      "type": "color",
+      "description": "Graphique divergent : côté négatif (dépassé). Bleu et orange restent distincts pour les daltoniens."
+    },
+    "chart-grid": {
+      "value": "#ebe7e2",
+      "type": "color",
+      "description": "Lignes de grille et ligne de base, 1px plein."
+    },
+    "chart-muted": {
+      "value": "#9a93a3",
+      "type": "color",
+      "description": "Courbe secondaire (sparkline, période précédente)."
+    }
+  },
+  "Sombre": {
+    "canvas": {
+      "value": "#131116",
+      "type": "color",
+      "description": "Fond d'écran de toutes les pages."
+    },
+    "surface": {
+      "value": "#1e1b22",
+      "type": "color",
+      "description": "Cartes, feuilles, barre d'onglets."
+    },
+    "surface-sunken": {
+      "value": "#29252e",
+      "type": "color",
+      "description": "Cartes neutres (factures, recettes), champs de saisie, pastilles non sélectionnées."
+    },
+    "line": {
+      "value": "#3a3541",
+      "type": "color",
+      "description": "Filets, bordures de pastilles et de champs."
+    },
+    "ink": {
+      "value": "#f4f1f6",
+      "type": "color",
+      "description": "Texte principal sur canvas, surface, surface-sunken et sur toutes les couleurs pastel. Remplit la pastille sélectionnée."
+    },
+    "ink-muted": {
+      "value": "#ada6b6",
+      "type": "color",
+      "description": "Texte secondaire (heures, métadonnées) sur canvas, surface et surface-sunken."
+    },
+    "on-ink": {
+      "value": "#131116",
+      "type": "color",
+      "description": "Texte sur un fond ink (pastille sélectionnée, bulle sombre)."
+    },
+    "action": {
+      "value": "#5aa8ff",
+      "type": "color",
+      "description": "Action principale : bouton primaire, bouton +, coche validée, date du jour. Texte action sur canvas et surface."
+    },
+    "on-action": {
+      "value": "#0a1626",
+      "type": "color",
+      "description": "Texte et icônes posés sur action."
+    },
+    "action-soft": {
+      "value": "#172a42",
+      "type": "color",
+      "description": "Fond teinté derrière une info liée à une action (rappel, lien)."
+    },
+    "marque": {
+      "value": "#d60b52",
+      "type": "color",
+      "description": "Magenta exact du logo Nous deux, identique dans les deux thèmes. Réservé au logo et à l'icône d'app ; dans l'interface, utilise heart."
+    },
+    "heart": {
+      "value": "#ff6b9b",
+      "type": "color",
+      "description": "Le couple et la marque : magenta du logo. Match, coeur, moments à deux, bouton « On matche ? ». Jamais pour une erreur. Texte heart sur canvas et surface (4,7:1 et plus)."
+    },
+    "on-heart": {
+      "value": "#2a0a12",
+      "type": "color",
+      "description": "Texte posé sur heart."
+    },
+    "heart-soft": {
+      "value": "#3b1b23",
+      "type": "color",
+      "description": "Fond des messages du partenaire et des bandeaux de match."
+    },
+    "lavande": {
+      "value": "#302e55",
+      "type": "color",
+      "description": "Catégorie Sport et loisirs, partenaire A. Texte ink."
+    },
+    "rose": {
+      "value": "#4b2439",
+      "type": "color",
+      "description": "Catégorie Repas et sorties à deux. Texte ink."
+    },
+    "lilas": {
+      "value": "#41294b",
+      "type": "color",
+      "description": "Catégorie Famille et enfants. Texte ink."
+    },
+    "menthe": {
+      "value": "#183f33",
+      "type": "color",
+      "description": "Catégorie Courses et maison. Texte ink."
+    },
+    "beurre": {
+      "value": "#3f3816",
+      "type": "color",
+      "description": "Catégorie Notes et idées, tirelire, mise en avant légère. Texte ink."
+    },
+    "peche": {
+      "value": "#4a2d1c",
+      "type": "color",
+      "description": "Partenaire B, catégorie Voyages. Texte ink."
+    },
+    "citron": {
+      "value": "#3b4712",
+      "type": "color",
+      "description": "Énergie, bonne nouvelle, cartes héros et stickers. Texte ink."
+    },
+    "sapin": {
+      "value": "#2c6a50",
+      "type": "color",
+      "description": "Module Plantes : panneaux et cartes plante. Texte on-sapin."
+    },
+    "on-sapin": {
+      "value": "#fff7e3",
+      "type": "color",
+      "description": "Texte crème posé sur sapin."
+    },
+    "eye": {
+      "value": "#ffffff",
+      "type": "color",
+      "description": "Blanc des yeux des mascottes, identique dans les deux thèmes."
+    },
+    "pupil": {
+      "value": "#1d1a23",
+      "type": "color",
+      "description": "Pupilles et sourcils des mascottes, identique dans les deux thèmes."
+    },
+    "buddy-lavande": {
+      "value": "#cdcdf5",
+      "type": "color",
+      "description": "Corps des mascottes (Buddy) et de la tirelire en lavande, identique dans les deux thèmes pour garder des mascottes vives en sombre."
+    },
+    "buddy-rose": {
+      "value": "#fbc2da",
+      "type": "color",
+      "description": "Corps des mascottes (Buddy) et de la tirelire en rose, identique dans les deux thèmes pour garder des mascottes vives en sombre."
+    },
+    "buddy-lilas": {
+      "value": "#eac4ee",
+      "type": "color",
+      "description": "Corps des mascottes (Buddy) et de la tirelire en lilas, identique dans les deux thèmes pour garder des mascottes vives en sombre."
+    },
+    "buddy-menthe": {
+      "value": "#b0ead5",
+      "type": "color",
+      "description": "Corps des mascottes (Buddy) et de la tirelire en menthe, identique dans les deux thèmes pour garder des mascottes vives en sombre."
+    },
+    "buddy-beurre": {
+      "value": "#faec94",
+      "type": "color",
+      "description": "Corps des mascottes (Buddy) et de la tirelire en beurre, identique dans les deux thèmes pour garder des mascottes vives en sombre."
+    },
+    "buddy-peche": {
+      "value": "#ffd4ba",
+      "type": "color",
+      "description": "Corps des mascottes (Buddy) et de la tirelire en peche, identique dans les deux thèmes pour garder des mascottes vives en sombre."
+    },
+    "buddy-citron": {
+      "value": "#cbef5c",
+      "type": "color",
+      "description": "Corps des mascottes (Buddy) et de la tirelire en citron, identique dans les deux thèmes pour garder des mascottes vives en sombre."
+    },
+    "leaf": {
+      "value": "#8fd16f",
+      "type": "color",
+      "description": "Feuillage des mascottes plantes en forme. Identique dans les deux thèmes, décoratif."
+    },
+    "leaf-deep": {
+      "value": "#3f8f45",
+      "type": "color",
+      "description": "Tiges, nervures et petites feuilles des mascottes plantes. Identique dans les deux thèmes, décoratif."
+    },
+    "leaf-dry": {
+      "value": "#c9cc62",
+      "type": "color",
+      "description": "Feuillage d'une plante qui a soif. Identique dans les deux thèmes, décoratif."
+    },
+    "leaf-wilt": {
+      "value": "#c4a067",
+      "type": "color",
+      "description": "Feuillage d'une plante qui fane, pas arrosée depuis trop longtemps. Identique dans les deux thèmes, décoratif."
+    },
+    "water": {
+      "value": "#5aa8ff",
+      "type": "color",
+      "description": "Gouttes d'eau et de sueur des mascottes. Identique dans les deux thèmes, décoratif."
+    },
+    "partner-a": {
+      "value": "#302e55",
+      "type": "color",
+      "description": "Couleur de la personne A : avatar, événements perso dans l'agenda partagé."
+    },
+    "partner-b": {
+      "value": "#4a2d1c",
+      "type": "color",
+      "description": "Couleur de la personne B : avatar, événements perso dans l'agenda partagé."
+    },
+    "together": {
+      "value": "#4b2439",
+      "type": "color",
+      "description": "Ce qui concerne les deux : événements communs, dépenses partagées."
+    },
+    "success": {
+      "value": "#62d6a2",
+      "type": "color",
+      "description": "Statut Payé, tâche faite. Toujours accompagné du mot."
+    },
+    "warning": {
+      "value": "#ffb866",
+      "type": "color",
+      "description": "Échéance proche (moins de 3 jours). Toujours accompagné du délai."
+    },
+    "danger": {
+      "value": "#ff8c78",
+      "type": "color",
+      "description": "Retard, erreur. Toujours accompagné du mot."
+    },
+    "focus": {
+      "value": "#5aa8ff",
+      "type": "color",
+      "description": "Anneau de focus clavier, 2px plein, décalé de 2px."
+    },
+    "data-1": {
+      "value": "#7f74e6",
+      "type": "color",
+      "description": "Série 1 des graphiques, et toujours la personne A (lavande). Ordre fixe, jamais permuté. Marques uniquement, jamais du texte."
+    },
+    "data-2": {
+      "value": "#d27426",
+      "type": "color",
+      "description": "Série 2, et toujours la personne B (pêche). Ordre fixe, jamais permuté. Marques uniquement, jamais du texte."
+    },
+    "data-3": {
+      "value": "#1b9470",
+      "type": "color",
+      "description": "Série 3 (vert). Ordre fixe, jamais permuté. Marques uniquement, jamais du texte."
+    },
+    "data-4": {
+      "value": "#3a8ae0",
+      "type": "color",
+      "description": "Série 4 (bleu), pôle positif des graphiques divergents. Ordre fixe, jamais permuté. Marques uniquement, jamais du texte."
+    },
+    "data-5": {
+      "value": "#d9578a",
+      "type": "color",
+      "description": "Série 5 (rose). Ordre fixe, jamais permuté. Marques uniquement, jamais du texte."
+    },
+    "data-6": {
+      "value": "#9d9016",
+      "type": "color",
+      "description": "Série 6 (olive). Au-delà de 6 séries, regrouper en « Autres ». Ordre fixe, jamais permuté. Marques uniquement, jamais du texte."
+    },
+    "seq-1": {
+      "value": "#1d2a25",
+      "type": "color",
+      "description": "Échelle séquentielle (intensité), pas 1 sur 5, du plus faible au plus fort. Calendrier de dépenses."
+    },
+    "seq-2": {
+      "value": "#1f4a3a",
+      "type": "color",
+      "description": "Échelle séquentielle (intensité), pas 2 sur 5, du plus faible au plus fort. Calendrier de dépenses."
+    },
+    "seq-3": {
+      "value": "#2c7a5a",
+      "type": "color",
+      "description": "Échelle séquentielle (intensité), pas 3 sur 5, du plus faible au plus fort. Calendrier de dépenses."
+    },
+    "seq-4": {
+      "value": "#4fb487",
+      "type": "color",
+      "description": "Échelle séquentielle (intensité), pas 4 sur 5, du plus faible au plus fort. Calendrier de dépenses."
+    },
+    "seq-5": {
+      "value": "#a3e8c8",
+      "type": "color",
+      "description": "Échelle séquentielle (intensité), pas 5 sur 5, du plus faible au plus fort. Calendrier de dépenses."
+    },
+    "div-pos": {
+      "value": "#3a8ae0",
+      "type": "color",
+      "description": "Graphique divergent : côté positif (épargné, sous le budget)."
+    },
+    "div-neg": {
+      "value": "#d27426",
+      "type": "color",
+      "description": "Graphique divergent : côté négatif (dépassé). Bleu et orange restent distincts pour les daltoniens."
+    },
+    "chart-grid": {
+      "value": "#2f2b35",
+      "type": "color",
+      "description": "Lignes de grille et ligne de base, 1px plein."
+    },
+    "chart-muted": {
+      "value": "#6f6878",
+      "type": "color",
+      "description": "Courbe secondaire (sparkline, période précédente)."
+    }
+  },
+  "Global": {
+    "space-1": {
+      "value": "4px",
+      "type": "spacing"
+    },
+    "space-2": {
+      "value": "8px",
+      "type": "spacing"
+    },
+    "space-3": {
+      "value": "12px",
+      "type": "spacing"
+    },
+    "space-4": {
+      "value": "16px",
+      "type": "spacing"
+    },
+    "space-5": {
+      "value": "20px",
+      "type": "spacing"
+    },
+    "space-6": {
+      "value": "24px",
+      "type": "spacing"
+    },
+    "space-8": {
+      "value": "32px",
+      "type": "spacing"
+    },
+    "space-10": {
+      "value": "40px",
+      "type": "spacing"
+    },
+    "radius-sm": {
+      "value": "8px",
+      "type": "borderRadius"
+    },
+    "radius-md": {
+      "value": "16px",
+      "type": "borderRadius"
+    },
+    "radius-lg": {
+      "value": "24px",
+      "type": "borderRadius"
+    },
+    "radius-xl": {
+      "value": "32px",
+      "type": "borderRadius"
+    },
+    "radius-pill": {
+      "value": "999px",
+      "type": "borderRadius"
+    },
+    "type-display": {
+      "value": {
+        "fontFamily": "Figtree",
+        "fontWeight": "800",
+        "fontSize": "40px",
+        "lineHeight": "44px",
+        "letterSpacing": "-0.02em"
+      },
+      "type": "typography"
+    },
+    "type-title": {
+      "value": {
+        "fontFamily": "Figtree",
+        "fontWeight": "700",
+        "fontSize": "28px",
+        "lineHeight": "32px",
+        "letterSpacing": "-0.01em"
+      },
+      "type": "typography"
+    },
+    "type-headline": {
+      "value": {
+        "fontFamily": "Figtree",
+        "fontWeight": "700",
+        "fontSize": "22px",
+        "lineHeight": "28px",
+        "letterSpacing": "0"
+      },
+      "type": "typography"
+    },
+    "type-body-lg": {
+      "value": {
+        "fontFamily": "Figtree",
+        "fontWeight": "500",
+        "fontSize": "18px",
+        "lineHeight": "26px",
+        "letterSpacing": "0"
+      },
+      "type": "typography"
+    },
+    "type-body": {
+      "value": {
+        "fontFamily": "Figtree",
+        "fontWeight": "400",
+        "fontSize": "16px",
+        "lineHeight": "22px",
+        "letterSpacing": "0"
+      },
+      "type": "typography"
+    },
+    "type-label": {
+      "value": {
+        "fontFamily": "Figtree",
+        "fontWeight": "600",
+        "fontSize": "14px",
+        "lineHeight": "18px",
+        "letterSpacing": "0"
+      },
+      "type": "typography"
+    },
+    "type-caption": {
+      "value": {
+        "fontFamily": "Figtree",
+        "fontWeight": "500",
+        "fontSize": "13px",
+        "lineHeight": "16px",
+        "letterSpacing": "0"
+      },
+      "type": "typography"
+    },
+    "type-amount": {
+      "value": {
+        "fontFamily": "Figtree",
+        "fontWeight": "800",
+        "fontSize": "44px",
+        "lineHeight": "48px",
+        "letterSpacing": "-0.02em"
+      },
+      "type": "typography"
+    },
+    "type-amount-sm": {
+      "value": {
+        "fontFamily": "Figtree",
+        "fontWeight": "700",
+        "fontSize": "22px",
+        "lineHeight": "28px",
+        "letterSpacing": "0"
+      },
+      "type": "typography"
+    },
+    "type-romance": {
+      "value": {
+        "fontFamily": "Fraunces",
+        "fontWeight": "500 Italic",
+        "fontSize": "34px",
+        "lineHeight": "38px",
+        "letterSpacing": "0"
+      },
+      "type": "typography"
+    },
+    "type-sticker": {
+      "value": {
+        "fontFamily": "Fraunces",
+        "fontWeight": "800 Italic",
+        "fontSize": "30px",
+        "lineHeight": "34px",
+        "letterSpacing": "0"
+      },
+      "type": "typography"
+    },
+    "type-hero": {
+      "value": {
+        "fontFamily": "Figtree",
+        "fontWeight": "800",
+        "fontSize": "44px",
+        "lineHeight": "44px",
+        "letterSpacing": "-0.02em"
+      },
+      "type": "typography"
+    }
+  }
+}

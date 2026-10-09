@@ -1,5 +1,5 @@
 import {useEffect,useLayoutEffect,useRef,useState,type ReactNode} from 'react';
-import {Heart,X} from 'lucide-react';
+import {Heart,X} from './icons';
 import {swipeAxis,swipeChoice} from '../lib/swipe';
 export default function MealSwipeCard({children,onVote,recipeId,title}:{children:ReactNode;onVote:(like:boolean)=>void;recipeId?:string;title?:string}){
  const card=useRef<HTMLElement>(null),frame=useRef(0),timer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined);
@@ -20,6 +20,6 @@ export default function MealSwipeCard({children,onVote,recipeId,title}:{children
  onPointerMove={e=>{const g=gesture.current;if(!g)return;const dx=e.clientX-g.x,dy=e.clientY-g.y;g.axis=swipeAxis(dx,dy,g.axis);if(g.axis==='x')paint(dx,true);}}
  onPointerCancel={()=>{gesture.current=null;paint(0);}}
  onPointerUp={e=>{const g=gesture.current;if(!g)return;gesture.current=null;const choice=swipeChoice(e.clientX-g.x,e.clientY-g.y,performance.now()-g.at,e.currentTarget.clientWidth,g.axis);if(choice!==null)vote(choice);else paint(0);}}>
- {children}<strong className="swipe-stamp stamp-yes" aria-hidden="true">MIAM !</strong><strong className="swipe-stamp stamp-no" aria-hidden="true">UNE AUTRE !</strong></article>
- <div className="swipe-controls"><button className="swipe-pass" disabled={leaving} onClick={()=>vote(false)}><X size={24} aria-hidden="true"/>Une autre envie</button><button className="swipe-like" disabled={leaving} onClick={()=>vote(true)}><Heart size={24} aria-hidden="true"/>Oh oui, miam !</button></div></>;
+ {children}<strong className="swipe-stamp stamp-yes" aria-hidden="true">Miam !</strong><strong className="swipe-stamp stamp-no" aria-hidden="true">Une autre !</strong></article>
+ <div className="swipe-controls nd-swipe"><button className="swipe-pass nd-swipe-btn nd-swipe-no" aria-label="Une autre envie" disabled={leaving} onClick={()=>vote(false)}><X size={24} aria-hidden="true"/><span className="sr-only">Une autre envie</span></button><button className="swipe-like nd-swipe-btn nd-swipe-yes" aria-label="Oh oui, miam !" disabled={leaving} onClick={()=>vote(true)}><Heart size={24} aria-hidden="true"/><span className="sr-only">Oh oui, miam !</span></button></div></>;
 }
