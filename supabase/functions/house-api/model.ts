@@ -1,3 +1,4 @@
+import {synchronizeInvitation} from './invitation-agenda.ts';
 import {validDate,categories} from './domain.ts';
 import {z} from 'npm:zod@3.25.76';
 import {mealVote,type MealState} from './meals.ts';
@@ -55,7 +56,7 @@ export function householdMutation(s:State,p:any,actor:number){
   if(!s.household)throw new ApiError(400,'Configurez votre maison.');
   const list=action.includes('appointment')?'appointments':action.includes('entry')?'entries':action==='item'||action==='delete-item'?'items':null;
   if(!list)throw new ApiError(400,'Action inconnue.');
-  const existing=s[list].find(x=>x.id===payload?.id);if(existing&&existing.owner!==actor)throw new ApiError(403,'Seul l’auteur peut modifier ou supprimer cet élément.');
+  const existing=s[list].find(x=>x.id===payload?.id);if(list==='appointments'&&existing?.sourceIdeaId)throw new ApiError(403,'Ce rendez-vous vient d’une invitation acceptée. Modifiez ou annulez l’invitation depuis Nos idées.');if(existing&&existing.owner!==actor)throw new ApiError(403,'Seul l’auteur peut modifier ou supprimer cet élément.');
   if(list==='entries'&&!action.startsWith('delete-')&&payload?.member!==actor)throw new ApiError(403,'Enregistrez uniquement vos propres paiements.');
   if(action.startsWith('delete-')){const v=deleteInput.parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0||s[list][i].version!==v.version)conflict();s[list].splice(i,1);}
   else{const v=(list==='entries'?entryInput:list==='items'?itemInput:appointmentInput).parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0&&v.version!==0||i>=0&&s[list][i].version!==v.version)conflict();if(list==='items'&&existing&&existing.kind!==v.kind)throw new ApiError(400,'Le type de liste ne peut pas changer.');if(list==='items'&&v.kind==='shopping'&&((existing&&v.done!==existing.done)||(!existing&&v.done)))throw new ApiError(400,'Utilisez la case achat pour cocher un article.');const value={...v,...(list==='items'&&v.kind==='shopping'?{note:v.note??existing?.note??'',photoId:v.photoId===undefined?existing?.photoId??null:v.photoId,weekStart:weekMonday(v.weekStart||existing?.weekStart||parisToday()),purchasedBy:existing?.purchasedBy??null,purchasedAt:existing?.purchasedAt??null}:{}),owner:actor,version:v.version+1,createdAt:i<0?now:s[list][i].createdAt};if(i<0)s[list].push(value);else s[list][i]=value;}
@@ -93,6 +94,7 @@ function lifeMutation(s:State,action:string,p:any,actor:number,now:string){
  const isIdea=action.includes('idea');const list=isIdea?(s.ideas??=[]):(s.plants??=[]);const old=list.find(x=>x.id===p?.id);const date=parisDate();
  if(action==='idea-response'){
   const v=ideaResponseInput.parse(p);if(!old||old.owner===actor)throw new ApiError(403,'Seule la personne invitée peut répondre.');
+  if(old.version===v.version+1&&old.status===v.status&&old.responseNote===v.responseNote)return null;
   if(old.version!==v.version||old.status!=='pending')conflict();Object.assign(old,{status:v.status,responseNote:v.responseNote,respondedAt:now,version:old.version+1});
  }else if(action==='plant-care-all'){
   const v=deleteInput.parse(p);if(!old||old.version!==v.version)conflict();
@@ -115,6 +117,7 @@ function lifeMutation(s:State,action:string,p:any,actor:number,now:string){
    if(old)list[list.indexOf(old)]=value;else list.push(value);
   }
  }
+ if(isIdea)synchronizeInvitation(s,p.id,now);
  const note={category:isIdea?'ideas':'plants',message:action==='idea-response'?(p.status==='accepted'?'a accepté votre invitation.':'a répondu « pas cette fois » à votre invitation.'):action==='idea'?'vous propose une activité à deux.':action.startsWith('plant-care')?'a pris soin d’une plante.':action==='plant'?'a mis à jour le petit jardin.':'a supprimé une fiche.'};
  s.sequence=(s.sequence||0)+1;s.activity.unshift({id:s.sequence,actor,...note,createdAt:now});s.activity=s.activity.slice(0,500);return note;
 }

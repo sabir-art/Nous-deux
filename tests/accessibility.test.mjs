@@ -15,6 +15,7 @@ for(const theme of ['light','dark']){
  function check(fg,bg,label,threshold=4.5){const r=contrast(tokens[fg],tokens[bg]);assert(r>=threshold,`${theme}: ${label}: ${r.toFixed(2)} < ${threshold}`);count++;if(threshold===4.5)min=Math.min(min,r);}
  for(const bg of ['--canvas','--surface','--surface-sunken','--action-soft']){for(const fg of ['--ink','--ink-muted'])check(fg,bg,fg+' on '+bg);check('--focus',bg,'Keyboard focus',3);}
  for(const bg of ['--lavande','--rose','--lilas','--menthe','--beurre','--peche','--citron','--heart-soft'])check('--ink',bg,'Text on '+bg);
+ for(const bg of ['--rose','--lavande','--peche','--beurre','--lilas'])check('--heart',bg,'Floating navigation active icon',3);
  for(let step=1;step<=5;step++)check(step>=4?'--surface':'--ink','--seq-'+step,'Calendar spending heatmap '+step);
  check('--on-action','--action','Action button');check('--on-heart','--heart','Love button');check('--on-ink','--ink','Own message');check('--on-sapin','--sapin','Plant card');check('--pupil','--buddy-citron','Plant care button');
  for(const status of ['--success','--warning','--danger'])check(status,'--surface','Status '+status);

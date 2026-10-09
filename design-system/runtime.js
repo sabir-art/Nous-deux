@@ -211,7 +211,7 @@ import * as React from 'react';
     var t = useTip(), series = p.series || [{ name: p.title }], W = 320, H = 170, T = 34, unit = p.unit, n = series.length;
     var max = 0; p.data.forEach(function (d) { d.values.forEach(function (v) { max = Math.max(max, v); }); });
     var band = W / p.data.length, bw = n > 1 ? 12 : 18, gap = 4, gw = n * bw + (n - 1) * gap, cur = p.current != null ? p.current : p.data.length - 1;
-    var y = function (v) { return T + (H - T) * (1 - v / max); };
+    var y = function (v) { return T + (H - T) * (1 - v / (max || 1)); };
     var peak = null; p.data.forEach(function (d, i) { d.values.forEach(function (v, j) { if (!peak || v > peak.v) peak = { v: v, i: i, j: j }; }); });
     var total = 0; p.data[cur].values.forEach(function (v) { total += v; });
     return h(ChartFrame, { title: p.title, subtitle: p.subtitle, emoji: p.emoji, deco: p.deco || "lavande", tip: t[0], headline: p.headline || money(total, unit), badge: p.badge,
@@ -235,7 +235,7 @@ import * as React from 'react';
     var t = useTip(), series = p.series, W = 320, H = 170, T = 24, B = 10, X0 = 10, X1 = 310, unit = p.unit;
     var max = 0, min = Infinity; series.forEach(function (s) { s.values.forEach(function (v) { max = Math.max(max, v); min = Math.min(min, v); }); }); if (p.goal) max = Math.max(max, p.goal);
     max = max * 1.08; var lo = p.fromZero ? 0 : Math.max(0, min - (max - min) * .35);
-    var n = p.labels.length, x = function (i) { return X0 + (X1 - X0) * i / (n - 1); }, y = function (v) { return T + (H - T - B) * (1 - (v - lo) / (max - lo)); };
+    var n = p.labels.length, x = function (i) { return X0 + (X1 - X0) * i / (n - 1); }, y = function (v) { return T + (H - T - B) * (1 - (v - lo) / (max - lo || 1)); };
     var hov = t[0] && t[0].i, last = n - 1;
     return h(ChartFrame, { title: p.title, subtitle: p.subtitle, emoji: p.emoji, deco: p.deco || "menthe", tip: t[0], headline: p.headline || money(series[0].values[last], unit), badge: p.badge,
       legend: series.map(function (s, i) { return { name: s.name, who: s.who, color: colOf(s.color, i), line: true }; }),

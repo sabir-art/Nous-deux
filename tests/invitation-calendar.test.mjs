@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {realpathSync} from 'node:fs';
+const {build}=createRequire(realpathSync('node_modules/wrangler/package.json'))('esbuild');
+const b=await build({entryPoints:['supabase/functions/house-api/model.ts'],bundle:true,platform:'node',format:'esm',write:false,plugins:[{name:'npm',setup(x){x.onResolve({filter:/^npm:zod@/},()=>({path:realpathSync('node_modules/zod/index.js')}));}}]});
+const {householdMutation:change,visibleAppointments}=await import('data:text/javascript;base64,'+Buffer.from(b.outputFiles[0].text).toString('base64'));
+const home=()=>({household:{first:'A',second:'B',version:1},entries:[],items:[],appointments:[],activity:[],devices:[],sequence:0});
+const idea=(extras={})=>({id:crypto.randomUUID(),version:0,title:'Une table à deux',description:'Notre soirée',category:'restaurant',date:'2026-10-11',time:'19:30',location:'En terrasse',place:{name:'La table',address:'12 rue Exemple, Paris',lat:48.85,lon:2.35,source:'manual'},...extras});
+const s=home(),i=idea();change(s,{action:'idea',payload:i},1);assert.equal(s.appointments.length,0);
+const response={id:i.id,version:1,status:'accepted',responseNote:'Avec plaisir'};
+change(s,{action:'idea-response',payload:response},0);assert.equal(s.appointments.length,1);
+let event=s.appointments[0];assert.equal(event.sourceIdeaId,i.id);assert.equal(event.owner,1);assert.equal(event.visibility,'shared');assert.equal(event.person,-1);assert.equal(event.status,'scheduled');assert.equal(event.date,i.date);assert.equal(event.time,i.time);assert.deepEqual(event.place,i.place);assert.equal(event.category,'party');assert(event.location.includes('En terrasse'));
+assert.deepEqual(visibleAppointments(s,0),visibleAppointments(s,1));const activity=s.activity.length;
+change(s,{action:'idea-response',payload:response},0);assert.equal(s.appointments.length,1);assert.equal(s.activity.length,activity,'A retry creates no duplicate event or activity');
+for(const actor of [0,1]){assert.throws(()=>change(s,{action:'appointment',payload:{...event,date:'2026-10-12'}},actor),e=>e.status===403);assert.throws(()=>change(s,{action:'delete-appointment',payload:event},actor),e=>e.status===403);}
+assert.throws(()=>change(s,{action:'idea',payload:{...i,version:2,title:'Un faux changement'}},0),e=>e.status===403);
+change(s,{action:'idea',payload:{...i,version:2,date:'2026-10-12',time:''}},1);assert.equal(s.appointments.length,0,'Reproposing withdraws the agreed date until new consent');
+assert.throws(()=>change(s,{action:'idea-response',payload:response},0),e=>e.status===409);
+change(s,{action:'idea-response',payload:{...response,version:3}},0);event=s.appointments[0];assert.equal(event.date,'2026-10-12');assert.equal(event.time,'','An invitation without a time is all-day');
+change(s,{action:'delete-idea',payload:{id:i.id,version:4}},1);assert.equal(s.appointments.length,0);
+const unscheduled=idea({date:'',time:''});change(s,{action:'idea',payload:unscheduled},0);change(s,{action:'idea-response',payload:{id:unscheduled.id,version:1,status:'accepted'}},1);assert.equal(s.appointments.length,0,'Undated ideas do not invent a calendar date');
+const declined=idea();change(s,{action:'idea',payload:declined},0);change(s,{action:'idea-response',payload:{id:declined.id,version:1,status:'declined'}},1);assert.equal(s.appointments.length,0);
+const scheduled=idea({category:'trip'});change(s,{action:'idea',payload:scheduled},0);assert.throws(()=>change(s,{action:'idea-response',payload:{id:scheduled.id,version:1,status:'accepted'}},0),e=>e.status===403);change(s,{action:'idea-response',payload:{id:scheduled.id,version:1,status:'accepted'}},1);assert.equal(s.appointments[0].category,'travel');
+const normal={id:crypto.randomUUID(),title:'Ma routine',date:'2026-10-10',time:'08:00',category:'personal',person:0,status:'scheduled',bookBy:'',note:'',location:'',version:0,recurrence:'custom',intervalDays:28,visibility:'private'};
+change(s,{action:'appointment',payload:normal},0);assert.equal(s.appointments.at(-1).intervalDays,28);assert(!visibleAppointments(s,1).some(a=>a.id===normal.id));
+for(const intervalDays of [0,-1,1.5,3651,NaN,undefined])assert.throws(()=>change(s,{action:'appointment',payload:{...normal,id:crypto.randomUUID(),intervalDays}},0));
+for(const intervalDays of [1,6,15,26,27,3650]){const row={...normal,id:crypto.randomUUID(),intervalDays};change(s,{action:'appointment',payload:row},0);assert.equal(s.appointments.at(-1).intervalDays,intervalDays);}
+assert.throws(()=>change(s,{action:'appointment',payload:{...normal,id:crypto.randomUUID(),status:'to_book',date:'',time:''}},0));
+console.log('PASS: accepted invitations create one shared event, address/time propagation, all-day dates, retries, author permissions, consent renewal, deletion and undated/declined ideas.');
+console.log('PASS: validated custom recurrence, private visibility, invalid/decimal/missing intervals and appointments still to book.');

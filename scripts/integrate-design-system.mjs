@@ -10,6 +10,8 @@ runtime=runtime.replace('s[0] === t[0] ? "page"','(Object.hasOwn(p, "active") ? 
 runtime=runtime.replace('d.day === s[0] ? "date"','d.day === (p.selected !== undefined ? p.selected : s[0]) ? "date"');
 runtime=runtime.replace('background: "var(--" + (w === "a"', 'background: "var(--" + (d.tones && d.tones[i] ? d.tones[i] : w === "a"');
 // Budget data can legitimately be empty. Never display NaN or round away cents.
+runtime=runtime.replace('1 - v / max', '1 - v / (max || 1)');
+runtime=runtime.replace('(v - lo) / (max - lo)', '(v - lo) / (max - lo || 1)');
 runtime=runtime.replaceAll('Math.round(it.value / total * 100)','(total ? Math.round(it.value / total * 100) : 0)');
 runtime=runtime.replace('flexGrow: it.value,','flexGrow: total ? it.value : 1,');
 runtime=runtime.replace('Math.round(n).toLocaleString("fr-FR")','n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })');

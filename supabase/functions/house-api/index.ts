@@ -1,3 +1,4 @@
+import {uploadAttachment,signedAttachment,deleteAttachment,AttachmentError} from './attachments.ts';
 import {searchPlaces,placeMutation,PlaceError} from './places.ts';
 import {uploadVoice,signedVoice,deleteVoice,VoiceError} from './voices.ts';
 import {validAIKey,verifyAIKey,AISettingsError} from './ai-settings.ts';
@@ -43,7 +44,7 @@ export async function handler(req:Request):Promise<Response>{
  if(!['GET','POST'].includes(req.method))return json({error:'Méthode non autorisée.'},405);
  try{
  const url=new URL(req.url),route=url.searchParams.get('route')||'',token=req.headers.get('x-house-session')||'';
- let p:any={};if(req.method==='POST'&&route!=='voice-upload'){if(!req.headers.get('content-type')?.includes('application/json'))return json({error:'Format invalide.'},415);const raw=await req.text();if(raw.length>(route==='photos'?361000:36000))return json({error:'Contenu trop long.'},413);p=JSON.parse(raw);}
+ let p:any={};if(req.method==='POST'&&!['voice-upload','attachment-upload'].includes(route)){if(!req.headers.get('content-type')?.includes('application/json'))return json({error:'Format invalide.'},415);const raw=await req.text();if(raw.length>(route==='photos'?361000:36000))return json({error:'Contenu trop long.'},413);p=JSON.parse(raw);}
  if(route==='plant-reminders'){
   if(req.method!=='POST')return json({error:'Méthode non autorisée.'},405);
   const credential=req.headers.get('x-plant-reminder')||'';if(!/^[a-f0-9]{64}$/.test(credential))return json({error:'Accès réservé au planificateur.'},401);
@@ -72,6 +73,8 @@ export async function handler(req:Request):Promise<Response>{
  if(!/^[a-f0-9]{64}$/.test(token))return json({error:'Connectez-vous à votre maison.'},401);
  const sessions=await db('nd_sessions?token_hash=eq.'+await hash(token)+'&expires_at=gt.'+Date.now()+'&select=token_hash,member');if(!sessions.length||![0,1].includes(sessions[0].member))return json({error:'Votre session a expiré. Reconnectez-vous.'},401);
  const actor=sessions[0].member;
+ if(route==='attachment-upload'){if(req.method!=='POST')return json({error:'Méthode non autorisée.'},405);return json(await uploadAttachment(req,actor,db,Deno.env.get('SUPABASE_URL')!,secret()));}
+ if(route==='attachments'){if(req.method==='GET')return json(await signedAttachment(url.searchParams.get('id')||'',actor,db,Deno.env.get('SUPABASE_URL')!,secret()));if(p.action!=='discard')throw new ApiError(400,'Action inconnue.');await deleteAttachment(p.id,actor,db,Deno.env.get('SUPABASE_URL')!,secret());return json({ok:true});}
  if(route==='voice-upload'){if(req.method!=='POST')return json({error:'Méthode non autorisée.'},405);return json(await uploadVoice(req,actor,db,Deno.env.get('SUPABASE_URL')!,secret()));}
  if(route==='voices'){if(req.method==='GET')return json(await signedVoice(url.searchParams.get('id')||'',actor,db,Deno.env.get('SUPABASE_URL')!,secret()));if(p.action!=='discard')throw new ApiError(400,'Action inconnue.');await deleteVoice(p.id,actor,db,Deno.env.get('SUPABASE_URL')!,secret());return json({ok:true});}
 
@@ -133,7 +136,7 @@ export async function handler(req:Request):Promise<Response>{
   if(req.method==='GET'){
    const before=url.searchParams.get('before');let filter='';
    if(before){const c=chatCursorInput.parse({before,beforeId:url.searchParams.get('beforeId')});filter='&or='+encodeURIComponent(`(created_at.lt.${c.before},and(created_at.eq.${c.before},id.lt.${c.beforeId}))`);}
-   const messages=await db('nd_messages?select=id,member,text,voice_id,voice_duration,created_at,edited_at,version&order=created_at.desc,id.desc&limit=60'+filter);
+   const messages=await db('nd_messages?select=id,member,text,voice_id,voice_duration,attachment_id,attachment_name,attachment_mime,attachment_bytes,created_at,edited_at,version&order=created_at.desc,id.desc&limit=60'+filter);
    return json({messages:messages.reverse(),hasMore:messages.length===60});
   }
   const v=chatInput.parse(p);
@@ -141,11 +144,12 @@ export async function handler(req:Request):Promise<Response>{
    // Stable client UUID makes retries safe; a duplicate never changes an existing message.
    const previous=(await db('nd_messages?id=eq.'+v.id+'&select=id,member'))[0];if(previous){if(previous.member!==actor)throw new ApiError(403,'Ce message appartient à votre moitié.');return json({ok:true});}
    let voice:any=null;if(v.voiceId){voice=(await db('nd_voices?id=eq.'+v.voiceId))[0];if(!voice?.ready||voice.owner!==actor)throw new ApiError(403,'Vous pouvez envoyer uniquement vos propres enregistrements.');if((await db('nd_messages?voice_id=eq.'+v.voiceId+'&select=id&limit=1')).length)throw new ApiError(409,'Ce vocal a déjà été envoyé.');}
-   await db('nd_messages?on_conflict=id','POST',{id:v.id,member:actor,text:v.text||'',...(voice?{voice_id:voice.id,voice_duration:voice.duration_ms}:{})},'resolution=ignore-duplicates,return=representation');return json({ok:true});
+   let attachment:any=null;if(v.attachmentId){attachment=(await db('nd_attachments?id=eq.'+v.attachmentId))[0];if(!attachment?.ready||attachment.owner!==actor)throw new ApiError(403,'Vous pouvez envoyer uniquement vos propres fichiers.');if((await db('nd_messages?attachment_id=eq.'+v.attachmentId+'&select=id&limit=1')).length)throw new ApiError(409,'Ce fichier a déjà été envoyé.');}
+   await db('nd_messages?on_conflict=id','POST',{id:v.id,member:actor,text:v.text||'',...(voice?{voice_id:voice.id,voice_duration:voice.duration_ms}:{}),...(attachment?{attachment_id:attachment.id,attachment_name:attachment.name,attachment_mime:attachment.mime,attachment_bytes:attachment.bytes}:{})},'resolution=ignore-duplicates,return=representation');return json({ok:true});
   }
-  const old=(await db('nd_messages?id=eq.'+v.id))[0];authorizeChat(old,actor,v.version);if(old.voice_id&&v.action==='edit')throw new ApiError(400,'Un vocal ne se modifie pas. Vous pouvez le supprimer.');
+  const old=(await db('nd_messages?id=eq.'+v.id))[0];authorizeChat(old,actor,v.version);if((old.voice_id||old.attachment_id)&&v.action==='edit')throw new ApiError(400,'Un vocal ou un fichier ne se modifie pas. Vous pouvez le supprimer.');
   const rows=await db('nd_messages?id=eq.'+v.id+'&member=eq.'+actor+'&version=eq.'+v.version,v.action==='delete'?'DELETE':'PATCH',v.action==='delete'?undefined:{text:v.text,edited_at:new Date().toISOString(),version:v.version!+1});
-  if(!rows.length)throw new ApiError(409,'Ce message a changé. Actualisez la discussion.');if(v.action==='delete'&&old.voice_id)try{await deleteVoice(old.voice_id,actor,db,Deno.env.get('SUPABASE_URL')!,secret());}catch{/* Message removed; an unlinked attachment remains private to its author if storage is unavailable. */}return json({ok:true});
+  if(!rows.length)throw new ApiError(409,'Ce message a changé. Actualisez la discussion.');if(v.action==='delete'&&old.voice_id)try{await deleteVoice(old.voice_id,actor,db,Deno.env.get('SUPABASE_URL')!,secret());}catch{/* Message removed; an unlinked attachment remains private to its author if storage is unavailable. */}if(v.action==='delete'&&old.attachment_id)try{await deleteAttachment(old.attachment_id,actor,db,Deno.env.get('SUPABASE_URL')!,secret());}catch{/* Unlinked files remain private if storage is temporarily unavailable. */}return json({ok:true});
  }
  if(route==='calls'){
   if(req.method==='GET'){const {data:s}=await state();return json({call:s.call&&s.call.state!=='ended'&&s.call.expiresAt>Date.now()?s.call:null});}
@@ -157,6 +161,6 @@ export async function handler(req:Request):Promise<Response>{
   await mutate(s=>{const d=s.devices.find(d=>d.deviceId===p.deviceId);if(d&&d.member!==actor)throw new ApiError(403,'Cet appareil appartient à un autre compte.');deviceMutation(s,{...p,member:actor});});return json({ok:true});
  }
  return json({error:'Route inconnue.'},404);
- }catch(e){if(e instanceof PlaceError||e instanceof VoiceError||e instanceof ApiError||e instanceof MealError||e instanceof RecipeError||e instanceof AISettingsError)return json({error:e.message},e.status);if(e instanceof SyntaxError||e&&typeof e==='object'&&'issues'in e)return json({error:'Vérifiez les champs du formulaire.'},400);return json({error:'Service temporairement indisponible. Réessayez.'},503);}
+ }catch(e){if(e instanceof AttachmentError||e instanceof PlaceError||e instanceof VoiceError||e instanceof ApiError||e instanceof MealError||e instanceof RecipeError||e instanceof AISettingsError)return json({error:e.message},e.status);if(e instanceof SyntaxError||e&&typeof e==='object'&&'issues'in e)return json({error:'Vérifiez les champs du formulaire.'},400);return json({error:'Service temporairement indisponible. Réessayez.'},503);}
 }
 Deno.serve(handler);

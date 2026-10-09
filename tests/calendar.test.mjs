@@ -27,3 +27,14 @@ for(const y of ['2026','2027'])assert.equal(holidays.filter(x=>x.date.startsWith
 assert(holidays.some(x=>x.title==='Pâques'&&x.date==='2027-03-28'));
 assert(holidays.filter(x=>x.category==='islam'&&x.date.startsWith('2027')).every(x=>x.provisional));
 console.log('PASS: annual birthdays, leap days, monthly clamping, weekly limits, multi-day trips and reference holidays.');
+// Custom day intervals keep their anchor across months, years and daylight-saving changes.
+for(const intervalDays of [1,5,6,7,15,26,27,28]){
+ const custom={...base,date:'2026-10-10',time:'19:30',recurrence:'custom',intervalDays};
+ const rows=occurrences([custom],'2026-10-10','2027-01-31');assert(rows.length>1);
+ for(let i=1;i<rows.length;i++){assert.equal(Date.parse(rows[i].date)-Date.parse(rows[i-1].date),intervalDays*86400000);assert.equal(rows[i].time,'19:30');}
+ assert(rows.every(r=>r.original===custom));
+}
+assert.deepEqual(occurrences([{...base,date:'2026-10-10',recurrence:'custom',intervalDays:15,repeatUntil:'2026-11-09'}],'2026-10-01','2026-12-31').map(a=>a.date),['2026-10-10','2026-10-25','2026-11-09']);
+assert.deepEqual(occurrences([{...base,date:'2026-12-20',endDate:'2026-12-22',recurrence:'custom',intervalDays:15}],'2027-01-04','2027-01-04').map(a=>[a.date,a.endDate]),[['2027-01-04','2027-01-06']]);
+assert(occurrences([{...base,date:'2000-01-01',recurrence:'custom',intervalDays:27}],'2050-01-01','2050-12-31').length<15,'Distant series jump straight into the requested period');
+console.log('PASS: arbitrary day intervals, fixed times over DST, inclusive repeat limits, multi-day occurrences and distant anchors.');

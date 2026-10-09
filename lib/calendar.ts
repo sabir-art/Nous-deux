@@ -27,11 +27,12 @@ export function occurrences(events:Appointment[],from:string,to:string):Appointm
   if(!a.date||a.status==='to_book')continue;
   const span=a.endDate?Math.max(0,Math.round((Date.parse(a.endDate)-Date.parse(a.date))/dayMs)):0;
   const first=addDays(from,-span),mode=a.recurrence||'none';
+  const interval=mode==='weekly'?7:mode==='custom'&&Number.isInteger(a.intervalDays)&&a.intervalDays!>=1&&a.intervalDays!<=3650?a.intervalDays!:1;
   const [y,m,d]=a.date.split('-').map(Number),[fy,fm]=first.split('-').map(Number);
-  let n=mode==='yearly'?Math.max(0,fy-y-1):mode==='monthly'?Math.max(0,(fy-y)*12+fm-m-1):mode==='weekly'?Math.max(0,Math.floor((Date.parse(first)-Date.parse(a.date))/(7*dayMs))-1):0;
+  let n=mode==='yearly'?Math.max(0,fy-y-1):mode==='monthly'?Math.max(0,(fy-y)*12+fm-m-1):(mode==='weekly'||mode==='custom')?Math.max(0,Math.floor((Date.parse(first)-Date.parse(a.date))/(interval*dayMs))-1):0;
   for(;;n++){
    let start=a.date;
-   if(mode==='weekly')start=addDays(a.date,n*7);
+   if(mode==='weekly'||mode==='custom')start=addDays(a.date,n*interval);
    if(mode==='monthly'||mode==='yearly'){
     const total=y*12+m-1+(mode==='yearly'?n*12:n),year=Math.floor(total/12),month=total%12;
     const last=new Date(Date.UTC(year,month+1,0,12)).getUTCDate();
