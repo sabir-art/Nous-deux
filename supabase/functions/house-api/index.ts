@@ -1,5 +1,5 @@
 import {buildPushPayload} from 'npm:@block65/webcrypto-web-push@2.0.0';
-import {ApiError,householdMutation,callMutation,deviceMutation,type State} from './model.ts';
+import {visibleAppointments,ApiError,householdMutation,callMutation,deviceMutation,type State} from './model.ts';
 import {defaultPreferences,deviceInput,allowedPushEndpoint} from './communication.ts';
 const ORIGIN='https://sabir-art.github.io',BASE='/Nous-deux/';
 const enc=new TextEncoder();
@@ -41,7 +41,7 @@ export async function handler(req:Request):Promise<Response>{
  const sessions=await db('nd_sessions?token_hash=eq.'+await hash(token)+'&expires_at=gt.'+Date.now()+'&select=token_hash,member');if(!sessions.length||![0,1].includes(sessions[0].member))return json({error:'Votre session a expiré. Reconnectez-vous.'},401);
  const actor=sessions[0].member;
  if(route==='household'){
-  if(req.method==='GET'){const {data:s}=await state();return json({member:actor,household:s.household,entries:s.entries,items:s.items,appointments:s.appointments});}
+  if(req.method==='GET'){const {data:s}=await state();return json({member:actor,household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor)});}
   const {result,data}=await mutate(s=>householdMutation(s,p,actor));if(result)try{await notify(data,actor,result.category,'Votre moitié '+result.message,req.headers.get('x-adeux-device')||'');}catch{}return json({ok:true});
  }
  if(route==='calls'){

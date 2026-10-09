@@ -31,3 +31,13 @@ s.items[0].owner=null;assert.throws(()=>householdMutation(s,{action:'delete-item
 assert.throws(()=>householdMutation(s,{action:'delete-appointment',payload:{id:aid,version:2}},0),e=>e.status===403);
 assert.throws(()=>householdMutation(s,{action:'household',payload:{...s.household,second:'Usurpe'}},0),e=>e.status===403);
 console.log('PASS: cross-account updates/deletes, forged payer/owner, legacy records and partner profile changes are denied.');
+const {visibleAppointments}=await import('data:text/javascript;base64,'+Buffer.from(bundle.outputFiles[0].text).toString('base64'));
+const privateId=crypto.randomUUID(),privateEvent={...ap,id:privateId,status:'scheduled',date:'2026-10-10',endDate:'2026-10-15',recurrence:'yearly',visibility:'private',version:0};
+let before=s.activity.length;assert.equal(householdMutation(s,{action:'appointment',payload:privateEvent},0),null);assert.equal(s.activity.length,before);
+assert(visibleAppointments(s,0).some(a=>a.id===privateId));assert(!visibleAppointments(s,1).some(a=>a.id===privateId));
+assert.throws(()=>householdMutation(s,{action:'appointment',payload:{...privateEvent,version:1,visibility:'shared'}},1),e=>e.status===403);
+householdMutation(s,{action:'appointment',payload:{...privateEvent,version:1,visibility:'shared'}},0);assert(visibleAppointments(s,1).some(a=>a.id===privateId));assert(s.activity.some(a=>a.appointmentId===privateId));
+householdMutation(s,{action:'appointment',payload:{...privateEvent,version:2,visibility:'private'}},0);assert(!s.activity.some(a=>a.appointmentId===privateId));assert(!visibleAppointments(s,1).some(a=>a.id===privateId));
+assert.equal(householdMutation(s,{action:'delete-appointment',payload:{id:privateId,version:3}},0),null);
+assert.throws(()=>householdMutation(s,{action:'appointment',payload:{...privateEvent,endDate:'2026-10-01'}},0));
+console.log('PASS: private events excluded from partner data, activity and notification intents; sharing transitions and date validation.');

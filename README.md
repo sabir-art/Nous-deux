@@ -50,3 +50,13 @@ Le dépôt ne contient ni données personnelles, ni mots de passe, ni clés priv
 Ouvrir l'application dans Safari, se connecter, puis Partager → Sur l'écran d'accueil. Réactiver les notifications depuis cette nouvelle installation : les autorisations de l'ancienne adresse ne sont pas transférables. Une connexion Internet reste nécessaire pour charger et synchroniser les données.
 
 L'appel audio reste expérimental et dépend de la compatibilité réseau (STUN sans relais TURN).
+
+## Calendrier personnel et partagé
+
+Un nouvel événement est privé par défaut. L'API exclut les événements privés de la réponse du partenaire ; leur création, modification et suppression ne produisent aucune activité partagée ni notification. L'auteur peut passer un événement en partagé et reste seul autorisé à le modifier. Les événements existants sans champ de visibilité conservent leur visibilité partagée.
+
+Les événements peuvent couvrir plusieurs jours, être répétés chaque semaine, mois ou année, et avoir une date de fin de répétition. Les modifications/suppressions portent sur toute la série. Les occurrences sont calculées à l'affichage ; le dernier jour du mois est utilisé si le jour n'existe pas (29 février → 28 février). La section À prendre et le calendrier utilisent les mêmes filtres de catégorie et de visibilité.
+
+`lib/holidays.ts` contient 80 repères datés pour 2026–2027 avec leurs sources : jours fériés nationaux français (API gouvernementale et Service Public), principales fêtes catholiques (AELF), repères musulmans (Grande Mosquée de Paris, Islamic Relief et calendrier islamic.app pour le Mawlid 2027), fêtes familiales (La Poste). Les repères lunaires prévisionnels sont signalés comme tels, avec une fourchette dans le titre lorsque nécessaire. Ces références sont consultables, masquables, non modifiables et ne produisent pas de notifications. Les fêtes chrétiennes correspondent au calendrier catholique occidental ; ce catalogue ne prétend pas couvrir toutes les fêtes locales, confessions ni saints du jour.
+
+Les tests `tests/calendar.test.mjs` et `tests/supabase-model.test.mjs` couvrent récurrence, plages de dates, confidentialité et droits d'auteur.

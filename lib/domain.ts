@@ -1,7 +1,7 @@
 export type Entry={owner?:number|null;id:string;kind:'expense'|'settlement';title:string;cents:number;member:number;category:string;date:string;note:string;version:number;createdAt:string};
 export type Item={owner?:number|null;id:string;kind:'shopping'|'task';title:string;quantity:string;assignee:number;due:string;priority:number;done:boolean;version:number;createdAt:string};
 export type Household={first:string;second:string;name:string;budget:number;version:number};
-export type Appointment={owner?:number|null;id:string;title:string;category:'medical'|'personal'|'admin'|'other';person:number;status:'to_book'|'scheduled'|'done';date:string;time:string;bookBy:string;location:string;note:string;createdAt:string;version:number};
+export type Appointment={holidayGroups?:string[];visibility?:'private'|'shared';recurrence?:'none'|'weekly'|'monthly'|'yearly';endDate?:string;repeatUntil?:string;source?:string;provisional?:boolean;original?:Appointment;owner?:number|null;id:string;title:string;category:'medical'|'personal'|'admin'|'work'|'holiday'|'travel'|'birthday'|'party'|'absence'|'family'|'sport'|'study'|'home'|'other'|'france'|'christian'|'islam'|'culture';person:number;status:'to_book'|'scheduled'|'done';date:string;time:string;bookBy:string;location:string;note:string;createdAt:string;version:number};
 export type Data={member?:number;household:Household|null;entries:Entry[];items:Item[];appointments:Appointment[]};
 export const categories=['Courses','Maison','Factures','Sorties','Transport','Autre'];
 export function centsFromInput(value:string):number{
