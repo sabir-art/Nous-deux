@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {realpathSync,readFileSync} from 'node:fs';
+const {build}=createRequire(realpathSync('node_modules/wrangler/package.json'))('esbuild');const b=await build({entryPoints:['lib/photos.ts'],bundle:true,platform:'node',format:'esm',write:false});const {compressPhoto}=await import('data:text/javascript;base64,'+Buffer.from(b.outputFiles[0].text).toString('base64'));
+let reads=0,draws=0;globalThis.FileReader=class{readAsDataURL(){reads++;this.result='data:image/jpeg;base64,/9j/2Q==';this.onload();}};
+globalThis.Image=class{naturalWidth=8000;naturalHeight=6000;async decode(){assert(this.src.startsWith('data:image/'),'Decode uses a CSP-permitted data URL');}};
+const canvas={width:0,height:0,getContext:()=>({fillRect(){},drawImage(){draws++;},fillStyle:''}),toDataURL:()=>canvas.width>800?'data:image/jpeg;base64,'+'A'.repeat(400000):'data:image/jpeg;base64,/9j/2Q=='};
+globalThis.document={createElement:tag=>{assert.equal(tag,'canvas');return canvas;}};
+assert((await compressPhoto({size:30*1024*1024})).startsWith('data:image/jpeg'));assert(draws>=3,'A detailed large photo is resized until it fits storage');assert.equal(canvas.width,800);assert.equal(canvas.height,600);
+const prior=reads;await assert.rejects(compressPhoto({size:30*1024*1024+1}),/30 Mo/);assert.equal(reads,prior);await assert.rejects(compressPhoto({size:0}),/vide/);
+globalThis.Image=class{async decode(){throw Error('Loading Error');}};await assert.rejects(compressPhoto({size:3000}),/format photo.*JPEG ou PNG/);
+assert(readFileSync('index.html','utf8').includes("img-src 'self' data:"));
+console.log('PASS: 30 MB input, adaptive compression, CSP-compatible photo decoding and readable format errors.');

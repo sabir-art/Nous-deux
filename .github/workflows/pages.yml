@@ -27,6 +27,8 @@ jobs:
       - run: node tests/calendar.test.mjs
       - run: node tests/chat-api.test.mjs
       - run: node tests/life.test.mjs
+      - run: node tests/meals.test.mjs
+      - run: node tests/photos.test.mjs
       - run: pnpm run build:web
       - uses: actions/upload-pages-artifact@v3
         with:

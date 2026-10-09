@@ -1,18 +1,24 @@
+import {mealVote,type MealState} from './meals.ts';
 import {parisDate,plantCare} from './life.ts';
 import {entryInput,itemInput,householdInput,deleteInput,appointmentInput,shoppingCheckInput,templateInput,templateApplyInput,ideaInput,ideaResponseInput,plantInput,plantCareInput} from './validation.ts';
 import {deviceInput,memberInput,preferenceInput,subscriptionInput,changeDescription} from './communication.ts';
 export class ApiError extends Error{constructor(public status:number,message:string){super(message);}}
-export type State={household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];plantReminderDays?:Record<string,string>};
+export type State=MealState&{profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];plantReminderDays?:Record<string,string>};
 const conflict=()=>{throw new ApiError(409,'Cet élément a changé sur un autre appareil. Fermez puis rouvrez le formulaire.');};
 export function householdMutation(s:State,p:any,actor:number){
  if(actor!==0&&actor!==1)throw new ApiError(403,'Compte personnel requis.');
  const {action,payload}=p;if(typeof action!=='string')throw new ApiError(400,'Action invalide.');const previous=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;const now=new Date().toISOString();
 
- if(['idea','idea-response','delete-idea','plant','plant-care','delete-plant'].includes(action))return lifeMutation(s,action,payload,actor,now);
+ if(['idea','idea-response','delete-idea','plant','plant-care','plant-care-all','delete-plant'].includes(action))return lifeMutation(s,action,payload,actor,now);
+ if(action==='meal-vote'){mealVote(s,payload,actor);return null;}
+ if(action==='profile-photo'){
+  const id=payload?.photoId;if(id!==null&&(typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)))throw new ApiError(400,'Photo invalide.');
+  s.profiles??={};s.profiles[actor]=id;return null;
+ }
  if(action==='shopping-check'){
   const v=shoppingCheckInput.parse(payload),item=s.items.find(i=>i.id===v.id&&i.kind==='shopping');
   if(!item||item.version!==v.version)conflict();
-  if(item.done&&!v.done&&item.purchasedBy!==actor)throw new ApiError(403,'Seule la personne qui a coché cet achat peut l’annuler.');
+  if(item.done&&!v.done&&item.purchasedBy!=null&&item.purchasedBy!==actor)throw new ApiError(403,'Seule la personne qui a coché cet achat peut l’annuler.');
   if(item.done!==v.done)Object.assign(item,{done:v.done,purchasedBy:v.done?actor:null,purchasedAt:v.done?now:null,version:item.version+1});
   return {category:'shopping',message:v.done?'a coché un achat dans les courses.':'a remis un article à acheter.'};
  }
@@ -80,6 +86,11 @@ function lifeMutation(s:State,action:string,p:any,actor:number,now:string){
  if(action==='idea-response'){
   const v=ideaResponseInput.parse(p);if(!old||old.owner===actor)throw new ApiError(403,'Seule la personne invitée peut répondre.');
   if(old.version!==v.version||old.status!=='pending')conflict();Object.assign(old,{status:v.status,responseNote:v.responseNote,respondedAt:now,version:old.version+1});
+ }else if(action==='plant-care-all'){
+  const v=deleteInput.parse(p);if(!old||old.version!==v.version)conflict();
+  const due=plantCare(old,date).filter(c=>c.overdue>=0&&!old.careLog?.some((l:any)=>l.kind===c.kind&&l.date===date));
+  if(!due.length)throw new ApiError(409,'Tous les soins du jour sont déjà faits.');
+  for(const c of due){old[c.kind==='water'?'lastWater':c.kind==='light'?'lastLight':'lastFeed']=date;old.careLog=[{kind:c.kind,actor,date,at:now},...(old.careLog||[])].slice(0,100);}old.version++;
  }else if(action==='plant-care'){
   const v=plantCareInput.parse(p);if(!old||old.version!==v.version)conflict();if(!plantCare(old,date).some(c=>c.kind===v.kind))throw new ApiError(400,'Ce soin n’est pas activé.');
   const key=v.kind==='water'?'lastWater':v.kind==='light'?'lastLight':'lastFeed';
@@ -96,7 +107,7 @@ function lifeMutation(s:State,action:string,p:any,actor:number,now:string){
    if(old)list[list.indexOf(old)]=value;else list.push(value);
   }
  }
- const note={category:isIdea?'ideas':'plants',message:action==='idea-response'?(p.status==='accepted'?'a accepté votre invitation.':'a répondu « pas cette fois » à votre invitation.'):action==='idea'?'vous propose une activité à deux.':action==='plant-care'?'a pris soin d’une plante.':action==='plant'?'a mis à jour le petit jardin.':'a supprimé une fiche.'};
+ const note={category:isIdea?'ideas':'plants',message:action==='idea-response'?(p.status==='accepted'?'a accepté votre invitation.':'a répondu « pas cette fois » à votre invitation.'):action==='idea'?'vous propose une activité à deux.':action.startsWith('plant-care')?'a pris soin d’une plante.':action==='plant'?'a mis à jour le petit jardin.':'a supprimé une fiche.'};
  s.sequence=(s.sequence||0)+1;s.activity.unshift({id:s.sequence,actor,...note,createdAt:now});s.activity=s.activity.slice(0,500);return note;
 }
 export function claimPlantReminders(s:State,date:string){
