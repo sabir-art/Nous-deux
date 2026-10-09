@@ -1,4 +1,6 @@
-import {mealProjection,MealError} from './meals.ts';
+import {recipeTitles} from './recipe-ids.ts';
+import {claimDiscovery,finishDiscovery,discoveryProjection,discoverRecipes,DiscoveryError} from './recipe-discovery.ts';
+import {mealProjection,mealVote,MealError} from './meals.ts';
 import {parisDate} from './life.ts';
 import {chatInput,chatCursorInput,photoInput} from './validation.ts';
 import {buildPushPayload} from 'npm:@block65/webcrypto-web-push@2.0.0';
@@ -18,6 +20,16 @@ async function mutate<T>(fn:(s:State)=>T){for(let i=0;i<4;i++){const snapshot=aw
 async function config(){return (await db('nd_config?id=eq.1&select=data'))[0].data;}
 async function send(device:any,data:any){if(!allowedPushEndpoint(device.subscription.endpoint))return false;const keys=(await config()).vapid;const payload=await buildPushPayload({data:JSON.stringify({...data,url:BASE+'?view='+(data.category||'settings')}),options:{ttl:data.category==='calls'?90:3600}},device.subscription,{...keys,subject:ORIGIN+BASE});const r=await fetch(device.subscription.endpoint,{...payload,redirect:'manual',signal:AbortSignal.timeout(5000)});if(r.status===404||r.status===410)await mutate(s=>{s.devices=s.devices.filter(d=>d.deviceId!==device.deviceId);});return r.ok;}
 async function notify(s:State,actor:number,category:string,message:string,originDevice=''){await Promise.allSettled(s.devices.filter(d=>d.member!==actor&&d.deviceId!==originDevice&&({...defaultPreferences,...d.preferences})[category]).map(d=>send(d,{title:'À deux',body:message,category,tag:category==='calls'?'adeux-call':undefined})));}
+const aiKey=()=>Deno.env.get('OPENAI_API_KEY')||'';
+async function runDiscovery(){
+ const key=aiKey();if(!key)return;
+ try{
+  const {result:job,data}=await mutate(s=>claimDiscovery(s,true));if(!job)return;
+  try{const recipes=await discoverRecipes(key,[...recipeTitles,...(data.generatedRecipes||[]).map(r=>r.title)],Deno.env.get('OPENAI_RECIPE_MODEL')||'gpt-5.4-mini');await mutate(s=>finishDiscovery(s,job,recipes));}
+  catch(e){await mutate(s=>finishDiscovery(s,job,[],e instanceof DiscoveryError?e.code:'upstream'));}
+ }catch{/* Never log credentials, prompts, household data or provider response bodies. */}
+}
+function backgroundDiscovery(){const task=runDiscovery();if(typeof EdgeRuntime!=='undefined')EdgeRuntime.waitUntil(task);return task;}
 const cors={'Access-Control-Allow-Origin':ORIGIN,'Access-Control-Allow-Headers':'content-type,apikey,x-house-session,x-adeux-member,x-adeux-device','Access-Control-Allow-Methods':'GET,POST,OPTIONS','Vary':'Origin','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
 export async function handler(req:Request):Promise<Response>{
  const json=(body:unknown,status=200)=>Response.json(body,{status,headers:cors});
@@ -32,6 +44,7 @@ export async function handler(req:Request):Promise<Response>{
   const credential=req.headers.get('x-plant-reminder')||'';if(!/^[a-f0-9]{64}$/.test(credential))return json({error:'Accès réservé au planificateur.'},401);
   const cfg=await config();if(!cfg.plantReminderHash||!equal(await hash(credential),cfg.plantReminderHash))return json({error:'Accès réservé au planificateur.'},401);
   const now=new Date(),hour=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hour:'2-digit',hour12:false}).format(now);if(hour!=='09')return json({ok:true,skipped:true});
+  backgroundDiscovery();
   const day=parisDate(now);const {result}=await mutate(s=>claimPlantReminders(s,day));
   const results=await Promise.allSettled(result.map(async({device,count})=>{
    try{const ok=await send(device,{title:'Le petit jardin 🌱',body:count===1?'Une plante réclame son petit spa. Vérifiez ses soins du jour !':`${count} plantes attendent leurs soins. La réunion des feuilles a commencé !`,category:'plants',tag:'adeux-plants'});if(ok)return true;}catch{}
@@ -54,6 +67,21 @@ export async function handler(req:Request):Promise<Response>{
  if(!/^[a-f0-9]{64}$/.test(token))return json({error:'Connectez-vous à votre maison.'},401);
  const sessions=await db('nd_sessions?token_hash=eq.'+await hash(token)+'&expires_at=gt.'+Date.now()+'&select=token_hash,member');if(!sessions.length||![0,1].includes(sessions[0].member))return json({error:'Votre session a expiré. Reconnectez-vous.'},401);
  const actor=sessions[0].member;
+ if(route==='recipes'){
+  if(req.method==='POST'){
+   if(p.action==='toggle'){
+    if(typeof p.enabled!=='boolean')throw new ApiError(400,'Réglage invalide.');
+    await mutate(s=>{s.recipeDiscovery={...s.recipeDiscovery,enabled:p.enabled};});
+   }else if(p.action!=='discover')throw new ApiError(400,'Action inconnue.');
+   backgroundDiscovery();
+  }
+  const {data}=await state();return json({recipes:data.generatedRecipes||[],discovery:discoveryProjection(data,!!aiKey())});
+ }
+ if(route==='meals'){
+
+  if(req.method==='GET'){const {data}=await state();return json(mealProjection(data,actor));}
+  const {data}=await mutate(s=>mealVote(s,p,actor));return json(mealProjection(data,actor));
+ }
  if(route==='household'){
   if(req.method==='GET'){const {data:s}=await state();return json({member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[]});}
   if(['item','profile-photo'].includes(p.action)&&p.payload?.photoId){const photoId=deviceInput.parse(p.payload.photoId);const photos=await db('nd_photos?id=eq.'+photoId+'&select=owner');if(!photos.length||photos[0].owner!==actor)throw new ApiError(403,'Vous ne pouvez joindre que votre propre photo.');}

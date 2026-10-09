@@ -52,3 +52,19 @@ assert.equal((await handler(homeReq({action:'meal-vote',payload:{date,recipeId:'
 const matched=await (await handler(homeReq())).json();assert.equal(matched.meals.matches.length,1);assert.deepEqual(Object.keys(matched.meals).sort(),['date','matches','myVotes']);
 assert.equal((await handler(homeReq({action:'meal-vote',payload:{date,recipeId:'pork',like:true}}))).status,400);
 console.log('PASS: real handler projects only own meal votes and mutual matches; profile photo ownership, sharing and unlink protection.');
+
+function routeReq(route,payload,auth=true){return new Request('https://edge.test/?route='+route,{method:payload?'POST':'GET',headers:{'Content-Type':'application/json',...(auth?{'x-house-session':'a'.repeat(64)}:{})},...(payload?{body:JSON.stringify(payload)}:{})});}
+assert.equal((await handler(routeReq('meals',undefined,false))).status,401);
+assert.equal((await handler(routeReq('recipes',undefined,false))).status,401);
+member=0;const direct=await (await handler(routeReq('meals',{date,recipeId:'greek-salad',like:true,actor:1}))).json();
+assert.equal(direct.myVotes['greek-salad'],true);
+// The fast endpoint accepts only server-known recipes.
+assert.equal((await handler(routeReq('meals',{date,recipeId:'shakshuka',like:true,actor:1}))).status,200);
+assert.equal((await handler(routeReq('meals',{date,recipeId:'invented',like:true}))).status,400);
+const own=await (await handler(routeReq('meals'))).json();assert.deepEqual(Object.keys(own).sort(),['date','matches','myVotes']);
+member=1;const other=await (await handler(routeReq('meals'))).json();assert(!Object.hasOwn(other.myVotes,'greek-salad'));
+const library=await (await handler(routeReq('recipes'))).json();assert.equal(library.discovery.configured,false);assert.equal(library.discovery.status,'unconfigured');assert.deepEqual(library.recipes,[]);assert(!JSON.stringify(library).includes('test-service-key'));
+assert.equal((await handler(routeReq('recipes',{action:'toggle',enabled:false}))).status,200);assert.equal(household.recipeDiscovery.enabled,false);
+assert.equal((await handler(routeReq('recipes',{action:'toggle',enabled:'yes'}))).status,400);
+assert.equal((await handler(routeReq('recipes',{action:'discover'}))).status,200,'Missing key causes no external API request');
+console.log('PASS: fast meal endpoint authorization and own projection; authenticated recipe library, safe missing-secret status and discovery pause.');

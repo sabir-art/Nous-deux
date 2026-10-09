@@ -7,5 +7,6 @@ import '../app/globals.css';
 import '../app/design.css';
 import '../app/life.css';
 import '../app/warm.css';
+import '../app/polish.css';
 function App(){const [signedIn,setSignedIn]=useState(hasSession);useEffect(()=>{const logout=()=>setSignedIn(false);window.addEventListener('nousdeux-signed-out',logout);if('serviceWorker'in navigator)navigator.serviceWorker.register(APP_BASE+'sw.js',{scope:APP_BASE}).catch(()=>{});return()=>window.removeEventListener('nousdeux-signed-out',logout);},[]);return signedIn?<HouseApp/>:<AccessForm/>;}
 createRoot(document.getElementById('root')!).render(<App/>);

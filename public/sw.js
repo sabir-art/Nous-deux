@@ -4,7 +4,7 @@ self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
 self.addEventListener('push',event=>{
  let data={};try{data=event.data?.json()||{};}catch{}
  const url=typeof data.url==='string'&&data.url.startsWith('/Nous-deux/?view=')?data.url:'/Nous-deux/';
- event.waitUntil(self.registration.showNotification(data.title||'À deux',{body:data.body||'Une nouveauté dans votre maison.',icon:'/Nous-deux/icon-192.png',badge:'/Nous-deux/icon-192.png',tag:data.tag,data:{url}}));
+ event.waitUntil(self.registration.showNotification(data.title||'À deux',{body:data.body||'Une nouveauté dans votre maison.',icon:'/Nous-deux/icon-192.png?v=3',badge:'/Nous-deux/icon-192.png?v=3',tag:data.tag,data:{url}}));
 });
 self.addEventListener('notificationclick',event=>{
  event.notification.close();const target=new URL(event.notification.data?.url||'/Nous-deux/',self.location.origin).href;
