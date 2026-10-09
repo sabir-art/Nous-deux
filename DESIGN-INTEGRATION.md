@@ -33,3 +33,15 @@ Ces contrôles ne remplacent pas un audit RGAA complet ni une recette tactile su
 - Persistence: existing private `nd_state.data` contains `personalRecipes`, `mealPlans`, `mealPlanTemplates`; existing `nd_photos` stores images. No public bucket or direct anonymous table access was introduced. `house-api` continues checking the custom personal session, owner and record version before updates.
 
 Validation: TypeScript/build, API and domain tests, photo ownership checks, menu conflict/copy tests, gesture tests, design source integrity, contrast checks and markup/layout regressions. These automated checks do not replace a Safari/iPhone touch, keyboard and visual review, or a complete RGAA audit.
+
+## Reference-screen alignment — 9 October 2026
+
+- The supplied ZIP remains byte-for-byte intact. The runtime bridge connects `RecipeView` to private favorites, photographs, real servings/ingredients, preparation steps and an idempotent grocery batch. Missing recipe difficulty is displayed as unspecified; authors can enter it.
+- Cookbook and weekly-menu pickers combine author/source, category and accent-insensitive title/ingredient search. Changing the picker view preserves the week draft and restores keyboard focus to its meal slot.
+- The wheel uses the supplied wheel, stickers and avatar styles with three equal outcomes. Draws persist on the server for both people. A matched recipe keeps its already assigned cook; daily chores have their own stable draw. No partner ballots are exposed.
+- Category ceilings feed `RankedBars`; recorded bills feed `BillCard`. Expanded charts show six months of actual expenses, the daily heatmap, cumulative spending and remaining category budgets. No income or savings values are invented.
+- The existing suitcase cards now count days, hours, minutes and seconds to Paris wall-clock time, including daylight-saving transitions, without a per-second screen-reader announcement.
+- Native date/time controls sit inside bounded fields with a visible formatted value. Photo controls align icon and label horizontally; profile controls occupy the full row below the avatar. Calendar navigation uses a neutral background. CTA wording is shortened to fit on one line.
+- AI configuration is shared through Supabase Vault; see `docs/recipes-ai.md`.
+
+Validation includes 66 contrast pairs in light/dark themes (minimum normal text 4.65:1), immutable design-source hashes, TypeScript/build, authenticated API tests, persistent draws, combined search, DST boundaries, menu focus contracts and native field markup. Safari touch/picker behavior and full RGAA compliance still require device/manual assessment.

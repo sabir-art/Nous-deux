@@ -64,7 +64,7 @@ async function findPhoto(query:string,fetcher:typeof fetch):Promise<RecipeImage|
 }
 export async function discoverRecipes(key:string,existingTitles:string[],model='gpt-5.4-mini',fetcher:typeof fetch=fetch){
  const response=await fetcher('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(discoveryRequest(model,existingTitles,new Date().toISOString().slice(0,10))),signal:AbortSignal.timeout(90000),redirect:'error'});
- if(!response.ok)throw new DiscoveryError(response.status===401||response.status===403?'credentials':response.status===429?'quota':'upstream');
+ if(!response.ok){let code='upstream';if(response.status===401||response.status===403)code='credentials';if(response.status===429){const error=await response.json().catch(()=>null);code=error?.error?.code==='insufficient_quota'?'quota':'limited';}throw new DiscoveryError(code);}
  const data=await response.json();if(data.status!=='completed')throw new DiscoveryError('incomplete');
  const sources=new Set<string>();let output='';
  for(const item of data.output||[]){

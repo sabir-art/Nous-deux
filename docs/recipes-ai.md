@@ -4,11 +4,13 @@ L’application fonctionne sans OpenAI avec ses 40 recettes initiales. La décou
 
 ## Activation
 
-1. Révoquer la clé qui a été partagée dans la conversation et créer une nouvelle clé dans le projet OpenAI souhaité. Configurer le budget/les alertes du projet OpenAI selon les limites souhaitées.
-2. Dans le projet Supabase **jvjwyalusdygvkyzmiez**, ouvrir **Edge Functions → Secrets** et ajouter `OPENAI_API_KEY` avec la nouvelle valeur. Ne pas la placer dans GitHub, les variables Vite, la conversation ou un fichier public.
-3. Ouvrir **À table ! → Le carnet → Trouver des idées**. Le traitement continue en arrière-plan ; son état et les nouvelles recettes sont chargés automatiquement. En cas de configuration refusée ou quota dépassé, vérifier le secret et la facturation OpenAI. Le carnet initial reste accessible.
+1. Depuis le premier compte de la maison, ouvrir **Notre espace → Notre commis gourmand**. Saisir la clé OpenAI et le mot de passe personnel de l’application. La clé est vérifiée puis chiffrée dans **Supabase Vault** sous le nom `nous_deux_openai_key`.
+2. Cette configuration s’applique aux deux comptes, sur tous leurs appareils. L’autre membre ne reçoit jamais la clé. Le même formulaire permet de remplacer une clé ; utiliser une nouvelle clé si l’ancienne a été exposée.
+3. Ouvrir **À table → Le carnet**. La première recherche éligible démarre à l’ouverture ou avec **Trouver des idées**, puis continue en arrière-plan. Le statut signale séparément une clé refusée, un quota insuffisant, une limite 429 ou un autre échec. Les recettes existantes restent accessibles.
 
-Le modèle par défaut est `gpt-5.4-mini`. Le secret facultatif `OPENAI_RECIPE_MODEL` peut le remplacer par un modèle compatible Responses API, recherche web et sorties structurées. Aucun appel réel à OpenAI n’a été effectué pour cette livraison, faute de nouvelle clé installée ; les parcours succès/erreur ont été testés avec réponses simulées.
+Appliquer `supabase/sql/shared-ai-vault.sql` avant de déployer cette version de `house-api`. Les deux RPC Vault sont `SECURITY INVOKER`, avec chemin de recherche vide et droits réservés à `service_role` ; `anon`, `authenticated` et `PUBLIC` ne peuvent pas les appeler. La route de configuration impose une session du premier membre, son mot de passe personnel et au plus cinq tentatives par fenêtre de quinze minutes. La clé n’entre jamais dans l’état partagé, une réponse JSON, le navigateur ou GitHub.
+
+Le secret d’environnement `OPENAI_API_KEY` reste un repli pour les installations sans clé dans Vault. Le modèle par défaut est `gpt-5.4-mini` ; `OPENAI_RECIPE_MODEL` permet de le remplacer par un modèle compatible Responses API, recherche web et sorties structurées. La vérification de clé ne garantit pas la disponibilité du quota de génération. La configuration applicative ne recharge aucun compte et ne change pas ses limites de facturation.
 
 ## Fonctionnement et limites
 
@@ -19,7 +21,7 @@ Le modèle par défaut est `gpt-5.4-mini`. Le secret facultatif `OPENAI_RECIPE_M
 - La recherche web utilise une liste de sites culinaires et Wikibooks. Chaque recette doit citer une source réellement retournée par la recherche. Les étapes sont reformulées, et la fiche indique explicitement « adaptée par IA » avec un lien vers la source.
 - Les photos proviennent uniquement de l’API Wikimedia Commons avec métadonnées de licence vérifiées (CC BY, CC BY-SA, CC0 ou domaine public accompagné d’une URL de licence admissible). Crédit et licence sont affichés. Sans photo admissible, l’application montre un pictogramme et « Photo à venir ». Les images de sites de recettes ne sont pas récupérées sans licence.
 - Les nouvelles recettes sont conservées dans l’état privé Supabase ; les votes restent privés jusqu’au match mutuel. Le carnet conserve ses références, sans supprimer les plats des anciens matchs. La découverte se met en limite de capacité après 500 ajouts pour éviter la croissance illimitée de cet état ; augmenter cette limite demande une revue du stockage.
-- Les erreurs affichées sont génériques. Aucun corps de réponse du fournisseur ni secret n’est journalisé. Les commandes de découverte n’acceptent pas de prompt ni d’URL arbitraire du client.
+- Les erreurs affichées utilisent uniquement des catégories contrôlées. Aucun corps de réponse du fournisseur ni secret n’est journalisé. Les commandes de découverte n’acceptent pas de prompt ni d’URL arbitraire du client.
 
 Documentation vérifiée :
 
@@ -29,4 +31,4 @@ Documentation vérifiée :
 - https://supabase.com/docs/guides/functions/background-tasks
 - https://supabase.com/docs/guides/functions/secrets
 
-Tests : `node tests/recipe-discovery.test.mjs` et `node tests/chat-api.test.mjs`.
+Tests : `node tests/recipe-discovery.test.mjs`, `node tests/ai-settings.test.mjs` et `node tests/chat-api.test.mjs`.

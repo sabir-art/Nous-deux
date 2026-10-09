@@ -22,7 +22,7 @@ export declare const PlantCard: ComponentType<P.PlantCardProps>;
 export declare const PlantBuddy: ComponentType<P.PlantBuddyProps>;
 export declare const RecipeRow: ComponentType<P.RecipeRowProps>;
 export declare const SwipeDeck: ComponentType<P.SwipeDeckProps>;
-export declare const RecipeView: ComponentType<P.RecipeViewProps>;
+export declare const RecipeView: ComponentType<Omit<P.RecipeViewProps, 'onAddToList'> & {onAddToList?:(servings:number)=>void;onFavorite?:(value:boolean)=>void;adding?:boolean}>;
 export declare const WhoDoesItGame: ComponentType<P.WhoDoesItGameProps>;
 export {plantMood} from './components/index';
 export declare const FoodItem: ComponentType<P.FoodItemProps>;

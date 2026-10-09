@@ -1,9 +1,11 @@
+import {validDate,categories} from './domain.ts';
+import {z} from 'npm:zod@3.25.76';
 import {mealVote,type MealState} from './meals.ts';
 import {parisDate,plantCare} from './life.ts';
 import {entryInput,itemInput,householdInput,deleteInput,appointmentInput,shoppingCheckInput,templateInput,templateApplyInput,ideaInput,ideaResponseInput,plantInput,plantCareInput} from './validation.ts';
 import {deviceInput,memberInput,preferenceInput,subscriptionInput,changeDescription} from './communication.ts';
 export class ApiError extends Error{constructor(public status:number,message:string){super(message);}}
-export type State=MealState&{profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];plantReminderDays?:Record<string,string>};
+export type State=MealState&{shoppingBatches?:string[];profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];plantReminderDays?:Record<string,string>};
 const conflict=()=>{throw new ApiError(409,'Cet élément a changé sur un autre appareil. Fermez puis rouvrez le formulaire.');};
 export function householdMutation(s:State,p:any,actor:number){
  if(actor!==0&&actor!==1)throw new ApiError(403,'Compte personnel requis.');
@@ -14,6 +16,11 @@ export function householdMutation(s:State,p:any,actor:number){
  if(action==='profile-photo'){
   const id=payload?.photoId;if(id!==null&&(typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)))throw new ApiError(400,'Photo invalide.');
   s.profiles??={};s.profiles[actor]=id;return null;
+ }
+ if(action==='shopping-batch'){
+  const v=z.object({id:z.string().uuid(),weekStart:z.string().refine(validDate),note:z.string().max(700),items:z.array(z.object({title:z.string().trim().min(1).max(100),quantity:z.string().max(60)})).min(1).max(40)}).parse(payload);
+  if(weekMonday(v.weekStart)!==v.weekStart)throw new ApiError(400,'Choisissez un lundi.');s.shoppingBatches??=[];const key=actor+':'+v.id;if(s.shoppingBatches.includes(key))return null;if(s.shoppingBatches.length>=5000||s.items.length+v.items.length>10000)throw new ApiError(400,'Votre liste est pleine. Archivez des articles avant de continuer.');
+  for(const item of v.items)s.items.push({...item,id:crypto.randomUUID(),kind:'shopping',assignee:-1,due:'',priority:0,done:false,note:v.note,photoId:null,owner:actor,version:1,createdAt:now,weekStart:v.weekStart,purchasedBy:null,purchasedAt:null});s.shoppingBatches.push(key);return {category:'shopping',message:'a ajouté les ingrédients d’une recette.'};
  }
  if(action==='shopping-check'){
   const v=shoppingCheckInput.parse(payload),item=s.items.find(i=>i.id===v.id&&i.kind==='shopping');
@@ -42,7 +49,8 @@ export function householdMutation(s:State,p:any,actor:number){
   for(const item of t.items)s.items.push({...item,id:crypto.randomUUID(),kind:'shopping',assignee:-1,due:'',priority:0,done:false,owner:actor,version:1,createdAt:now,weekStart:v.weekStart,purchasedBy:null,purchasedAt:null});
   s.templateApplications.push(v.operationId);return {category:'shopping',message:'a ajouté une liste type aux courses.'};
  }
- if(action==='household'){const home=householdInput.parse(payload);if(s.household&&home[actor===0?'second':'first']!==s.household[actor===0?'second':'first'])throw new ApiError(403,'Vous ne pouvez pas modifier le profil de votre moitié.');if((s.household?.version||0)!==home.version)conflict();s.household={...home,version:home.version+1};}
+ if(action==='category-budgets'){const v=z.object({version:z.number().int().min(0),budgets:z.record(z.string().refine(key=>categories.includes(key)),z.number().int().min(0).max(999999999))}).parse(payload);if(!s.household||s.household.version!==v.version)conflict();s.household.categoryBudgets=v.budgets;s.household.version++;return null;}
+ if(action==='household'){const home=householdInput.parse(payload);if(s.household&&home[actor===0?'second':'first']!==s.household[actor===0?'second':'first'])throw new ApiError(403,'Vous ne pouvez pas modifier le profil de votre moitié.');if((s.household?.version||0)!==home.version)conflict();s.household={...s.household,...home,version:home.version+1};}
  else{
   if(!s.household)throw new ApiError(400,'Configurez votre maison.');
   const list=action.includes('appointment')?'appointments':action.includes('entry')?'entries':action==='item'||action==='delete-item'?'items':null;

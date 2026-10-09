@@ -280,7 +280,7 @@ import * as React from 'react';
   function RankedBars(p) {
     var tones = ["menthe", "rose", "peche", "lavande", "beurre", "lilas"];
     return h(ChartFrame, { title: p.title, subtitle: p.subtitle, emoji: p.emoji, deco: p.deco || "beurre",
-      table: { cols: ["Catégorie", "Dépensé"].concat(p.items[0].budget ? ["Budget", "Utilisé"] : []), rows: p.items.map(function (it) { return [it.label, money(it.value)].concat(it.budget ? [money(it.budget), Math.round(it.value / it.budget * 100) + " %"] : []); }) } },
+      table: { cols: ["Catégorie", "Dépensé"].concat(p.items.some(function(it){return it.budget>0;}) ? ["Budget", "Utilisé"] : []), rows: p.items.map(function (it) { return [it.label, money(it.value)].concat(p.items.some(function(row){return row.budget>0;}) ? (it.budget ? [money(it.budget), Math.round(it.value / it.budget * 100) + " %"] : ["Sans plafond", "—"]) : []); }) } },
       h("ul", { className: "nd-cat-grid" }, p.items.map(function (it, i) {
         var tone = it.tone || tones[i % tones.length], pct = it.budget ? Math.round(it.value / it.budget * 100) : null, over = pct > 100;
         return h("li", { key: i, className: cx("nd-cat", "nd-tone-" + tone) },
@@ -685,12 +685,12 @@ import * as React from 'react';
       left === 0 ? h("span", { role: "alert", className: "nd-sr" }, p.label + " est prêt") : null);
   }
 
-  function RecipeView(p) {
-    var r = p.recipe, sv = useState(r.servings || 2), serv = sv[0], tab = useState("ing"), fav = useState(!!p.favorite), stepS = useState(0);
+  function RecipeView(p) { var broken=useState(false); React.useEffect(function(){broken[1](false);},[p.recipe.image]);
+    var r = p.recipe, sv = useState(r.servings || 2), serv = sv[0], tab = useState("ing"), fav = [!!p.favorite, p.onFavorite || function(){}], stepS = useState(0);
     var f = serv / (r.servings || 2);
     return h("article", { className: "nd-recipe", "aria-labelledby": "rv-" + hashStr(r.name) },
       h("div", { className: cx("nd-recipe-hero", "nd-tone-" + (r.tone || "peche")) },
-        r.image ? h("img", { src: r.image, alt: "" }) : h("span", { className: "nd-recipe-hero-emoji", "aria-hidden": "true" }, r.emoji || foodEmoji(r.name)),
+        r.image && !broken[0] ? h("img", { src: r.image, alt: "", referrerPolicy: "no-referrer", onError: function(){broken[1](true);} }) : h("span", { className: "nd-recipe-hero-emoji", "aria-hidden": "true" }, r.emoji || foodEmoji(r.name)),
         h("button", { type: "button", className: "nd-round-btn left", "aria-label": "Fermer la recette", onClick: p.onClose }, h(Icon, { name: "x" })),
         h("button", { type: "button", className: cx("nd-round-btn right", fav[0] && "on"), "aria-label": "Recette favorite", "aria-pressed": fav[0] ? "true" : "false", onClick: function () { fav[1](!fav[0]); } }, h(Icon, { name: "heart" })),
         r.matched ? h("span", { className: "nd-recipe-match" }, h(Sticker, { tone: "heart", size: "sm", rotate: -6 }, "votre match")) : null),
@@ -706,10 +706,10 @@ import * as React from 'react';
           h("div", { className: "nd-stepper", role: "group", "aria-labelledby": "srv-l" },
             h("button", { type: "button", "aria-label": "Une personne de moins", disabled: serv <= 1, onClick: function () { sv[1](serv - 1); } }, h(Icon, { name: "minus", size: "sm" })),
             h("output", { "aria-live": "polite" }, serv + " personne" + (serv > 1 ? "s" : "")),
-            h("button", { type: "button", "aria-label": "Une personne de plus", onClick: function () { sv[1](serv + 1); } }, h(Icon, { name: "plus", size: "sm" })))),
+            h("button", { type: "button", "aria-label": "Une personne de plus", disabled: serv >= 50, onClick: function () { sv[1](serv + 1); } }, h(Icon, { name: "plus", size: "sm" })))),
         h("div", { className: "nd-seg", role: "tablist", "aria-label": "Recette" },
           [["ing", "Ingrédients (" + r.ingredients.length + ")"], ["steps", "Étapes (" + r.steps.length + ")"]].map(function (t) {
-            return h("button", { key: t[0], type: "button", role: "tab", id: "tab-" + t[0], "aria-selected": tab[0] === t[0] ? "true" : "false", "aria-controls": "panel-" + t[0], onClick: function () { tab[1](t[0]); } }, t[1]);
+            return h("button", { key: t[0], type: "button", role: "tab", id: "tab-" + t[0], "aria-selected": tab[0] === t[0] ? "true" : "false", "aria-controls": "panel-" + t[0], tabIndex: tab[0] === t[0] ? 0 : -1, onKeyDown: function(e){if(["ArrowLeft","ArrowRight","Home","End"].includes(e.key)){e.preventDefault();var next=e.key==="Home"?"ing":e.key==="End"?"steps":tab[0]==="ing"?"steps":"ing";tab[1](next);e.currentTarget.parentElement.querySelector("#tab-"+next).focus();}}, onClick: function () { tab[1](t[0]); } }, t[1]);
           })),
         tab[0] === "ing" ? h("div", { role: "tabpanel", id: "panel-ing", "aria-labelledby": "tab-ing", className: "nd-recipe-list" },
           r.ingredients.map(function (it, i) { return h(FoodItem, { key: i, name: it.name, emoji: it.emoji, tone: it.tone || "neutre", qty: scaleQty(it.qty, f) }); }))
@@ -719,7 +719,7 @@ import * as React from 'react';
                 h("button", { type: "button", className: "nd-step-head", "aria-expanded": i === stepS[0] ? "true" : "false", onClick: function () { stepS[1](i); } }, h("span", { className: "nd-step-num" }, "Étape " + (i + 1)), h("span", { className: "nd-step-short" }, s.title)),
                 i === stepS[0] ? h("div", { className: "nd-step-body" }, h("p", null, s.text), s.timer ? h(Timer, { minutes: s.timer, label: s.timerLabel || s.timer + " min" }) : null) : null);
             })),
-        h(Button, { size: "lg", icon: "cart", className: "nd-recipe-cta", onClick: p.onAddToList }, "Ajouter aux courses")));
+        h(Button, { size: "lg", icon: "cart", className: "nd-recipe-cta", disabled: p.adding, onClick: function(){p.onAddToList && p.onAddToList(serv);} }, p.adding ? "Ajout…" : "Ajouter aux courses")));
   }
 
   function WhoDoesItGame(p) {

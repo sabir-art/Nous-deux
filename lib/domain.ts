@@ -1,10 +1,10 @@
 export type Entry={owner?:number|null;id:string;kind:'expense'|'settlement';title:string;cents:number;member:number;category:string;date:string;note:string;version:number;createdAt:string};
 export type Item={note?:string;photoId?:string|null;weekStart?:string;purchasedBy?:number|null;purchasedAt?:string|null;owner?:number|null;id:string;kind:'shopping'|'task';title:string;quantity:string;assignee:number;due:string;priority:number;done:boolean;version:number;createdAt:string};
-export type Household={first:string;second:string;name:string;budget:number;version:number};
+export type Household={categoryBudgets?:Record<string,number>;first:string;second:string;name:string;budget:number;version:number};
 export type Appointment={holidayGroups?:string[];visibility?:'private'|'shared';recurrence?:'none'|'weekly'|'monthly'|'yearly';endDate?:string;repeatUntil?:string;source?:string;provisional?:boolean;original?:Appointment;owner?:number|null;id:string;title:string;category:'medical'|'personal'|'admin'|'work'|'holiday'|'travel'|'birthday'|'party'|'absence'|'family'|'sport'|'study'|'home'|'other'|'france'|'christian'|'islam'|'culture';person:number;status:'to_book'|'scheduled'|'done';date:string;time:string;bookBy:string;location:string;note:string;createdAt:string;version:number};
 export type ShoppingTemplate={id:string;title:string;owner:number;items:{title:string;quantity:string}[]};
 export type MealMatch={recipeId:string;chef:0|1|2;createdAt:string};
-export type Meals={date:string;myVotes:Record<string,boolean>;matches:MealMatch[]};
+export type Meals={date:string;myVotes:Record<string,boolean>;matches:MealMatch[];draws?:Record<string,Record<string,0|1|2>>};
 export type Data={meals?:Meals;profiles?:Record<string,string|null>;ideas?:import('./life').Idea[];plants?:import('./life').Plant[];templates?:ShoppingTemplate[];member?:number;household:Household|null;entries:Entry[];items:Item[];appointments:Appointment[]};
 export const categories=['Courses','Maison','Factures','Sorties','Transport','Autre'];
 export function centsFromInput(value:string):number{

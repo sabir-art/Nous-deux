@@ -3,12 +3,12 @@ import {recipeIds} from './recipe-ids.ts';
 import {validDate} from './domain.ts';
 export class RecipeError extends Error{constructor(public status:number,message:string){super(message);}}
 const id=z.string().uuid(),version=z.number().int().min(0),title=z.string().trim().min(1).max(100);
-const recipeInput=z.object({id,version,title,group:z.enum(['Végétarien','Poulet','Bœuf','Poisson','Autre']),minutes:z.number().int().min(1).max(1440),servings:z.number().int().min(1).max(50),ingredients:z.array(z.string().trim().min(1).max(200)).min(1).max(40),steps:z.array(z.string().trim().min(1).max(500)).min(1).max(30),photoId:id.nullable(),calories:z.number().int().min(0).max(10000).nullable(),nutrients:z.string().trim().max(700),porkFree:z.literal(true)});
+const recipeInput=z.object({id,version,title,difficulty:z.enum(['Facile','Intermédiaire','Avancée','Non précisée']).default('Non précisée'),group:z.enum(['Végétarien','Poulet','Bœuf','Poisson','Autre']),minutes:z.number().int().min(1).max(1440),servings:z.number().int().min(1).max(50),ingredients:z.array(z.string().trim().min(1).max(200)).min(1).max(40),steps:z.array(z.string().trim().min(1).max(500)).min(1).max(30),photoId:id.nullable(),calories:z.number().int().min(0).max(10000).nullable(),nutrients:z.string().trim().max(700),porkFree:z.literal(true)});
 export type PersonalRecipe=z.infer<typeof recipeInput>&{owner:number;createdAt:string;photo:string;archived:boolean};
 export type MealSlot={day:number;meal:'lunch'|'dinner';recipeId:string};
 export type MealPlan={id:string;version:number;owner:number;weekStart:string;slots:MealSlot[]};
 export type MealTemplate={id:string;title:string;owner:number;slots:MealSlot[]};
-export type RecipeState={personalRecipes?:PersonalRecipe[];mealPlans?:MealPlan[];mealPlanTemplates?:MealTemplate[];generatedRecipes?:{id:string}[]};
+export type RecipeState={recipeFavorites?:Record<string,string[]>;personalRecipes?:PersonalRecipe[];mealPlans?:MealPlan[];mealPlanTemplates?:MealTemplate[];generatedRecipes?:{id:string}[]};
 const monday=z.string().refine(v=>validDate(v)&&new Date(v+'T12:00:00Z').getUTCDay()===1,'Choisissez le lundi de la semaine.');
 const slots=z.array(z.object({day:z.number().int().min(0).max(6),meal:z.enum(['lunch','dinner']),recipeId:z.string().min(1).max(100)})).min(1).max(14).refine(s=>new Set(s.map(x=>x.day+':'+x.meal)).size===s.length,'Un seul plat par créneau.');
 const conflict=()=>{throw new RecipeError(409,'Cet élément a changé. Fermez puis rouvrez le formulaire.');};
@@ -16,6 +16,7 @@ const owner=(old:{owner:number}|undefined,actor:number)=>{if(!old)throw new Reci
 export function knownRecipe(s:RecipeState,id:string,activeOnly=false){return recipeIds.includes(id)||!!s.generatedRecipes?.some(r=>r.id===id)||!!s.personalRecipes?.some(r=>r.id===id&&(!activeOnly||!r.archived));}
 export function recipeMutation(s:RecipeState,p:any,actor:number){
  if(actor!==0&&actor!==1)throw new RecipeError(403,'Compte personnel requis.');
+ if(p.action==='recipe-favorite'){const v=z.object({id:z.string().min(1).max(100),favorite:z.boolean()}).parse(p.payload);if(!knownRecipe(s,v.id))throw new RecipeError(404,'Recette introuvable.');s.recipeFavorites??={};const ids=s.recipeFavorites[actor]||[];s.recipeFavorites[actor]=v.favorite?[...new Set([...ids,v.id])]:ids.filter(id=>id!==v.id);return;}
  const now=new Date().toISOString();
  const checkSlots=(values:MealSlot[])=>{if(values.some(v=>!knownRecipe(s,v.recipeId)))throw new RecipeError(400,'Une recette de ce menu n’existe plus.');};
  if(p.action==='recipe-save'){

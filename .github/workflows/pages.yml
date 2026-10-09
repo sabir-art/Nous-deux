@@ -32,6 +32,8 @@ jobs:
       - run: node tests/interaction.test.mjs
       - run: node tests/recipe-discovery.test.mjs
       - run: node tests/recipe-library.test.mjs
+      - run: node tests/recipe-experience.test.mjs
+      - run: node tests/ai-settings.test.mjs
       - run: node tests/accessibility.test.mjs
       - run: node tests/design-system.test.mjs
       - run: node tests/mobile-ui.test.mjs

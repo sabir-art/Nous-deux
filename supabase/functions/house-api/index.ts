@@ -1,7 +1,8 @@
+import {validAIKey,verifyAIKey,AISettingsError} from './ai-settings.ts';
 import {recipeMutation,RecipeError} from './recipe-library.ts';
 import {recipeTitles} from './recipe-ids.ts';
 import {claimDiscovery,finishDiscovery,discoveryProjection,discoverRecipes,DiscoveryError} from './recipe-discovery.ts';
-import {mealProjection,mealVote,MealError} from './meals.ts';
+import {mealProjection,mealVote,mealDraw,MealError} from './meals.ts';
 import {parisDate} from './life.ts';
 import {chatInput,chatCursorInput,photoInput} from './validation.ts';
 import {buildPushPayload} from 'npm:@block65/webcrypto-web-push@2.0.0';
@@ -21,12 +22,13 @@ async function mutate<T>(fn:(s:State)=>T){for(let i=0;i<4;i++){const snapshot=aw
 async function config(){return (await db('nd_config?id=eq.1&select=data'))[0].data;}
 async function send(device:any,data:any){if(!allowedPushEndpoint(device.subscription.endpoint))return false;const keys=(await config()).vapid;const payload=await buildPushPayload({data:JSON.stringify({...data,url:BASE+'?view='+(data.category||'settings')}),options:{ttl:data.category==='calls'?90:3600}},device.subscription,{...keys,subject:ORIGIN+BASE});const r=await fetch(device.subscription.endpoint,{...payload,redirect:'manual',signal:AbortSignal.timeout(5000)});if(r.status===404||r.status===410)await mutate(s=>{s.devices=s.devices.filter(d=>d.deviceId!==device.deviceId);});return r.ok;}
 async function notify(s:State,actor:number,category:string,message:string,originDevice=''){await Promise.allSettled(s.devices.filter(d=>d.member!==actor&&d.deviceId!==originDevice&&({...defaultPreferences,...d.preferences})[category]).map(d=>send(d,{title:'À deux',body:message,category,tag:category==='calls'?'adeux-call':undefined})));}
-const aiKey=()=>Deno.env.get('OPENAI_API_KEY')||'';
+const aiKey=async()=>{const stored=await db('rpc/nd_openai_key_get','POST',{});return typeof stored==='string'&&validAIKey(stored)?stored:Deno.env.get('OPENAI_API_KEY')||'';};
+const aiModel=()=>Deno.env.get('OPENAI_RECIPE_MODEL')||'gpt-5.4-mini';
 async function runDiscovery(){
- const key=aiKey();if(!key)return;
  try{
+  const key=await aiKey();if(!key)return;
   const {result:job,data}=await mutate(s=>claimDiscovery(s,true));if(!job)return;
-  try{const recipes=await discoverRecipes(key,[...recipeTitles,...(data.generatedRecipes||[]).map(r=>r.title)],Deno.env.get('OPENAI_RECIPE_MODEL')||'gpt-5.4-mini');await mutate(s=>finishDiscovery(s,job,recipes));}
+  try{const recipes=await discoverRecipes(key,[...recipeTitles,...(data.generatedRecipes||[]).map(r=>r.title)],aiModel());await mutate(s=>finishDiscovery(s,job,recipes));}
   catch(e){await mutate(s=>finishDiscovery(s,job,[],e instanceof DiscoveryError?e.code:'upstream'));}
  }catch{/* Never log credentials, prompts, household data or provider response bodies. */}
 }
@@ -68,6 +70,18 @@ export async function handler(req:Request):Promise<Response>{
  if(!/^[a-f0-9]{64}$/.test(token))return json({error:'Connectez-vous à votre maison.'},401);
  const sessions=await db('nd_sessions?token_hash=eq.'+await hash(token)+'&expires_at=gt.'+Date.now()+'&select=token_hash,member');if(!sessions.length||![0,1].includes(sessions[0].member))return json({error:'Votre session a expiré. Reconnectez-vous.'},401);
  const actor=sessions[0].member;
+ if(route==='ai-settings'){
+  if(req.method==='POST'){
+   if(actor!==0)throw new ApiError(403,'La clé partagée se configure depuis le compte qui gère l’abonnement.');
+   if(!validAIKey(p.key)||typeof p.password!=='string'||p.password.length<12||p.password.length>128)throw new ApiError(400,'Vérifiez la clé et votre mot de passe personnel.');
+   const hits=await db('rpc/nd_rate_hit','POST',{rate_key:'ai-settings:'+actor+':'+Math.floor(Date.now()/900000),expiry:Date.now()+1800000});if(hits>5)throw new ApiError(429,'Trop de tentatives. Réessayez dans 15 minutes.');
+   const account=(await db('nd_members?member=eq.'+actor))[0];if(!account?.password_hash||!equal(await passwordHash(p.password,account.salt),account.password_hash))throw new ApiError(403,'Votre mot de passe personnel est incorrect.');
+   await verifyAIKey(p.key,aiModel());await db('rpc/nd_openai_key_set','POST',{api_key:p.key});
+   await mutate(s=>{s.recipeDiscovery={...s.recipeDiscovery,enabled:true,...(['credentials','quota','limited'].includes(s.recipeDiscovery?.errorCode||'')?{attemptedAt:undefined,status:undefined,errorCode:undefined}: {})};});
+   backgroundDiscovery();
+  }
+  const {data}=await state();return json({configured:!!await aiKey(),canConfigure:actor===0,discovery:discoveryProjection(data,!!await aiKey())});
+ }
  if(route==='recipes'){
   if(req.method==='POST'){
    if(p.action==='toggle'){
@@ -79,12 +93,12 @@ export async function handler(req:Request):Promise<Response>{
    }
    if(['toggle','discover'].includes(p.action))backgroundDiscovery();
   }
-  const {data}=await state();return json({recipes:[...(data.generatedRecipes||[]),...(data.personalRecipes||[])],plans:data.mealPlans||[],menus:data.mealPlanTemplates||[],member:actor,discovery:discoveryProjection(data,!!aiKey())});
+  const {data}=await state(),configured=!!await aiKey(),discovery=discoveryProjection(data,configured);if(req.method==='GET'&&configured&&discovery.enabled&&Date.now()>=discovery.nextAttemptAt)backgroundDiscovery();return json({recipes:[...(data.generatedRecipes||[]),...(data.personalRecipes||[])],favorites:data.recipeFavorites?.[actor]||[],plans:data.mealPlans||[],menus:data.mealPlanTemplates||[],member:actor,discovery});
  }
  if(route==='meals'){
 
   if(req.method==='GET'){const {data}=await state();return json(mealProjection(data,actor));}
-  const {data}=await mutate(s=>mealVote(s,p,actor));return json(mealProjection(data,actor));
+  const {data}=await mutate(s=>p.action==='draw'?mealDraw(s,p,actor):mealVote(s,p,actor));return json(mealProjection(data,actor));
  }
  if(route==='household'){
   if(req.method==='GET'){const {data:s}=await state();return json({member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[]});}
@@ -129,6 +143,6 @@ export async function handler(req:Request):Promise<Response>{
   await mutate(s=>{const d=s.devices.find(d=>d.deviceId===p.deviceId);if(d&&d.member!==actor)throw new ApiError(403,'Cet appareil appartient à un autre compte.');deviceMutation(s,{...p,member:actor});});return json({ok:true});
  }
  return json({error:'Route inconnue.'},404);
- }catch(e){if(e instanceof ApiError||e instanceof MealError||e instanceof RecipeError)return json({error:e.message},e.status);if(e instanceof SyntaxError||e&&typeof e==='object'&&'issues'in e)return json({error:'Vérifiez les champs du formulaire.'},400);return json({error:'Service temporairement indisponible. Réessayez.'},503);}
+ }catch(e){if(e instanceof ApiError||e instanceof MealError||e instanceof RecipeError||e instanceof AISettingsError)return json({error:e.message},e.status);if(e instanceof SyntaxError||e&&typeof e==='object'&&'issues'in e)return json({error:'Vérifiez les champs du formulaire.'},400);return json({error:'Service temporairement indisponible. Réessayez.'},503);}
 }
 Deno.serve(handler);

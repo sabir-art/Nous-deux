@@ -16,7 +16,7 @@ mealVote(s,{date,recipeId:recipeIds[0],like:true,chef:99},1);assert.equal(s.meal
 assert.deepEqual(mealProjection(s,0,date).matches,mealProjection(s,1,date).matches);assert(!Object.hasOwn(mealProjection(s,1,date).myVotes,recipeIds[1]));
 mealVote(s,{date,recipeId:recipeIds[0],like:true},1);assert.equal(s.mealRounds[date].matches.length,1);assert.equal(s.mealRounds[date].matches[0].chef,match.chef,'Retry cannot reroll');
 assert.throws(()=>mealVote(s,{date,recipeId:recipeIds[0],like:false},1));assert.throws(()=>mealVote(s,{date,recipeId:'unknown',like:true},0));assert.throws(()=>mealVote(s,{date:'2001-01-01',recipeId:recipeIds[0],like:true},0));assert.throws(()=>mealVote(s,{date,recipeId:recipeIds[0],like:'yes'},0));assert.throws(()=>mealVote(s,{date,recipeId:recipeIds[0],like:true},2));
-assert.deepEqual(mealProjection(s,0,'2001-01-01'),{date:'2001-01-01',myVotes:{},matches:[]});
+assert.deepEqual(mealProjection(s,0,'2001-01-01'),{date:'2001-01-01',myVotes:{},matches:[],draws:{}});
 // Cover all outcomes plus rejection of the single biased uint32 value.
 const native=globalThis.crypto;let samples=[4294967295,0,1,2];Object.defineProperty(globalThis,'crypto',{configurable:true,value:{getRandomValues(a){a[0]=samples.shift();return a;}}});assert.equal(drawChef(),0);assert.equal(drawChef(),1);assert.equal(drawChef(),2);Object.defineProperty(globalThis,'crypto',{configurable:true,value:native});
 const id=crypto.randomUUID();householdMutation(s,{action:'profile-photo',payload:{photoId:id,member:1}},0);assert.equal(s.profiles[0],id);assert.equal(s.profiles[1],undefined);
