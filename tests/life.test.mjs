@@ -1,0 +1,37 @@
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {realpathSync,readFileSync} from 'node:fs';
+const {build}=createRequire(realpathSync('node_modules/wrangler/package.json'))('esbuild');
+async function bundle(path){const b=await build({entryPoints:[path],bundle:true,platform:'node',format:'esm',write:false,plugins:[{name:'npm',setup(b){b.onResolve({filter:/^npm:zod@/},()=>({path:realpathSync('node_modules/zod/index.js')}));}}]});return import('data:text/javascript;base64,'+Buffer.from(b.outputFiles[0].text).toString('base64'));}
+const {products,searchProducts,findProduct}=await bundle('lib/products.ts');
+assert(products.length>=200);assert.equal(new Set(products.map(p=>p.title)).size,products.length);
+assert(searchProducts('ba').some(p=>p.title==='Banane'));assert.equal(searchProducts('ban1')[0].title,'Banane');assert.equal(searchProducts('banana')[0].title,'Banane');assert.equal(searchProducts('cereales')[0].title,'Céréales');assert.equal(searchProducts('kiw')[0].title,'Kiwi');assert.equal(findProduct('bananes').icon,'🍌');
+assert(!findProduct('Banane').presets.includes('100 g'));assert(findProduct('Paprika').presets.includes('30 g'));assert(findProduct('Œufs').presets.includes('6 œufs'));assert.equal(findProduct('Un truc inventé'),undefined);
+for(const p of products){assert(p.icon);assert(p.presets.length>0);}
+const {householdMutation,claimPlantReminders}=await bundle('supabase/functions/house-api/model.ts');
+const {plantCare,plantMood,parisDate,addDays}=await bundle('lib/life.ts');
+assert.equal(readFileSync('lib/life.ts','utf8'),readFileSync('supabase/functions/house-api/life.ts','utf8'),'Client and server share the same calendar rules');
+const s={household:{first:'A',second:'B',version:1},entries:[],items:[],appointments:[],activity:[],devices:[],sequence:0};
+const invite={id:crypto.randomUUID(),version:0,title:'Un film ensemble',description:'Un vendredi tranquille',category:'home',date:'2026-10-16',time:'20:00',location:'Salon',owner:1,status:'accepted'};
+householdMutation(s,{action:'idea',payload:invite},0);assert.equal(s.ideas[0].owner,0);assert.equal(s.ideas[0].status,'pending');
+assert.throws(()=>householdMutation(s,{action:'idea-response',payload:{id:invite.id,version:1,status:'accepted'}},0),e=>e.status===403);
+assert.throws(()=>householdMutation(s,{action:'idea',payload:{...invite,version:1}},1),e=>e.status===403);
+householdMutation(s,{action:'idea-response',payload:{id:invite.id,version:1,status:'accepted',responseNote:'Avec plaisir'}},1);assert.equal(s.ideas[0].status,'accepted');assert.equal(s.ideas[0].responseNote,'Avec plaisir');
+assert.throws(()=>householdMutation(s,{action:'idea-response',payload:{id:invite.id,version:1,status:'declined'}},1),e=>e.status===409);
+householdMutation(s,{action:'idea',payload:{...invite,version:2,title:'Un autre film'}},0);assert.equal(s.ideas[0].status,'pending');assert.equal(s.ideas[0].responseNote,'');
+assert.throws(()=>householdMutation(s,{action:'delete-idea',payload:{id:invite.id,version:3}},1),e=>e.status===403);
+const day=parisDate();const p={id:crypto.randomUUID(),version:0,name:'Pousse',species:'Plante fictive',location:'Salon',note:'',waterEvery:7,lightEvery:0,feedEvery:30,lastWater:addDays(day,-10),lastLight:day,lastFeed:day,reminders:true,remindBoth:false};
+householdMutation(s,{action:'plant',payload:{...p,owner:1,careLog:[{actor:1}]}},0);assert.equal(s.plants[0].owner,0);assert.equal(s.plants[0].careLog.length,0);assert.equal(plantCare(s.plants[0]).length,2);assert.equal(plantCare(s.plants[0])[0].overdue,3);assert.equal(plantMood(s.plants[0]),'thirsty');
+assert.equal(plantMood({...p,lastWater:addDays(day,-20)}),'droopy');assert.equal(plantMood({...p,lastWater:addDays(day,-7)}),'ready');assert.equal(plantMood({...p,lastWater:day}),'happy');
+assert.throws(()=>householdMutation(s,{action:'plant',payload:{...p,version:1,name:'Usurpation'}},1),e=>e.status===403);
+assert.throws(()=>householdMutation(s,{action:'plant-care',payload:{id:p.id,version:1,kind:'light'}},1),e=>e.status===400);
+const d0={deviceId:crypto.randomUUID(),member:0,preferences:{plants:true}},d1={deviceId:crypto.randomUUID(),member:1,preferences:{plants:true}},off={deviceId:crypto.randomUUID(),member:0,preferences:{plants:false}};
+s.devices=[d0,d1,off];assert.deepEqual(claimPlantReminders(s,day).map(x=>x.device.deviceId),[d0.deviceId]);assert.equal(claimPlantReminders(s,day).length,0);s.plants[0].remindBoth=true;assert.deepEqual(claimPlantReminders(s,day).map(x=>x.device.deviceId),[d1.deviceId]);
+householdMutation(s,{action:'plant-care',payload:{id:p.id,version:1,kind:'water',actor:0,date:'2020-01-01'}},1);assert.equal(s.plants[0].lastWater,day);assert.equal(s.plants[0].careLog[0].actor,1);assert.equal(plantMood(s.plants[0]),'happy');
+assert.throws(()=>householdMutation(s,{action:'plant-care',payload:{id:p.id,version:2,kind:'water'}},0),e=>e.status===409);
+householdMutation(s,{action:'plant',payload:{...p,version:2,lastWater:addDays(day,-30),remindBoth:true}},0);assert.equal(s.plants[0].lastWater,day);assert.equal(s.plants[0].careLog[0].actor,1);
+assert.equal(claimPlantReminders(s,addDays(day,1)).length,0);
+assert.throws(()=>householdMutation(s,{action:'plant',payload:{...p,id:crypto.randomUUID(),lastWater:addDays(day,1)}},0),e=>e.status===400);
+assert.throws(()=>householdMutation(s,{action:'plant',payload:{...p,id:crypto.randomUUID(),waterEvery:0}},0));
+assert.equal(addDays('2026-10-24',2),'2026-10-26');assert.equal(parisDate(new Date('2026-10-09T23:30:00Z')),'2026-10-10');
+console.log('PASS: 234-product catalogue, typo matching, sensible quantities; invitation authors/responses; plant ownership, care history, Paris dates, moods and deduplicated reminder audiences.');

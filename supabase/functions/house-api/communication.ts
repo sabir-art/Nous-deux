@@ -1,9 +1,9 @@
 import {z} from 'npm:zod@3.25.76';
-export const notificationCategories=['shopping','tasks','expenses','calendar','calls'] as const;
+export const notificationCategories=['shopping','tasks','expenses','calendar','calls','ideas','plants'] as const;
 export type NotificationCategory=typeof notificationCategories[number];
-export const preferenceInput=z.object({shopping:z.boolean(),tasks:z.boolean(),expenses:z.boolean(),calendar:z.boolean(),calls:z.boolean()}).strict();
+export const preferenceInput=z.object({shopping:z.boolean(),tasks:z.boolean(),expenses:z.boolean(),calendar:z.boolean(),calls:z.boolean(),ideas:z.boolean().default(true),plants:z.boolean().default(true)}).strict();
 export type Preferences=z.infer<typeof preferenceInput>;
-export const defaultPreferences:Preferences={shopping:true,tasks:true,expenses:true,calendar:true,calls:true};
+export const defaultPreferences:Preferences={shopping:true,tasks:true,expenses:true,calendar:true,calls:true,ideas:true,plants:true};
 export const deviceInput=z.string().uuid();
 export const memberInput=z.number().int().min(0).max(1);
 // Restrict outbound push requests to known browser push services (no arbitrary URLs).

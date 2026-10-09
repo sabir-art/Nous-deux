@@ -1,0 +1,10 @@
+export type Idea={id:string;owner:number;title:string;description:string;category:'restaurant'|'outing'|'home'|'trip'|'surprise';date:string;time:string;location:string;version:number;status:'pending'|'accepted'|'declined';responseNote:string;createdAt:string;respondedAt?:string};
+export type CareKind='water'|'light'|'feed';
+export type Plant={id:string;owner:number;name:string;species:string;location:string;note:string;waterEvery:number;lightEvery:number;feedEvery:number;lastWater:string;lastLight:string;lastFeed:string;reminders:boolean;remindBoth:boolean;version:number;createdAt:string;careLog:{kind:CareKind;actor:number;date:string;at:string}[]};
+export const careLabels={water:'Arrosage',light:'Lumière à vérifier',feed:'Engrais'};
+export function parisDate(now=new Date()){return new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);}
+export function addDays(date:string,days:number){const d=new Date(date+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+days);return d.toISOString().slice(0,10);}
+export function dayDifference(a:string,b:string){return Math.round((Date.parse(a+'T12:00:00Z')-Date.parse(b+'T12:00:00Z'))/86400000);}
+export function plantCare(plant:Plant,date=parisDate()){return (['water','light','feed'] as CareKind[]).map(kind=>{const interval=plant[`${kind}Every`];const last=plant[kind==='water'?'lastWater':kind==='light'?'lastLight':'lastFeed'];const due=addDays(last,interval);return {kind,interval,last,due,overdue:dayDifference(date,due)};}).filter(c=>c.interval>0);}
+export function plantMood(plant:Plant,date=parisDate()){const water=plantCare(plant,date).find(c=>c.kind==='water')!;return water.overdue<0?'happy':water.overdue===0?'ready':water.overdue<=Math.max(2,Math.floor(water.interval/2))?'thirsty':'droopy';}
+export const plantQuips={happy:'La vie est belle, je pousse tranquille !',ready:'C’est mon jour de spa. On vérifie mon terreau ?',thirsty:'Allô, le service des petites gouttes ? 🌧️',droopy:'Je répète pour un rôle de salade fanée… On s’occupe de moi ?'};

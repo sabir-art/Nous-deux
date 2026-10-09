@@ -1,6 +1,7 @@
-import {chatInput,chatCursorInput} from './validation.ts';
+import {parisDate} from './life.ts';
+import {chatInput,chatCursorInput,photoInput} from './validation.ts';
 import {buildPushPayload} from 'npm:@block65/webcrypto-web-push@2.0.0';
-import {authorizeChat,visibleAppointments,ApiError,householdMutation,callMutation,deviceMutation,type State} from './model.ts';
+import {claimPlantReminders,authorizeChat,visibleAppointments,ApiError,householdMutation,callMutation,deviceMutation,type State} from './model.ts';
 import {defaultPreferences,deviceInput,allowedPushEndpoint} from './communication.ts';
 const ORIGIN='https://sabir-art.github.io',BASE='/Nous-deux/';
 const enc=new TextEncoder();
@@ -15,7 +16,7 @@ async function state(){const rows=await db('nd_state?id=eq.1&select=version,data
 async function mutate<T>(fn:(s:State)=>T){for(let i=0;i<4;i++){const snapshot=await state();const result=fn(snapshot.data);const rows=await db('nd_state?id=eq.1&version=eq.'+snapshot.version,'PATCH',{data:snapshot.data,version:snapshot.version+1});if(rows.length)return {result,data:snapshot.data};}throw new ApiError(409,'Modification simultanée. Réessayez.');}
 async function config(){return (await db('nd_config?id=eq.1&select=data'))[0].data;}
 async function send(device:any,data:any){if(!allowedPushEndpoint(device.subscription.endpoint))return false;const keys=(await config()).vapid;const payload=await buildPushPayload({data:JSON.stringify({...data,url:BASE+'?view='+(data.category||'settings')}),options:{ttl:data.category==='calls'?90:3600}},device.subscription,{...keys,subject:ORIGIN+BASE});const r=await fetch(device.subscription.endpoint,{...payload,redirect:'manual',signal:AbortSignal.timeout(5000)});if(r.status===404||r.status===410)await mutate(s=>{s.devices=s.devices.filter(d=>d.deviceId!==device.deviceId);});return r.ok;}
-async function notify(s:State,actor:number,category:string,message:string,originDevice=''){await Promise.allSettled(s.devices.filter(d=>d.member!==actor&&d.deviceId!==originDevice&&(d.preferences||defaultPreferences)[category]).map(d=>send(d,{title:'À deux',body:message,category,tag:category==='calls'?'adeux-call':undefined})));}
+async function notify(s:State,actor:number,category:string,message:string,originDevice=''){await Promise.allSettled(s.devices.filter(d=>d.member!==actor&&d.deviceId!==originDevice&&({...defaultPreferences,...d.preferences})[category]).map(d=>send(d,{title:'À deux',body:message,category,tag:category==='calls'?'adeux-call':undefined})));}
 const cors={'Access-Control-Allow-Origin':ORIGIN,'Access-Control-Allow-Headers':'content-type,apikey,x-house-session,x-adeux-member,x-adeux-device','Access-Control-Allow-Methods':'GET,POST,OPTIONS','Vary':'Origin','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
 export async function handler(req:Request):Promise<Response>{
  const json=(body:unknown,status=200)=>Response.json(body,{status,headers:cors});
@@ -24,7 +25,18 @@ export async function handler(req:Request):Promise<Response>{
  if(!['GET','POST'].includes(req.method))return json({error:'Méthode non autorisée.'},405);
  try{
  const url=new URL(req.url),route=url.searchParams.get('route')||'',token=req.headers.get('x-house-session')||'';
- let p:any={};if(req.method==='POST'){if(!req.headers.get('content-type')?.includes('application/json'))return json({error:'Format invalide.'},415);const raw=await req.text();if(raw.length>36000)return json({error:'Contenu trop long.'},413);p=JSON.parse(raw);}
+ let p:any={};if(req.method==='POST'){if(!req.headers.get('content-type')?.includes('application/json'))return json({error:'Format invalide.'},415);const raw=await req.text();if(raw.length>(route==='photos'?361000:36000))return json({error:'Contenu trop long.'},413);p=JSON.parse(raw);}
+ if(route==='plant-reminders'){
+  if(req.method!=='POST')return json({error:'Méthode non autorisée.'},405);
+  const credential=req.headers.get('x-plant-reminder')||'';if(!/^[a-f0-9]{64}$/.test(credential))return json({error:'Accès réservé au planificateur.'},401);
+  const cfg=await config();if(!cfg.plantReminderHash||!equal(await hash(credential),cfg.plantReminderHash))return json({error:'Accès réservé au planificateur.'},401);
+  const now=new Date(),hour=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hour:'2-digit',hour12:false}).format(now);if(hour!=='09')return json({ok:true,skipped:true});
+  const day=parisDate(now);const {result}=await mutate(s=>claimPlantReminders(s,day));
+  const results=await Promise.allSettled(result.map(async({device,count})=>{
+   try{const ok=await send(device,{title:'Le petit jardin 🌱',body:count===1?'Une plante réclame son petit spa. Vérifiez ses soins du jour !':`${count} plantes attendent leurs soins. La réunion des feuilles a commencé !`,category:'plants',tag:'adeux-plants'});if(ok)return true;}catch{}
+   await mutate(s=>{if(s.plantReminderDays?.[device.deviceId]===day)delete s.plantReminderDays[device.deviceId];});return false;
+  }));return json({ok:true,attempted:result.length,sent:results.filter(r=>r.status==='fulfilled'&&r.value).length});
+ }
  if(route==='access'){
   const selected=Number(url.searchParams.get('member')??p.member);if(selected!==0&&selected!==1)return json({error:'Choisissez votre compte.'},400);const access=(await db('nd_members?member=eq.'+selected))[0];if(!access)return json({error:'Configuration en cours.'},503);
   if(req.method==='GET')return json({configured:!!access.password_hash});
@@ -42,10 +54,22 @@ export async function handler(req:Request):Promise<Response>{
  const sessions=await db('nd_sessions?token_hash=eq.'+await hash(token)+'&expires_at=gt.'+Date.now()+'&select=token_hash,member');if(!sessions.length||![0,1].includes(sessions[0].member))return json({error:'Votre session a expiré. Reconnectez-vous.'},401);
  const actor=sessions[0].member;
  if(route==='household'){
-  if(req.method==='GET'){const {data:s}=await state();return json({member:actor,household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[]});}
+  if(req.method==='GET'){const {data:s}=await state();return json({member:actor,household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[]});}
+  if(p.action==='item'&&p.payload?.photoId){const photoId=deviceInput.parse(p.payload.photoId);const photos=await db('nd_photos?id=eq.'+photoId+'&select=owner');if(!photos.length||photos[0].owner!==actor)throw new ApiError(403,'Vous ne pouvez joindre que votre propre photo.');}
   const {result,data}=await mutate(s=>householdMutation(s,p,actor));if(result)try{await notify(data,actor,result.category,'Votre moitié '+result.message,req.headers.get('x-adeux-device')||'');}catch{}return json({ok:true});
  }
 
+ if(route==='photos'){
+  if(req.method==='GET'){
+   const id=deviceInput.parse(url.searchParams.get('id'));const photo=(await db('nd_photos?id=eq.'+id))[0];if(!photo)throw new ApiError(404,'Photo introuvable.');
+   if(photo.owner!==actor){const {data:s}=await state();if(!s.items.some(i=>i.kind==='shopping'&&i.photoId===id))throw new ApiError(403,'Photo non partagée.');}
+   return json({data:photo.data});
+  }
+  const v=photoInput.parse(p);let bytes='';try{bytes=atob(v.data.slice(23));}catch{throw new ApiError(400,'Photo invalide.');}if(bytes.length>270000||!bytes.startsWith('\xff\xd8')||!bytes.endsWith('\xff\xd9'))throw new ApiError(400,'Choisissez une image JPEG valide.');
+  const old=(await db('nd_photos?id=eq.'+v.id+'&select=owner'))[0];if(old&&old.owner!==actor)throw new ApiError(403,'Cette photo appartient à un autre compte.');
+  if(!old){const photos=await db('nd_photos?owner=eq.'+actor+'&select=id&limit=1000');if(photos.length>=1000)throw new ApiError(400,'Limite de photos atteinte.');}
+  await db('nd_photos?on_conflict=id','POST',{id:v.id,data:v.data,owner:actor},'resolution=ignore-duplicates,return=representation');return json({id:v.id});
+ }
  if(route==='chat'){
   if(req.method==='GET'){
    const before=url.searchParams.get('before');let filter='';
@@ -67,7 +91,7 @@ export async function handler(req:Request):Promise<Response>{
   const {result,data}=await mutate(s=>callMutation(s,{...p,member:actor}));if(p.action==='start')try{await notify(data,actor,'calls','Votre moitié vous appelle. Ouvrez À deux pour répondre.');}catch{}return json(result);
  }
  if(route==='notifications'){
-  if(req.method==='GET'){const device=deviceInput.parse(url.searchParams.get('device'));const {data:s}=await state();const d=s.devices.find(d=>d.deviceId===device&&d.member===actor);return json({publicKey:(await config()).vapid.publicKey,enabled:!!d,preferences:d?.preferences||defaultPreferences,activity:s.activity.slice(0,50)});}
+  if(req.method==='GET'){const device=deviceInput.parse(url.searchParams.get('device'));const {data:s}=await state();const d=s.devices.find(d=>d.deviceId===device&&d.member===actor);return json({publicKey:(await config()).vapid.publicKey,enabled:!!d,preferences:{...defaultPreferences,...d?.preferences},activity:s.activity.slice(0,50)});}
   if(p.action==='test'){const device=deviceInput.parse(p.deviceId);const {data:s}=await state();const d=s.devices.find(d=>d.deviceId===device&&d.member===actor);if(!d)return json({error:'Activez les notifications.'},400);return await send(d,{title:'À deux',body:'Les notifications de votre maison sont activées.'})?json({ok:true}):json({error:'Le service de notification a refusé le test.'},502);}
   await mutate(s=>{const d=s.devices.find(d=>d.deviceId===p.deviceId);if(d&&d.member!==actor)throw new ApiError(403,'Cet appareil appartient à un autre compte.');deviceMutation(s,{...p,member:actor});});return json({ok:true});
  }

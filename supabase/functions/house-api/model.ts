@@ -1,12 +1,14 @@
-import {entryInput,itemInput,householdInput,deleteInput,appointmentInput,shoppingCheckInput,templateInput,templateApplyInput} from './validation.ts';
+import {parisDate,plantCare} from './life.ts';
+import {entryInput,itemInput,householdInput,deleteInput,appointmentInput,shoppingCheckInput,templateInput,templateApplyInput,ideaInput,ideaResponseInput,plantInput,plantCareInput} from './validation.ts';
 import {deviceInput,memberInput,preferenceInput,subscriptionInput,changeDescription} from './communication.ts';
 export class ApiError extends Error{constructor(public status:number,message:string){super(message);}}
-export type State={household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[]};
+export type State={household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];plantReminderDays?:Record<string,string>};
 const conflict=()=>{throw new ApiError(409,'Cet élément a changé sur un autre appareil. Fermez puis rouvrez le formulaire.');};
 export function householdMutation(s:State,p:any,actor:number){
  if(actor!==0&&actor!==1)throw new ApiError(403,'Compte personnel requis.');
  const {action,payload}=p;if(typeof action!=='string')throw new ApiError(400,'Action invalide.');const previous=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;const now=new Date().toISOString();
 
+ if(['idea','idea-response','delete-idea','plant','plant-care','delete-plant'].includes(action))return lifeMutation(s,action,payload,actor,now);
  if(action==='shopping-check'){
   const v=shoppingCheckInput.parse(payload),item=s.items.find(i=>i.id===v.id&&i.kind==='shopping');
   if(!item||item.version!==v.version)conflict();
@@ -42,7 +44,7 @@ export function householdMutation(s:State,p:any,actor:number){
   const existing=s[list].find(x=>x.id===payload?.id);if(existing&&existing.owner!==actor)throw new ApiError(403,'Seul l’auteur peut modifier ou supprimer cet élément.');
   if(list==='entries'&&!action.startsWith('delete-')&&payload?.member!==actor)throw new ApiError(403,'Enregistrez uniquement vos propres paiements.');
   if(action.startsWith('delete-')){const v=deleteInput.parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0||s[list][i].version!==v.version)conflict();s[list].splice(i,1);}
-  else{const v=(list==='entries'?entryInput:list==='items'?itemInput:appointmentInput).parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0&&v.version!==0||i>=0&&s[list][i].version!==v.version)conflict();if(list==='items'&&existing&&existing.kind!==v.kind)throw new ApiError(400,'Le type de liste ne peut pas changer.');if(list==='items'&&v.kind==='shopping'&&((existing&&v.done!==existing.done)||(!existing&&v.done)))throw new ApiError(400,'Utilisez la case achat pour cocher un article.');const value={...v,...(list==='items'&&v.kind==='shopping'?{weekStart:weekMonday(v.weekStart||existing?.weekStart||parisToday()),purchasedBy:existing?.purchasedBy??null,purchasedAt:existing?.purchasedAt??null}:{}),owner:actor,version:v.version+1,createdAt:i<0?now:s[list][i].createdAt};if(i<0)s[list].push(value);else s[list][i]=value;}
+  else{const v=(list==='entries'?entryInput:list==='items'?itemInput:appointmentInput).parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0&&v.version!==0||i>=0&&s[list][i].version!==v.version)conflict();if(list==='items'&&existing&&existing.kind!==v.kind)throw new ApiError(400,'Le type de liste ne peut pas changer.');if(list==='items'&&v.kind==='shopping'&&((existing&&v.done!==existing.done)||(!existing&&v.done)))throw new ApiError(400,'Utilisez la case achat pour cocher un article.');const value={...v,...(list==='items'&&v.kind==='shopping'?{note:v.note??existing?.note??'',photoId:v.photoId===undefined?existing?.photoId??null:v.photoId,weekStart:weekMonday(v.weekStart||existing?.weekStart||parisToday()),purchasedBy:existing?.purchasedBy??null,purchasedAt:existing?.purchasedAt??null}:{}),owner:actor,version:v.version+1,createdAt:i<0?now:s[list][i].createdAt};if(i<0)s[list].push(value);else s[list][i]=value;}
  }
  // Private changes never enter the shared activity feed or trigger partner push.
  const current=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;
@@ -72,3 +74,34 @@ export function visibleAppointments(s:State,actor:number){return s.appointments.
 export function weekMonday(date:string){const d=new Date(date+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);return d.toISOString().slice(0,10);}
 const parisToday=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 export function authorizeChat(message:any,actor:number,version:number|undefined){if(!message||message.member!==actor)throw new ApiError(403,'Vous pouvez modifier uniquement vos messages.');if(message.version!==version)conflict();}
+
+function lifeMutation(s:State,action:string,p:any,actor:number,now:string){
+ const isIdea=action.includes('idea');const list=isIdea?(s.ideas??=[]):(s.plants??=[]);const old=list.find(x=>x.id===p?.id);const date=parisDate();
+ if(action==='idea-response'){
+  const v=ideaResponseInput.parse(p);if(!old||old.owner===actor)throw new ApiError(403,'Seule la personne invitée peut répondre.');
+  if(old.version!==v.version||old.status!=='pending')conflict();Object.assign(old,{status:v.status,responseNote:v.responseNote,respondedAt:now,version:old.version+1});
+ }else if(action==='plant-care'){
+  const v=plantCareInput.parse(p);if(!old||old.version!==v.version)conflict();if(!plantCare(old,date).some(c=>c.kind===v.kind))throw new ApiError(400,'Ce soin n’est pas activé.');
+  const key=v.kind==='water'?'lastWater':v.kind==='light'?'lastLight':'lastFeed';
+  if(old.careLog?.some((c:any)=>c.kind===v.kind&&c.date===date))throw new ApiError(409,'Ce soin a déjà été noté aujourd’hui.');
+  old[key]=date;old.careLog=[{kind:v.kind,actor,date,at:now},...(old.careLog||[])].slice(0,100);old.version++;
+ }else{
+  if(old&&old.owner!==actor)throw new ApiError(403,'Seul l’auteur peut modifier ou supprimer cette fiche.');
+  if(action.startsWith('delete-')){const v=deleteInput.parse(p);if(!old||old.version!==v.version)conflict();list.splice(list.indexOf(old),1);}
+  else{
+   const v=(isIdea?ideaInput:plantInput).parse(p);if((old?.version||0)!==v.version)conflict();
+   if(!old&&list.length>=(isIdea?300:100))throw new ApiError(400,'La limite de fiches est atteinte. Supprimez une ancienne fiche pour continuer.');
+   if(!isIdea&&['lastWater','lastLight','lastFeed'].some(k=>v[k]>date))throw new ApiError(400,'Un soin déjà effectué ne peut pas être dans le futur.');
+   const value={...v,owner:actor,version:v.version+1,createdAt:old?.createdAt||now,...(isIdea?{status:'pending',responseNote:'',respondedAt:null}:{careLog:old?.careLog||[],...(old?{lastWater:old.lastWater,lastLight:old.lastLight,lastFeed:old.lastFeed}:{})})};
+   if(old)list[list.indexOf(old)]=value;else list.push(value);
+  }
+ }
+ const note={category:isIdea?'ideas':'plants',message:action==='idea-response'?(p.status==='accepted'?'a accepté votre invitation.':'a répondu « pas cette fois » à votre invitation.'):action==='idea'?'vous propose une activité à deux.':action==='plant-care'?'a pris soin d’une plante.':action==='plant'?'a mis à jour le petit jardin.':'a supprimé une fiche.'};
+ s.sequence=(s.sequence||0)+1;s.activity.unshift({id:s.sequence,actor,...note,createdAt:now});s.activity=s.activity.slice(0,500);return note;
+}
+export function claimPlantReminders(s:State,date:string){
+ s.plantReminderDays??={};const targets=s.devices.filter(d=>(d.preferences?.plants??true)&&s.plantReminderDays![d.deviceId]!==date).flatMap(d=>{
+ const due=(s.plants||[]).filter(p=>p.reminders&&(p.owner===d.member||p.remindBoth)&&plantCare(p,date).some(c=>c.overdue>=0));if(!due.length)return [];
+ s.plantReminderDays![d.deviceId]=date;return [{device:d,count:due.length}];
+ });for(const id of Object.keys(s.plantReminderDays))if(!s.devices.some(d=>d.deviceId===id))delete s.plantReminderDays[id];return targets;
+}
