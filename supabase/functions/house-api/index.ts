@@ -1,3 +1,4 @@
+import {recipeMutation,RecipeError} from './recipe-library.ts';
 import {recipeTitles} from './recipe-ids.ts';
 import {claimDiscovery,finishDiscovery,discoveryProjection,discoverRecipes,DiscoveryError} from './recipe-discovery.ts';
 import {mealProjection,mealVote,MealError} from './meals.ts';
@@ -72,10 +73,13 @@ export async function handler(req:Request):Promise<Response>{
    if(p.action==='toggle'){
     if(typeof p.enabled!=='boolean')throw new ApiError(400,'Réglage invalide.');
     await mutate(s=>{s.recipeDiscovery={...s.recipeDiscovery,enabled:p.enabled};});
-   }else if(p.action!=='discover')throw new ApiError(400,'Action inconnue.');
-   backgroundDiscovery();
+   }else if(p.action!=='discover'){
+    if(p.action==='recipe-save'&&p.payload?.photoId){const photoId=deviceInput.parse(p.payload.photoId);const photos=await db('nd_photos?id=eq.'+photoId+'&select=owner');if(!photos.length||photos[0].owner!==actor)throw new ApiError(403,'Vous ne pouvez joindre que votre propre photo.');}
+    await mutate(s=>recipeMutation(s,p,actor));
+   }
+   if(['toggle','discover'].includes(p.action))backgroundDiscovery();
   }
-  const {data}=await state();return json({recipes:data.generatedRecipes||[],discovery:discoveryProjection(data,!!aiKey())});
+  const {data}=await state();return json({recipes:[...(data.generatedRecipes||[]),...(data.personalRecipes||[])],plans:data.mealPlans||[],menus:data.mealPlanTemplates||[],member:actor,discovery:discoveryProjection(data,!!aiKey())});
  }
  if(route==='meals'){
 
@@ -91,7 +95,7 @@ export async function handler(req:Request):Promise<Response>{
  if(route==='photos'){
   if(req.method==='GET'){
    const id=deviceInput.parse(url.searchParams.get('id'));const photo=(await db('nd_photos?id=eq.'+id))[0];if(!photo)throw new ApiError(404,'Photo introuvable.');
-   if(photo.owner!==actor){const {data:s}=await state();if(!s.items.some(i=>i.kind==='shopping'&&i.photoId===id)&&!Object.values(s.profiles||{}).includes(id))throw new ApiError(403,'Photo non partagée.');}
+   if(photo.owner!==actor){const {data:s}=await state();if(!s.items.some(i=>i.kind==='shopping'&&i.photoId===id)&&!Object.values(s.profiles||{}).includes(id)&&!s.personalRecipes?.some(r=>r.photoId===id))throw new ApiError(403,'Photo non partagée.');}
    return json({data:photo.data});
   }
   const v=photoInput.parse(p);let bytes='';try{bytes=atob(v.data.slice(23));}catch{throw new ApiError(400,'Photo invalide.');}if(bytes.length>270000||!bytes.startsWith('\xff\xd8')||!bytes.endsWith('\xff\xd9'))throw new ApiError(400,'Choisissez une image JPEG valide.');
@@ -125,6 +129,6 @@ export async function handler(req:Request):Promise<Response>{
   await mutate(s=>{const d=s.devices.find(d=>d.deviceId===p.deviceId);if(d&&d.member!==actor)throw new ApiError(403,'Cet appareil appartient à un autre compte.');deviceMutation(s,{...p,member:actor});});return json({ok:true});
  }
  return json({error:'Route inconnue.'},404);
- }catch(e){if(e instanceof ApiError||e instanceof MealError)return json({error:e.message},e.status);if(e instanceof SyntaxError||e&&typeof e==='object'&&'issues'in e)return json({error:'Vérifiez les champs du formulaire.'},400);return json({error:'Service temporairement indisponible. Réessayez.'},503);}
+ }catch(e){if(e instanceof ApiError||e instanceof MealError||e instanceof RecipeError)return json({error:e.message},e.status);if(e instanceof SyntaxError||e&&typeof e==='object'&&'issues'in e)return json({error:'Vérifiez les champs du formulaire.'},400);return json({error:'Service temporairement indisponible. Réessayez.'},503);}
 }
 Deno.serve(handler);

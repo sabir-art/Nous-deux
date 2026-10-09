@@ -83,7 +83,7 @@ import * as React from 'react';
         return h("div", { key: d.day },
           h("div", { className: "nd-day-dow" }, d.dow),
           h("button", { type: "button", className: "nd-day-num", "aria-current": d.day === (p.selected !== undefined ? p.selected : s[0]) ? "date" : undefined, "aria-label": (d.label || d.dow + " " + d.day) + (d.who && d.who.length ? ", " + d.who.length + " événement" + (d.who.length > 1 ? "s" : "") : ""), onClick: function () { s[1](d.day); p.onSelect && p.onSelect(d.day); } }, d.day),
-          h("div", { className: "nd-day-dots" }, (d.who || []).map(function (w, i) { return h("i", { key: i, style: { background: "var(--" + (w === "a" ? "partner-a" : w === "b" ? "partner-b" : "heart") + ")" } }); })));
+          h("div", { className: "nd-day-dots" }, (d.who || []).map(function (w, i) { return h("i", { key: i, style: { background: "var(--" + (d.tones && d.tones[i] ? d.tones[i] : w === "a" ? "partner-a" : w === "b" ? "partner-b" : "heart") + ")" } }); })));
       }));
   }
 
@@ -488,15 +488,15 @@ import * as React from 'react';
     }
   };
   function PiggyBank(p) {
-    var goal = p.goal || 1, pct = Math.max(0, Math.min(1, (p.value || 0) / goal)), mode = p.mode || "budget", variant = p.variant || "classique";
+    var hasGoal = p.goal > 0, goal = p.goal || 1, pct = hasGoal ? Math.max(0, Math.min(1, (p.value || 0) / goal)) : 0, mode = p.mode || "budget", variant = p.variant || "classique";
     var high = mode === "budget" && pct >= .9;
     var note = p.note || (mode === "budget" ? (high ? "Attention, presque tout est dépensé" : "Il reste " + euros(goal - p.value) + " ce mois-ci") : "Encore " + euros(goal - p.value) + " pour l'objectif");
     var id = useState(function () { return "pig" + (++uid); })[0];
     return h("div", { className: cx("nd-piggy", "nd-piggy-" + variant), "data-level": high ? "high" : "ok" },
       h("div", { className: "nd-piggy-head" }, h("div", { className: "nd-money-label" }, p.label),
-        h("span", { className: cx("nd-status", high ? "nd-status-soon" : "nd-status-paid") }, Math.round(pct * 100) + " %", h("span", { className: "nd-sr" }, high ? " : budget presque épuisé" : mode === "budget" ? " du budget utilisé" : " de l'objectif"))),
-      h("svg", { viewBox: "0 -14 240 204", role: "img", "aria-label": "Tirelire remplie à " + Math.round(pct * 100) + " %" }, (PIGS[variant] || PIGS.classique)(pct, high, id)),
-      h("div", { className: "nd-piggy-amount" }, euros(p.value), h("small", null, " / " + euros(goal))),
+        h("span", { className: cx("nd-status", high ? "nd-status-soon" : "nd-status-paid") }, (hasGoal ? Math.round(pct * 100) + " %" : "Sans plafond"), h("span", { className: "nd-sr" }, !hasGoal ? " : aucun budget défini" : high ? " : budget presque épuisé" : mode === "budget" ? " du budget utilisé" : " de l'objectif"))),
+      h("svg", { viewBox: "0 -14 240 204", role: "img", "aria-label": hasGoal ? "Tirelire remplie à " + Math.round(pct * 100) + " %" : "Notre petite tirelire" }, (PIGS[variant] || PIGS.classique)(pct, high, id)),
+      h("div", { className: "nd-piggy-amount" }, euros(p.value), hasGoal ? h("small", null, " / " + euros(goal)) : null),
       h("div", { className: "nd-piggy-note" }, note),
       p.envelopes ? h("div", { className: "nd-envelopes" }, p.envelopes.map(function (e) {
         return h("div", { key: e.label, className: "nd-env" },

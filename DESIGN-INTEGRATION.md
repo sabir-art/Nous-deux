@@ -19,3 +19,17 @@ L’icône SVG d’application est copiée sans modification. Ses déclinaisons 
 - Vérification de budgets vides et remplis, conservation des centimes et du vrai solde, tableau accessible des graphiques, droits de modification des plantes, votes privés et appels conservés entre les pages.
 
 Ces contrôles ne remplacent pas un audit RGAA complet ni une recette tactile sur un iPhone réel. L’observation interactive de la session privée du navigateur n’était pas disponible pendant cette intégration. Aucune session de compte n’a été créée ou contournée pour les tests ; les rendus utilisent des données synthétiques sans accès réseau.
+
+## Mobile refinements and personal cookbook — 9 October 2026
+
+- Home: eight centered quick-add actions, short single-line tile badges, “Nos missions”, explicit countdown dates and an SVG suitcase mascot built from buddy tokens.
+- Layout: bounded Safari date inputs and dialog descendants; the viewport cannot scroll sideways, while plant rails and narrow calendar grids retain their own scroll. Recipe images have an explicit clipped frame.
+- Gestures: the recipe card owns one-finger motion, locks a slightly diagonal horizontal intent, and scrolls the workspace for a clearly vertical gesture. Keyboard arrow and button alternatives remain available; pinch zoom and reduced motion are retained.
+- Chat: one-row auto-growing composer, transparent outer surface, stable round send button, visual viewport resize/scroll and keyboard dismissal cleanup.
+- Calendar: visible French, Christian, Muslim and other holiday switches, distinct holiday tones, colored hero and panels. Personal event privacy is unchanged.
+- Invitations: illustrated ticket, optional folded reply, affectionate playful decline, and contained secondary actions. Budget mascot is shown without inventing a budget when no goal is set.
+- Recipes: authenticated `/recipes` mutations for author-owned recipes, servings, ingredients, steps, optional calories per portion, manual nutrient notes, and private compressed photos (30 MB input cap). Archived recipes remain available to existing matches and menus.
+- Weekly menus: up to 14 lunch/dinner slots, one author-owned plan per week, independent named snapshots and idempotent reuse into another empty week. A partner may view and copy a menu, but cannot change its author's plan or favorite.
+- Persistence: existing private `nd_state.data` contains `personalRecipes`, `mealPlans`, `mealPlanTemplates`; existing `nd_photos` stores images. No public bucket or direct anonymous table access was introduced. `house-api` continues checking the custom personal session, owner and record version before updates.
+
+Validation: TypeScript/build, API and domain tests, photo ownership checks, menu conflict/copy tests, gesture tests, design source integrity, contrast checks and markup/layout regressions. These automated checks do not replace a Safari/iPhone touch, keyboard and visual review, or a complete RGAA audit.

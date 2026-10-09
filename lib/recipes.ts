@@ -1,4 +1,4 @@
-export type Recipe={id:string;title:string;group:string;minutes:number;photo:string;servings:number;ingredients:string[];steps:string[];sourceUrl?:string;sourceTitle?:string;generatedAt?:string;image?:{url:string;source:string;author:string;license:string;licenseUrl:string}};
+export type Recipe={owner?:number;version?:number;photoId?:string|null;calories?:number|null;nutrients?:string;archived?:boolean;id:string;title:string;group:string;minutes:number;photo:string;servings:number;ingredients:string[];steps:string[];sourceUrl?:string;sourceTitle?:string;generatedAt?:string;image?:{url:string;source:string;author:string;license:string;licenseUrl:string}};
 export const recipes:Recipe[]=[
  {
   "id": "shakshuka",

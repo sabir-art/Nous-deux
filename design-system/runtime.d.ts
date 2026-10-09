@@ -7,7 +7,7 @@ export declare const Avatar: ComponentType<P.AvatarProps>;
 export declare const AvatarPair: ComponentType<P.AvatarPairProps>;
 export declare const CategoryTile: ComponentType<P.CategoryTileProps>;
 export declare const EventCard: ComponentType<P.EventCardProps>;
-export declare const DayStrip: ComponentType<P.DayStripProps>;
+export declare const DayStrip: ComponentType<Omit<P.DayStripProps, 'days'> & {days: (P.DayStripProps['days'][number] & {tones?:string[]})[]}>;
 export declare const BillCard: ComponentType<P.BillCardProps>;
 export declare const PaydayCard: ComponentType<P.PaydayCardProps>;
 export declare const TodoItem: ComponentType<P.TodoItemProps>;

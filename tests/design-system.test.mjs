@@ -11,7 +11,7 @@ export const views={empty:render(h(BudgetOverview,props)),spent:render(h(BudgetO
 const b=await build({stdin:{contents:source,loader:'tsx',resolveDir:process.cwd()},bundle:true,platform:'node',format:'cjs',packages:'external',jsx:'automatic',write:false});
 const mod={exports:{}};new Function('require','module','exports',b.outputFiles[0].text)(require,mod,mod.exports);const v=mod.exports.views;
 for(const html of Object.values(v)){assert(!html.includes('NaN'));assert(!html.includes('undefined'));}
-assert(v.empty.includes('12,34'));assert(v.empty.includes('Aucune dépense'));assert(!v.empty.includes('nd-piggy'));
+assert(v.empty.includes('12,34'));assert(v.empty.includes('Aucune dépense'));assert(v.empty.includes('nd-piggy-bulle'));assert(v.empty.includes('Sans plafond'));assert(!v.empty.includes(' / 1,00'));assert(!v.empty.includes('Tirelire remplie à'));
 assert(v.spent.includes('123,45'));assert(v.spent.includes('Tableau'));assert(v.spent.includes('Camille doit 12,34'));
 assert(v.pig.includes('123,45'));assert(v.zero.includes('0 %'));assert(v.day.includes('aria-current="date"'));
 assert(v.nav.includes('aria-label="Ajouter"'));assert(v.nav.includes('aria-current="page"'));assert(v.nav.includes('Argent'));assert(v.nav.includes('Nous'));

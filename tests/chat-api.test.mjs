@@ -68,3 +68,24 @@ assert.equal((await handler(routeReq('recipes',{action:'toggle',enabled:false}))
 assert.equal((await handler(routeReq('recipes',{action:'toggle',enabled:'yes'}))).status,400);
 assert.equal((await handler(routeReq('recipes',{action:'discover'}))).status,200,'Missing key causes no external API request');
 console.log('PASS: fast meal endpoint authorization and own projection; authenticated recipe library, safe missing-secret status and discovery pause.');
+
+// Personal recipes reuse authenticated private photo storage and custom member sessions.
+member=0;const personalId=crypto.randomUUID();const personal={id:personalId,version:0,title:'Le gratin maison',group:'Végétarien',minutes:40,servings:3,ingredients:['3 pommes de terre'],steps:['Cuire les pommes de terre.'],photoId,calories:350,nutrients:'Protéines : 12 g',porkFree:true,owner:1};
+assert.equal((await handler(routeReq('recipes',{action:'recipe-save',payload:personal},false))).status,401);
+assert.equal((await handler(routeReq('recipes',{action:'recipe-save',payload:personal}))).status,200);
+assert.equal(household.personalRecipes[0].owner,0);
+member=1;assert.equal((await handler(photoReq(undefined,photoId))).status,200,'A recipe photo is shared only once linked');
+const shared=await(await handler(routeReq('recipes'))).json();assert.equal(shared.recipes[0].calories,350);assert.equal(shared.recipes[0].servings,3);assert.equal(shared.member,1);
+assert.equal((await handler(routeReq('recipes',{action:'recipe-save',payload:{...personal,version:1}}))).status,403);
+assert.equal((await handler(routeReq('recipes',{action:'recipe-save',payload:{...personal,id:crypto.randomUUID()}}))).status,403,'Cannot use another author’s photo on a new recipe');
+assert.equal((await handler(routeReq('recipes',{action:'recipe-archive',payload:{id:personalId,version:1}}))).status,403);
+assert.equal((await handler(routeReq('meals',{date,recipeId:personalId,like:true}))).status,200);
+member=0;assert.equal((await handler(routeReq('meals',{date,recipeId:personalId,like:true}))).status,200);
+const personalMatch=await(await handler(routeReq('meals'))).json();assert(personalMatch.matches.some(m=>m.recipeId===personalId));
+const weekPlan={id:crypto.randomUUID(),version:0,weekStart:'2026-10-05',slots:[{day:0,meal:'dinner',recipeId:personalId}]};
+assert.equal((await handler(routeReq('recipes',{action:'plan-save',payload:weekPlan}))).status,200);
+member=1;assert.equal((await handler(routeReq('recipes',{action:'plan-save',payload:{...weekPlan,version:1}}))).status,403);
+member=0;assert.equal((await handler(routeReq('recipes',{action:'recipe-archive',payload:{id:personalId,version:1}}))).status,200);
+assert.equal((await handler(routeReq('meals',{date,recipeId:personalId,like:true}))).status,400,'Archived recipes cannot enter new rounds');
+const retained=await(await handler(routeReq('recipes'))).json();assert.equal(retained.plans[0].slots[0].recipeId,personalId);assert(retained.recipes[0].archived);
+console.log('PASS: real API recipe persistence, authenticated nutrition/photo sharing, photo reattachment denial, personal-recipe matches, plan author protection and historical recipe retention.');
