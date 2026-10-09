@@ -1,5 +1,6 @@
+import {chatInput,chatCursorInput} from './validation.ts';
 import {buildPushPayload} from 'npm:@block65/webcrypto-web-push@2.0.0';
-import {visibleAppointments,ApiError,householdMutation,callMutation,deviceMutation,type State} from './model.ts';
+import {authorizeChat,visibleAppointments,ApiError,householdMutation,callMutation,deviceMutation,type State} from './model.ts';
 import {defaultPreferences,deviceInput,allowedPushEndpoint} from './communication.ts';
 const ORIGIN='https://sabir-art.github.io',BASE='/Nous-deux/';
 const enc=new TextEncoder();
@@ -9,7 +10,7 @@ const equal=(a:string,b:string)=>{let v=a.length^b.length;for(let i=0;i<Math.max
 const passwordHash=async(p:string,s:string)=>{const k=await crypto.subtle.importKey('raw',enc.encode(p),'PBKDF2',false,['deriveBits']);return Array.from(new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(s),iterations:100000,hash:'SHA-256'},k,256)),b=>b.toString(16).padStart(2,'0')).join('');};
 // Service credentials only exist inside the Supabase Edge runtime, never in client code.
 const secret=()=>{const keys=Deno.env.get('SUPABASE_SECRET_KEYS');return keys?JSON.parse(keys).default:Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');};
-async function db(path:string,method='GET',body?:unknown){const key=secret();if(!key)throw new Error('Missing server configuration');const r=await fetch(Deno.env.get('SUPABASE_URL')+'/rest/v1/'+path,{method,headers:{apikey:key,...(key.startsWith('eyJ')?{Authorization:'Bearer '+key}:{}),'Content-Type':'application/json',Prefer:'return=representation'},...(body===undefined?{}:{body:JSON.stringify(body)})});if(!r.ok)throw new Error('Database request failed');const text=await r.text();return text?JSON.parse(text):null;}
+async function db(path:string,method='GET',body?:unknown,prefer='return=representation'){const key=secret();if(!key)throw new Error('Missing server configuration');const r=await fetch(Deno.env.get('SUPABASE_URL')+'/rest/v1/'+path,{method,headers:{apikey:key,...(key.startsWith('eyJ')?{Authorization:'Bearer '+key}:{}),'Content-Type':'application/json',Prefer:prefer},...(body===undefined?{}:{body:JSON.stringify(body)})});if(!r.ok)throw new Error('Database request failed');const text=await r.text();return text?JSON.parse(text):null;}
 async function state(){const rows=await db('nd_state?id=eq.1&select=version,data');if(!rows[0])throw new Error('Household missing');return rows[0] as {version:number;data:State};}
 async function mutate<T>(fn:(s:State)=>T){for(let i=0;i<4;i++){const snapshot=await state();const result=fn(snapshot.data);const rows=await db('nd_state?id=eq.1&version=eq.'+snapshot.version,'PATCH',{data:snapshot.data,version:snapshot.version+1});if(rows.length)return {result,data:snapshot.data};}throw new ApiError(409,'Modification simultanée. Réessayez.');}
 async function config(){return (await db('nd_config?id=eq.1&select=data'))[0].data;}
@@ -41,8 +42,25 @@ export async function handler(req:Request):Promise<Response>{
  const sessions=await db('nd_sessions?token_hash=eq.'+await hash(token)+'&expires_at=gt.'+Date.now()+'&select=token_hash,member');if(!sessions.length||![0,1].includes(sessions[0].member))return json({error:'Votre session a expiré. Reconnectez-vous.'},401);
  const actor=sessions[0].member;
  if(route==='household'){
-  if(req.method==='GET'){const {data:s}=await state();return json({member:actor,household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor)});}
+  if(req.method==='GET'){const {data:s}=await state();return json({member:actor,household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[]});}
   const {result,data}=await mutate(s=>householdMutation(s,p,actor));if(result)try{await notify(data,actor,result.category,'Votre moitié '+result.message,req.headers.get('x-adeux-device')||'');}catch{}return json({ok:true});
+ }
+
+ if(route==='chat'){
+  if(req.method==='GET'){
+   const before=url.searchParams.get('before');let filter='';
+   if(before){const c=chatCursorInput.parse({before,beforeId:url.searchParams.get('beforeId')});filter='&or='+encodeURIComponent(`(created_at.lt.${c.before},and(created_at.eq.${c.before},id.lt.${c.beforeId}))`);}
+   const messages=await db('nd_messages?select=id,member,text,created_at,edited_at,version&order=created_at.desc,id.desc&limit=60'+filter);
+   return json({messages:messages.reverse(),hasMore:messages.length===60});
+  }
+  const v=chatInput.parse(p);
+  if(v.action==='send'){
+   // Stable client UUID makes retries safe; a duplicate never changes an existing message.
+   await db('nd_messages?on_conflict=id','POST',{id:v.id,member:actor,text:v.text},'resolution=ignore-duplicates,return=representation');return json({ok:true});
+  }
+  const old=(await db('nd_messages?id=eq.'+v.id))[0];authorizeChat(old,actor,v.version);
+  const rows=await db('nd_messages?id=eq.'+v.id+'&member=eq.'+actor+'&version=eq.'+v.version,v.action==='delete'?'DELETE':'PATCH',v.action==='delete'?undefined:{text:v.text,edited_at:new Date().toISOString(),version:v.version!+1});
+  if(!rows.length)throw new ApiError(409,'Ce message a changé. Actualisez la discussion.');return json({ok:true});
  }
  if(route==='calls'){
   if(req.method==='GET'){const {data:s}=await state();return json({call:s.call&&s.call.state!=='ended'&&s.call.expiresAt>Date.now()?s.call:null});}

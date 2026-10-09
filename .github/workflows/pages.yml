@@ -25,6 +25,7 @@ jobs:
       - run: pnpm run check:web
       - run: node tests/supabase-model.test.mjs
       - run: node tests/calendar.test.mjs
+      - run: node tests/chat-api.test.mjs
       - run: pnpm run build:web
       - uses: actions/upload-pages-artifact@v3
         with:

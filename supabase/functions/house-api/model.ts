@@ -1,11 +1,39 @@
-import {entryInput,itemInput,householdInput,deleteInput,appointmentInput} from './validation.ts';
+import {entryInput,itemInput,householdInput,deleteInput,appointmentInput,shoppingCheckInput,templateInput,templateApplyInput} from './validation.ts';
 import {deviceInput,memberInput,preferenceInput,subscriptionInput,changeDescription} from './communication.ts';
 export class ApiError extends Error{constructor(public status:number,message:string){super(message);}}
-export type State={household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number};
+export type State={household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[]};
 const conflict=()=>{throw new ApiError(409,'Cet élément a changé sur un autre appareil. Fermez puis rouvrez le formulaire.');};
 export function householdMutation(s:State,p:any,actor:number){
  if(actor!==0&&actor!==1)throw new ApiError(403,'Compte personnel requis.');
- const {action,payload}=p;const previous=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;const now=new Date().toISOString();
+ const {action,payload}=p;if(typeof action!=='string')throw new ApiError(400,'Action invalide.');const previous=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;const now=new Date().toISOString();
+
+ if(action==='shopping-check'){
+  const v=shoppingCheckInput.parse(payload),item=s.items.find(i=>i.id===v.id&&i.kind==='shopping');
+  if(!item||item.version!==v.version)conflict();
+  if(item.done&&!v.done&&item.purchasedBy!==actor)throw new ApiError(403,'Seule la personne qui a coché cet achat peut l’annuler.');
+  if(item.done!==v.done)Object.assign(item,{done:v.done,purchasedBy:v.done?actor:null,purchasedAt:v.done?now:null,version:item.version+1});
+  return {category:'shopping',message:v.done?'a coché un achat dans les courses.':'a remis un article à acheter.'};
+ }
+ if(action==='template-create'){
+  const v=templateInput.parse(payload);if(weekMonday(v.weekStart)!==v.weekStart)throw new ApiError(400,'Choisissez une semaine.');
+  s.templates??=[];if(s.templates.some(t=>t.id===v.id))return null;
+  if(s.templates.length>=50)throw new ApiError(400,'Vous pouvez conserver 50 listes types. Supprimez-en une pour continuer.');
+  const items=s.items.filter(i=>i.kind==='shopping'&&i.weekStart===v.weekStart).map(i=>({title:i.title,quantity:i.quantity}));
+  if(!items.length||items.length>200)throw new ApiError(400,'La semaine doit contenir entre 1 et 200 articles.');
+  s.templates.push({id:v.id,title:v.title,items,owner:actor,createdAt:now});return null;
+ }
+ if(action==='template-delete'){
+  const t=s.templates?.find(t=>t.id===payload?.id);if(!t||t.owner!==actor)throw new ApiError(403,'Seul l’auteur peut supprimer cette liste type.');
+  s.templates=s.templates!.filter(x=>x.id!==t.id);
+  return null;
+ }
+ if(action==='template-apply'){
+  const v=templateApplyInput.parse(payload);if(weekMonday(v.weekStart)!==v.weekStart)throw new ApiError(400,'Choisissez une semaine.');
+  s.templateApplications??=[];if(s.templateApplications.includes(v.operationId))return null;
+  const t=s.templates?.find(t=>t.id===v.id);if(!t)throw new ApiError(404,'Liste type introuvable.');
+  for(const item of t.items)s.items.push({...item,id:crypto.randomUUID(),kind:'shopping',assignee:-1,due:'',priority:0,done:false,owner:actor,version:1,createdAt:now,weekStart:v.weekStart,purchasedBy:null,purchasedAt:null});
+  s.templateApplications.push(v.operationId);return {category:'shopping',message:'a ajouté une liste type aux courses.'};
+ }
  if(action==='household'){const home=householdInput.parse(payload);if(s.household&&home[actor===0?'second':'first']!==s.household[actor===0?'second':'first'])throw new ApiError(403,'Vous ne pouvez pas modifier le profil de votre moitié.');if((s.household?.version||0)!==home.version)conflict();s.household={...home,version:home.version+1};}
  else{
   if(!s.household)throw new ApiError(400,'Configurez votre maison.');
@@ -14,7 +42,7 @@ export function householdMutation(s:State,p:any,actor:number){
   const existing=s[list].find(x=>x.id===payload?.id);if(existing&&existing.owner!==actor)throw new ApiError(403,'Seul l’auteur peut modifier ou supprimer cet élément.');
   if(list==='entries'&&!action.startsWith('delete-')&&payload?.member!==actor)throw new ApiError(403,'Enregistrez uniquement vos propres paiements.');
   if(action.startsWith('delete-')){const v=deleteInput.parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0||s[list][i].version!==v.version)conflict();s[list].splice(i,1);}
-  else{const v=(list==='entries'?entryInput:list==='items'?itemInput:appointmentInput).parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0&&v.version!==0||i>=0&&s[list][i].version!==v.version)conflict();const value={...v,owner:actor,version:v.version+1,createdAt:i<0?now:s[list][i].createdAt};if(i<0)s[list].push(value);else s[list][i]=value;}
+  else{const v=(list==='entries'?entryInput:list==='items'?itemInput:appointmentInput).parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0&&v.version!==0||i>=0&&s[list][i].version!==v.version)conflict();if(list==='items'&&existing&&existing.kind!==v.kind)throw new ApiError(400,'Le type de liste ne peut pas changer.');if(list==='items'&&v.kind==='shopping'&&((existing&&v.done!==existing.done)||(!existing&&v.done)))throw new ApiError(400,'Utilisez la case achat pour cocher un article.');const value={...v,...(list==='items'&&v.kind==='shopping'?{weekStart:weekMonday(v.weekStart||existing?.weekStart||parisToday()),purchasedBy:existing?.purchasedBy??null,purchasedAt:existing?.purchasedAt??null}:{}),owner:actor,version:v.version+1,createdAt:i<0?now:s[list][i].createdAt};if(i<0)s[list].push(value);else s[list][i]=value;}
  }
  // Private changes never enter the shared activity feed or trigger partner push.
  const current=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;
@@ -40,3 +68,7 @@ export function deviceMutation(s:State,p:any){const deviceId=deviceInput.parse(p
 }
 
 export function visibleAppointments(s:State,actor:number){return s.appointments.filter(a=>a.visibility!=='private'||a.owner===actor);}
+
+export function weekMonday(date:string){const d=new Date(date+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);return d.toISOString().slice(0,10);}
+const parisToday=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+export function authorizeChat(message:any,actor:number,version:number|undefined){if(!message||message.member!==actor)throw new ApiError(403,'Vous pouvez modifier uniquement vos messages.');if(message.version!==version)conflict();}
