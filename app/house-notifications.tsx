@@ -1,26 +1,27 @@
 'use client';
+import {apiFetch,APP_BASE} from '../lib/api-client';
 import {useEffect,useState,useCallback} from 'react';
 import {Bell,BellOff,Check,RefreshCw} from 'lucide-react';
 import {defaultPreferences,notificationCategories,type Preferences} from '../lib/communication';
 import {deviceId} from '../lib/device';
 type Event={id:number;actor:number;category:string;message:string;createdAt:string};
 const labels={shopping:'Courses',tasks:'Tâches',expenses:'Dépenses et remboursements',calendar:'Rendez-vous',calls:'Invitations aux appels'};
-const jsonPost=async(body:unknown)=>{const r=await fetch('/api/notifications',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json() as {error?:string};if(!r.ok)throw new Error(data.error||'Enregistrement impossible.');return data;};
+const jsonPost=async(body:unknown)=>{const r=await apiFetch('/api/notifications',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json() as {error?:string};if(!r.ok)throw new Error(data.error||'Enregistrement impossible.');return data;};
 export default function HouseNotifications({active,names,onNavigate}:{active:number;names:string[];onNavigate:(tab:string)=>void}){
  const [preferences,setPreferences]=useState<Preferences>(defaultPreferences),[enabled,setEnabled]=useState(false),[supported,setSupported]=useState(false),[busy,setBusy]=useState(false),[ready,setReady]=useState(false),[message,setMessage]=useState(''),[key,setKey]=useState(''),[events,setEvents]=useState<Event[]>([]),[seen,setSeen]=useState(0);
- const load=useCallback(async()=>{const r=await fetch('/api/notifications?device='+deviceId(),{cache:'no-store'});if(!r.ok)throw new Error('Impossible de charger les notifications.');const d=await r.json() as {publicKey:string;enabled:boolean;preferences:Preferences;activity:Event[]};setKey(d.publicKey);setEnabled(d.enabled);setPreferences(d.preferences);setEvents(d.activity);setReady(true);},[]);
+ const load=useCallback(async()=>{const r=await apiFetch('/api/notifications?device='+deviceId(),{cache:'no-store'});if(!r.ok)throw new Error('Impossible de charger les notifications.');const d=await r.json() as {publicKey:string;enabled:boolean;preferences:Preferences;activity:Event[]};setKey(d.publicKey);setEnabled(d.enabled);setPreferences(d.preferences);setEvents(d.activity);setReady(true);},[]);
  useEffect(()=>{setSupported('serviceWorker'in navigator&&'PushManager'in window&&'Notification'in window);try{setSeen(Number(localStorage.getItem('adeux-seen-'+active)||0));}catch{}load().catch(e=>setMessage(e.message));const timer=setInterval(()=>{if(document.visibilityState==='visible')load().catch(()=>{});},15000);return()=>clearInterval(timer);},[load,active]);
  const run=async(fn:()=>Promise<void>)=>{setBusy(true);setMessage('');try{await fn();}catch(e){setMessage(e instanceof Error?e.message:'Action impossible.');}finally{setBusy(false);}};
  async function enable(){
   // The browser permission prompt must follow the user's tap immediately.
   const permission=await Notification.requestPermission();if(permission!=='granted')throw new Error(permission==='denied'?'Notifications bloquées. Vous pouvez les autoriser dans les réglages de votre appareil.':'Les notifications restent désactivées.');
   if(!key)throw new Error('Le service de notification n’est pas disponible. Réessayez.');
-  const registration=await navigator.serviceWorker.register('/sw.js',{scope:'/'});await navigator.serviceWorker.ready;
+  const registration=await navigator.serviceWorker.register(APP_BASE+'sw.js',{scope:APP_BASE});await navigator.serviceWorker.ready;
   const bytes=Uint8Array.from(atob(key.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-key.length%4)%4)),c=>c.charCodeAt(0));
   const sub=await registration.pushManager.getSubscription()||await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:bytes});
   await jsonPost({action:'subscribe',deviceId:deviceId(),member:active,preferences,subscription:sub.toJSON()});setEnabled(true);setMessage('Notifications activées pour '+names[active]+' sur cet appareil.');
  }
- async function disable(){await jsonPost({action:'disable',deviceId:deviceId()});setEnabled(false);const registration=await navigator.serviceWorker.getRegistration('/');await(await registration?.pushManager.getSubscription())?.unsubscribe();setMessage('Notifications désactivées sur cet appareil.');}
+ async function disable(){await jsonPost({action:'disable',deviceId:deviceId()});setEnabled(false);const registration=await navigator.serviceWorker.getRegistration(APP_BASE);await(await registration?.pushManager.getSubscription())?.unsubscribe();setMessage('Notifications désactivées sur cet appareil.');}
  async function change(next:Preferences){await jsonPost({action:'preferences',deviceId:deviceId(),member:active,preferences:next});setPreferences(next);}
  const markRead=()=>{const latest=events[0]?.id||0;setSeen(latest);try{localStorage.setItem('adeux-seen-'+active,String(latest));}catch{}};
  return <div className="communication-grid"><section className="panel settings-panel"><span className="settings-icon"><Bell size={23}/></span><h2>À votre rythme</h2><p>Recevez les nouveautés ajoutées par votre moitié. Ce réglage concerne uniquement cet appareil, identifié comme <strong>{names[active]}</strong>.</p>

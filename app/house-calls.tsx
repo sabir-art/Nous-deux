@@ -1,4 +1,5 @@
 'use client';
+import {apiFetch,APP_BASE} from '../lib/api-client';
 import {useState,useEffect,useRef} from 'react';
 import {Phone,PhoneOff,Mic,MicOff,Volume2} from 'lucide-react';
 type Call={id:string;caller:number;callerDevice:string;calleeDevice:string;offer:string;answer:string;state:string;expiresAt:number};
@@ -6,7 +7,7 @@ const iceServers=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.goog
 export default function HouseCalls({active,names,expanded,onOpen}:{active:number;names:string[];expanded:boolean;onOpen:()=>void}){
  const [call,setCall]=useState<Call|null>(null),[status,setStatus]=useState(''),[busy,setBusy]=useState(false),[muted,setMuted]=useState(false),[connected,setConnected]=useState(false),[elapsed,setElapsed]=useState(0),[audioBlocked,setAudioBlocked]=useState(false),[available,setAvailable]=useState(false);
  const session=useRef(''),peer=useRef<RTCPeerConnection|null>(null),stream=useRef<MediaStream|null>(null),audio=useRef<HTMLAudioElement|null>(null),current=useRef<Call|null>(null),localId=useRef(''),localMember=useRef(active),generation=useRef(0),operation=useRef(false),lastHeartbeat=useRef(0),connectionTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
- const post=async(action:string,id:string,extra:Record<string,unknown>={})=>{const r=await fetch('/api/calls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,id,session:session.current,member:localMember.current,...extra})});const d=await r.json() as {error?:string;call:Call|null};if(!r.ok)throw new Error(d.error||'Appel indisponible.');return d;};
+ const post=async(action:string,id:string,extra:Record<string,unknown>={})=>{const r=await apiFetch('/api/calls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,id,session:session.current,member:localMember.current,...extra})});const d=await r.json() as {error?:string;call:Call|null};if(!r.ok)throw new Error(d.error||'Appel indisponible.');return d;};
  const cleanup=()=>{generation.current++;if(connectionTimer.current)clearTimeout(connectionTimer.current);connectionTimer.current=null;const pc=peer.current;peer.current=null;pc?.close();stream.current?.getTracks().forEach(t=>t.stop());stream.current=null;if(audio.current)audio.current.srcObject=null;localId.current='';setConnected(false);setMuted(false);setElapsed(0);setAudioBlocked(false);};
  const end=async()=>{const id=localId.current||current.current?.id;cleanup();current.current=null;setCall(null);setStatus('Appel terminé.');if(id)try{await post('end',id);}catch(e){setStatus(e instanceof Error?e.message:'Appel arrêté sur cet appareil.');}};
  const fail=(message:string)=>{const id=localId.current;cleanup();setStatus(message);if(id)void post('end',id).catch(()=>{});};
@@ -14,7 +15,7 @@ export default function HouseCalls({active,names,expanded,onOpen}:{active:number
   session.current=crypto.randomUUID();setAvailable(!!navigator.mediaDevices?.getUserMedia&&'RTCPeerConnection'in window);
   let stopped=false,polling=false;
   const poll=async()=>{if(polling||operation.current||document.visibilityState!=='visible'&&!peer.current)return;polling=true;try{
-   const r=await fetch('/api/calls',{cache:'no-store'});if(!r.ok)throw new Error();const d=await r.json() as {error?:string;call:Call|null};if(stopped||operation.current)return;
+   const r=await apiFetch('/api/calls',{cache:'no-store'});if(!r.ok)throw new Error();const d=await r.json() as {error?:string;call:Call|null};if(stopped||operation.current)return;
    const next:Call|null=d.call;current.current=next;setCall(next);
    if(localId.current&&(!next||next.id!==localId.current)){cleanup();setStatus('Appel terminé ou sans réponse.');}
    if(next&&peer.current&&next.id===localId.current&&next.callerDevice===session.current&&next.answer&&!peer.current.currentRemoteDescription){await peer.current.setRemoteDescription({type:'answer',sdp:next.answer});}

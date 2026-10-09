@@ -1,0 +1,4 @@
+project_id = "jvjwyalusdygvkyzmiez"
+[functions.house-api]
+# Custom household authentication: hashed bearer sessions checked on all private routes.
+verify_jwt = false

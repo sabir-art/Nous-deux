@@ -1,43 +1,48 @@
-# À deux
+# Nous deux
 
-Shared household app in French, accessible without a ChatGPT or GitHub account. Both partners use their household password; each device chooses the person entering expenses. Records live in Cloudflare D1. No household records are stored only in the browser.
+Application privée de gestion du quotidien à deux : dépenses, remboursements, listes, calendrier et notifications.
 
-## Features
+## Hébergement indépendant
 
-- Common expenses split 50/50, cent-accurate balance, partial and full repayments.
-- Editable and deletable expense history, monthly browsing, search, categories and CSV export.
-- Shared shopping list with quantities and a separate task list with assignees, due dates and priorities.
-- Shared monthly calendar, person filters, appointment date/time/place/notes, booking backlog with optional call-by date, and completed appointments. The home page lists upcoming dates.
-- Configurable names, household title and optional monthly budget.
-- Phone/tablet layouts, French labels, home-screen manifest and Apple touch icon.
-- Active pages refresh every ten seconds and on focus. Offline writes are blocked with a clear message. Simultaneous writes use row versions to prevent silent overwrites.
+La version de production utilise **GitHub Pages** pour l'interface React et **Supabase** pour les données et l'API. Elle ne nécessite aucun compte ChatGPT ou GitHub pour ses utilisateurs.
 
-## Access and accounting
+- Interface : `https://sabir-art.github.io/Nous-deux/`
+- Projet Supabase : `jvjwyalusdygvkyzmiez`
+- Point d'entrée : `web/main.tsx` ; configuration : `vite.web.config.ts`
+- API : `supabase/functions/house-api/`
+- Schéma : `supabase/sql/schema.sql`
 
-The application authenticates with a household password and opaque 90-day sessions in Secure, HttpOnly, SameSite=Strict cookies. Only session token hashes are stored. The password uses salted PBKDF2-SHA256 (100,000 iterations, supported by Workers). Login attempts are limited in D1 per hashed IP and 15-minute bucket. APIs ignore ChatGPT identity headers and derive the existing household ID from server configuration. Initial setup requires a one-use bootstrap link; its secret is carried only in the URL fragment, cleared on load, and compared to a server-side SHA-256 hash. Setup is atomically disabled after the first password is saved. The public site shell exposes no household data. No money is transferred. Repayments record transfers already made outside the app. An odd cent is charged to the first person's share; this rule appears in settings and in the expense preview.
+Les anciens fichiers Next/Vinext et D1 restent dans le dépôt pour conserver l'historique de l'application. Ils ne sont pas utilisés par le déploiement GitHub Pages.
 
-## Development
+## Déploiement
 
-Use the Sites plugin workflow to install, build and publish. The source manifest declares the D1 `DB` binding. Migrations in `drizzle/` are applied by Sites on deployment. Do not edit applied migrations. The included starter scripts retain supported hosting integration.
-
-Validation:
+Dans Settings → Pages, sélectionner **GitHub Actions** comme source. Le workflow `.github/workflows/pages.yml` vérifie TypeScript, exécute les tests du modèle, construit puis publie l'interface à chaque modification de `main`.
 
 ```sh
-node --experimental-strip-types tests/domain.test.mjs
-node tests/api.test.mjs
-node tests/access.test.mjs
-node tests/communication.test.mjs
-node node_modules/typescript/bin/tsc --noEmit
+pnpm install --frozen-lockfile
+pnpm run check:web
+node tests/supabase-model.test.mjs
+pnpm run build:web
 ```
 
-The API tests execute real route handlers and authentication helpers against isolated Miniflare D1 storage. They check input validation, account isolation, shared reads, record changes, stale-write conflicts and origin checks. Their Next headers shim exists only in the test bundle.
+L'API Supabase est déployée séparément :
 
-The app requires internet to load and save. It intentionally does not cache private financial data in a service worker. Home screen installation opens the live app.
+```sh
+supabase functions deploy house-api --project-ref jvjwyalusdygvkyzmiez --no-verify-jwt
+```
 
-## Production configuration
+`verify_jwt=false` est intentionnel : cette API vérifie ses propres sessions privées. Les secrets de service restent exclusivement dans l'environnement Supabase. La clé publishable du client n'est pas un secret.
 
-Source code is mirrored on GitHub; runtime hosting and D1 remain on Sites/Cloudflare. GitHub Pages cannot execute these server routes. The site audience must permit anonymous access to the login page; all private data routes independently require a valid household session.
+## Accès et données
 
-Server-only secrets: `HOUSEHOLD_OWNER_ID` (existing records owner), `HOUSE_SETUP_HASH` (SHA-256 of initial setup token), and the existing VAPID keys. Never commit their values. A fresh installation requires these settings, the database migrations and a new bootstrap link. Do not replace an existing setup token or household owner during routine deployments. Password recovery currently requires an owner-assisted maintenance operation; no email recovery is implemented.
+Le propriétaire choisit un mot de passe d'au moins 12 caractères via un lien de première configuration à usage unique, communiqué en privé. Les deux utilisateurs partagent ce mot de passe. Chaque appareil reçoit une session indépendante de 90 jours ; la déconnexion révoque sa session.
 
-After setup, share the ordinary site URL and the household password privately with the other partner. Each device can sign out independently. Adding the app to the iPhone/iPad or Android home screen is supported by its web manifest; cookie persistence depends on browser settings.
+Les tables `nd_*` sont protégées par RLS et leurs droits sont retirés aux rôles publics. Seule l'API serveur peut les lire et les modifier après authentification. Les alertes informatives « RLS enabled, no policy » sont attendues : l'absence de politique refuse tout accès direct. Documentation : https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy
+
+Le dépôt ne contient ni données personnelles, ni mots de passe, ni clés privées. Les modifications concurrentes sont vérifiées par version pour éviter les écrasements silencieux.
+
+## iPhone
+
+Ouvrir l'application dans Safari, se connecter, puis Partager → Sur l'écran d'accueil. Réactiver les notifications depuis cette nouvelle installation : les autorisations de l'ancienne adresse ne sont pas transférables. Une connexion Internet reste nécessaire pour charger et synchroniser les données.
+
+L'appel audio reste expérimental et dépend de la compatibilité réseau (STUN sans relais TURN).
