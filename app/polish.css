@@ -96,7 +96,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--focus);outline-o
 .quantity-presets button.selected{background:var(--rose);color:var(--berry);border:2px solid var(--berry)}
 dialog{background:#fff;color:var(--ink);max-width:calc(100% - 24px);max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain;margin:auto;border-color:var(--line);box-shadow:0 24px 80px #3f264638}
 dialog::backdrop{background:#352c3980;backdrop-filter:blur(4px)}
-html[data-modal-open] .workspace{overflow:hidden;touch-action:none}
+html[data-modal-open] .workspace{overflow:hidden}
 .dialog-inner{min-width:0}.dialog-head{gap:12px;margin-bottom:20px}.dialog-head h2,.life-dialog .dialog-head h2{font-size:23px;line-height:1.25}.dialog-head .icon-button{flex-shrink:0}
 .quick-shopping{width:620px;overflow:hidden}
 .quick-shopping .dialog-inner{height:min(790px,calc(100dvh - 32px));max-height:calc(100dvh - 32px);padding:22px;overflow:hidden;gap:0}
@@ -191,3 +191,5 @@ html[data-modal-open] .workspace{overflow:hidden;touch-action:none}
 
 .calendar-day.is-today .calendar-day-number{background:transparent}
 .home-intro-actions strong,.home-intro-actions span{display:block;margin-left:0}
+
+.meal-tabs button,.match-banner,.match-label,.recipe-summary,.recipe-chef{display:flex;align-items:center;gap:8px}.match-banner{justify-content:center;flex-wrap:wrap}.recipe-summary,.recipe-chef{flex-wrap:wrap}.life-home-card>span{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:#fff9;color:var(--berry);flex-shrink:0}
