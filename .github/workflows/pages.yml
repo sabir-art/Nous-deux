@@ -26,6 +26,7 @@ jobs:
       - run: node tests/supabase-model.test.mjs
       - run: node tests/calendar.test.mjs
       - run: node tests/chat-api.test.mjs
+      - run: node tests/voices-places.test.mjs
       - run: node tests/life.test.mjs
       - run: node tests/meals.test.mjs
       - run: node tests/photos.test.mjs

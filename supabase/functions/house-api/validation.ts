@@ -1,3 +1,4 @@
+import {placeInput} from './places.ts';
 import {z} from 'npm:zod@3.25.76';
 import {validDate,categories} from './domain.ts';
 const label=z.string().trim().min(1).max(100);
@@ -24,12 +25,12 @@ export const appointmentInput=z.object({
 export const shoppingCheckInput=z.object({id:z.string().uuid(),version:z.number().int().min(1),done:z.boolean()});
 export const templateInput=z.object({id:z.string().uuid(),title:label,weekStart:date});
 export const templateApplyInput=z.object({id:z.string().uuid(),operationId:z.string().uuid(),weekStart:date});
-export const chatInput=z.object({action:z.enum(['send','edit','delete']),id:z.string().uuid(),text:z.string().trim().min(1).max(2000).optional(),version:z.number().int().min(1).optional()}).refine(v=>v.action==='delete'||!!v.text);
+export const chatInput=z.object({action:z.enum(['send','edit','delete']),id:z.string().uuid(),text:z.string().trim().min(1).max(2000).optional(),voiceId:z.string().uuid().optional(),version:z.number().int().min(1).optional()}).refine(v=>v.action==='delete'||(v.action==='edit'?!!v.text&&!v.voiceId:!!v.text!==!!v.voiceId));
 
 export const chatCursorInput=z.object({before:z.string().datetime({offset:true}),beforeId:z.string().uuid()});
 
 export const photoInput=z.object({id:z.string().uuid(),data:z.string().max(360000).regex(/^data:image\/jpeg;base64,\/9j\/[A-Za-z0-9+/=]+$/)});
-export const ideaInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),title:label,description:z.string().trim().max(1000),category:z.enum(['restaurant','outing','home','trip','surprise']),date:z.union([z.literal(''),date]),time:z.string().regex(/^$|^([01]\d|2[0-3]):[0-5]\d$/),location:z.string().trim().max(150)}).refine(v=>!v.time||!!v.date);
+export const ideaInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),title:label,description:z.string().trim().max(1000),category:z.enum(['restaurant','outing','home','trip','surprise']),date:z.union([z.literal(''),date]),time:z.string().regex(/^$|^([01]\d|2[0-3]):[0-5]\d$/),location:z.string().trim().max(150),place:placeInput.nullable().optional()}).refine(v=>!v.time||!!v.date);
 export const ideaResponseInput=z.object({id:z.string().uuid(),version:z.number().int().min(1),status:z.enum(['accepted','declined']),responseNote:z.string().trim().max(500).default('')});
 export const plantInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),name:z.string().trim().min(1).max(60),species:z.string().trim().max(80),location:z.string().trim().max(100),note:z.string().trim().max(700),waterEvery:z.number().int().min(1).max(365),lightEvery:z.number().int().min(0).max(365),feedEvery:z.number().int().min(0).max(365),lastWater:date,lastLight:date,lastFeed:date,reminders:z.boolean(),remindBoth:z.boolean()});
 export const plantCareInput=z.object({id:z.string().uuid(),version:z.number().int().min(1),kind:z.enum(['water','light','feed'])});

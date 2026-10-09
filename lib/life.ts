@@ -1,4 +1,6 @@
-export type Idea={id:string;owner:number;title:string;description:string;category:'restaurant'|'outing'|'home'|'trip'|'surprise';date:string;time:string;location:string;version:number;status:'pending'|'accepted'|'declined';responseNote:string;createdAt:string;respondedAt?:string};
+export type Place={name:string;address:string;lat:number|null;lon:number|null;source:'osm'|'manual';sourceId?:string};
+export type FavoritePlace=Place&{id:string;owner:number;version:number;createdAt:string};
+export type Idea={id:string;owner:number;title:string;description:string;category:'restaurant'|'outing'|'home'|'trip'|'surprise';date:string;time:string;location:string;place?:Place|null;version:number;status:'pending'|'accepted'|'declined';responseNote:string;createdAt:string;respondedAt?:string};
 export type CareKind='water'|'light'|'feed';
 export type Plant={id:string;owner:number;name:string;species:string;location:string;note:string;waterEvery:number;lightEvery:number;feedEvery:number;lastWater:string;lastLight:string;lastFeed:string;reminders:boolean;remindBoth:boolean;version:number;createdAt:string;careLog:{kind:CareKind;actor:number;date:string;at:string}[]};
 export const careLabels={water:'Arrosage',light:'Lumière à vérifier',feed:'Engrais'};

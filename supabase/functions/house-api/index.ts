@@ -1,3 +1,5 @@
+import {searchPlaces,placeMutation,PlaceError} from './places.ts';
+import {uploadVoice,signedVoice,deleteVoice,VoiceError} from './voices.ts';
 import {validAIKey,verifyAIKey,AISettingsError} from './ai-settings.ts';
 import {recipeMutation,RecipeError} from './recipe-library.ts';
 import {recipeTitles} from './recipe-ids.ts';
@@ -21,7 +23,7 @@ async function state(){const rows=await db('nd_state?id=eq.1&select=version,data
 async function mutate<T>(fn:(s:State)=>T){for(let i=0;i<4;i++){const snapshot=await state();const result=fn(snapshot.data);const rows=await db('nd_state?id=eq.1&version=eq.'+snapshot.version,'PATCH',{data:snapshot.data,version:snapshot.version+1});if(rows.length)return {result,data:snapshot.data};}throw new ApiError(409,'Modification simultanée. Réessayez.');}
 async function config(){return (await db('nd_config?id=eq.1&select=data'))[0].data;}
 async function send(device:any,data:any){if(!allowedPushEndpoint(device.subscription.endpoint))return false;const keys=(await config()).vapid;const payload=await buildPushPayload({data:JSON.stringify({...data,url:BASE+'?view='+(data.category||'settings')}),options:{ttl:data.category==='calls'?90:3600}},device.subscription,{...keys,subject:ORIGIN+BASE});const r=await fetch(device.subscription.endpoint,{...payload,redirect:'manual',signal:AbortSignal.timeout(5000)});if(r.status===404||r.status===410)await mutate(s=>{s.devices=s.devices.filter(d=>d.deviceId!==device.deviceId);});return r.ok;}
-async function notify(s:State,actor:number,category:string,message:string,originDevice=''){await Promise.allSettled(s.devices.filter(d=>d.member!==actor&&d.deviceId!==originDevice&&({...defaultPreferences,...d.preferences})[category]).map(d=>send(d,{title:'À deux',body:message,category,tag:category==='calls'?'adeux-call':undefined})));}
+async function notify(s:State,actor:number,category:string,message:string,originDevice=''){await Promise.allSettled(s.devices.filter(d=>d.member!==actor&&d.deviceId!==originDevice&&({...defaultPreferences,...d.preferences})[category]).map(d=>send(d,{title:category==='ideas'?'💌 Une invitation pour nous deux':'À deux',body:category==='ideas'?'✨ '+message+' 💛':message,category,tag:category==='calls'?'adeux-call':undefined})));}
 const aiKey=async()=>{const stored=await db('rpc/nd_openai_key_get','POST',{});return typeof stored==='string'&&validAIKey(stored)?stored:Deno.env.get('OPENAI_API_KEY')||'';};
 const aiModel=()=>Deno.env.get('OPENAI_RECIPE_MODEL')||'gpt-5.4-mini';
 async function runDiscovery(){
@@ -41,7 +43,7 @@ export async function handler(req:Request):Promise<Response>{
  if(!['GET','POST'].includes(req.method))return json({error:'Méthode non autorisée.'},405);
  try{
  const url=new URL(req.url),route=url.searchParams.get('route')||'',token=req.headers.get('x-house-session')||'';
- let p:any={};if(req.method==='POST'){if(!req.headers.get('content-type')?.includes('application/json'))return json({error:'Format invalide.'},415);const raw=await req.text();if(raw.length>(route==='photos'?361000:36000))return json({error:'Contenu trop long.'},413);p=JSON.parse(raw);}
+ let p:any={};if(req.method==='POST'&&route!=='voice-upload'){if(!req.headers.get('content-type')?.includes('application/json'))return json({error:'Format invalide.'},415);const raw=await req.text();if(raw.length>(route==='photos'?361000:36000))return json({error:'Contenu trop long.'},413);p=JSON.parse(raw);}
  if(route==='plant-reminders'){
   if(req.method!=='POST')return json({error:'Méthode non autorisée.'},405);
   const credential=req.headers.get('x-plant-reminder')||'';if(!/^[a-f0-9]{64}$/.test(credential))return json({error:'Accès réservé au planificateur.'},401);
@@ -70,6 +72,16 @@ export async function handler(req:Request):Promise<Response>{
  if(!/^[a-f0-9]{64}$/.test(token))return json({error:'Connectez-vous à votre maison.'},401);
  const sessions=await db('nd_sessions?token_hash=eq.'+await hash(token)+'&expires_at=gt.'+Date.now()+'&select=token_hash,member');if(!sessions.length||![0,1].includes(sessions[0].member))return json({error:'Votre session a expiré. Reconnectez-vous.'},401);
  const actor=sessions[0].member;
+ if(route==='voice-upload'){if(req.method!=='POST')return json({error:'Méthode non autorisée.'},405);return json(await uploadVoice(req,actor,db,Deno.env.get('SUPABASE_URL')!,secret()));}
+ if(route==='voices'){if(req.method==='GET')return json(await signedVoice(url.searchParams.get('id')||'',actor,db,Deno.env.get('SUPABASE_URL')!,secret()));if(p.action!=='discard')throw new ApiError(400,'Action inconnue.');await deleteVoice(p.id,actor,db,Deno.env.get('SUPABASE_URL')!,secret());return json({ok:true});}
+
+ if(route==='place-search'){
+  if(req.method!=='GET')return json({error:'Méthode non autorisée.'},405);
+  const places=await searchPlaces(url.searchParams.get('q')||'',url.searchParams.get('restaurants')==='1',()=>db('rpc/nd_rate_hit','POST',{rate_key:'places:'+Math.floor(Date.now()/300000),expiry:Date.now()+600000}));return json({places});
+ }
+ if(route==='places'){
+  if(req.method==='POST')await mutate(s=>placeMutation(s,p,actor));const {data}=await state();return json({places:data.favoritePlaces||[]});
+ }
  if(route==='ai-settings'){
   if(req.method==='POST'){
    if(actor!==0)throw new ApiError(403,'La clé partagée se configure depuis le compte qui gère l’abonnement.');
@@ -121,17 +133,19 @@ export async function handler(req:Request):Promise<Response>{
   if(req.method==='GET'){
    const before=url.searchParams.get('before');let filter='';
    if(before){const c=chatCursorInput.parse({before,beforeId:url.searchParams.get('beforeId')});filter='&or='+encodeURIComponent(`(created_at.lt.${c.before},and(created_at.eq.${c.before},id.lt.${c.beforeId}))`);}
-   const messages=await db('nd_messages?select=id,member,text,created_at,edited_at,version&order=created_at.desc,id.desc&limit=60'+filter);
+   const messages=await db('nd_messages?select=id,member,text,voice_id,voice_duration,created_at,edited_at,version&order=created_at.desc,id.desc&limit=60'+filter);
    return json({messages:messages.reverse(),hasMore:messages.length===60});
   }
   const v=chatInput.parse(p);
   if(v.action==='send'){
    // Stable client UUID makes retries safe; a duplicate never changes an existing message.
-   await db('nd_messages?on_conflict=id','POST',{id:v.id,member:actor,text:v.text},'resolution=ignore-duplicates,return=representation');return json({ok:true});
+   const previous=(await db('nd_messages?id=eq.'+v.id+'&select=id,member'))[0];if(previous){if(previous.member!==actor)throw new ApiError(403,'Ce message appartient à votre moitié.');return json({ok:true});}
+   let voice:any=null;if(v.voiceId){voice=(await db('nd_voices?id=eq.'+v.voiceId))[0];if(!voice?.ready||voice.owner!==actor)throw new ApiError(403,'Vous pouvez envoyer uniquement vos propres enregistrements.');if((await db('nd_messages?voice_id=eq.'+v.voiceId+'&select=id&limit=1')).length)throw new ApiError(409,'Ce vocal a déjà été envoyé.');}
+   await db('nd_messages?on_conflict=id','POST',{id:v.id,member:actor,text:v.text||'',...(voice?{voice_id:voice.id,voice_duration:voice.duration_ms}:{})},'resolution=ignore-duplicates,return=representation');return json({ok:true});
   }
-  const old=(await db('nd_messages?id=eq.'+v.id))[0];authorizeChat(old,actor,v.version);
+  const old=(await db('nd_messages?id=eq.'+v.id))[0];authorizeChat(old,actor,v.version);if(old.voice_id&&v.action==='edit')throw new ApiError(400,'Un vocal ne se modifie pas. Vous pouvez le supprimer.');
   const rows=await db('nd_messages?id=eq.'+v.id+'&member=eq.'+actor+'&version=eq.'+v.version,v.action==='delete'?'DELETE':'PATCH',v.action==='delete'?undefined:{text:v.text,edited_at:new Date().toISOString(),version:v.version!+1});
-  if(!rows.length)throw new ApiError(409,'Ce message a changé. Actualisez la discussion.');return json({ok:true});
+  if(!rows.length)throw new ApiError(409,'Ce message a changé. Actualisez la discussion.');if(v.action==='delete'&&old.voice_id)try{await deleteVoice(old.voice_id,actor,db,Deno.env.get('SUPABASE_URL')!,secret());}catch{/* Message removed; an unlinked attachment remains private to its author if storage is unavailable. */}return json({ok:true});
  }
  if(route==='calls'){
   if(req.method==='GET'){const {data:s}=await state();return json({call:s.call&&s.call.state!=='ended'&&s.call.expiresAt>Date.now()?s.call:null});}
@@ -143,6 +157,6 @@ export async function handler(req:Request):Promise<Response>{
   await mutate(s=>{const d=s.devices.find(d=>d.deviceId===p.deviceId);if(d&&d.member!==actor)throw new ApiError(403,'Cet appareil appartient à un autre compte.');deviceMutation(s,{...p,member:actor});});return json({ok:true});
  }
  return json({error:'Route inconnue.'},404);
- }catch(e){if(e instanceof ApiError||e instanceof MealError||e instanceof RecipeError||e instanceof AISettingsError)return json({error:e.message},e.status);if(e instanceof SyntaxError||e&&typeof e==='object'&&'issues'in e)return json({error:'Vérifiez les champs du formulaire.'},400);return json({error:'Service temporairement indisponible. Réessayez.'},503);}
+ }catch(e){if(e instanceof PlaceError||e instanceof VoiceError||e instanceof ApiError||e instanceof MealError||e instanceof RecipeError||e instanceof AISettingsError)return json({error:e.message},e.status);if(e instanceof SyntaxError||e&&typeof e==='object'&&'issues'in e)return json({error:'Vérifiez les champs du formulaire.'},400);return json({error:'Service temporairement indisponible. Réessayez.'},503);}
 }
 Deno.serve(handler);
