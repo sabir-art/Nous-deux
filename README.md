@@ -1,6 +1,6 @@
 # À deux
 
-Private shared household app in French. A couple uses one ChatGPT account across phones and iPad; each device chooses the person entering expenses. Records live in Cloudflare D1 and are scoped to the authenticated account. No household records are stored only in the browser.
+Shared household app in French, accessible without a ChatGPT or GitHub account. Both partners use their household password; each device chooses the person entering expenses. Records live in Cloudflare D1. No household records are stored only in the browser.
 
 ## Features
 
@@ -14,7 +14,7 @@ Private shared household app in French. A couple uses one ChatGPT account across
 
 ## Access and accounting
 
-Sites controls private authentication. Server routes require ChatGPT identity and scope every query and mutation to the stable user ID. Members are two labels within the same private account, not independent login identities. No money is transferred. Repayments record transfers already made outside the app. An odd cent is charged to the first person's share; this rule appears in settings and in the expense preview.
+The application authenticates with a household password and opaque 90-day sessions in Secure, HttpOnly, SameSite=Strict cookies. Only session token hashes are stored. The password uses salted PBKDF2-SHA256 (100,000 iterations, supported by Workers). Login attempts are limited in D1 per hashed IP and 15-minute bucket. APIs ignore ChatGPT identity headers and derive the existing household ID from server configuration. Initial setup requires a one-use bootstrap link; its secret is carried only in the URL fragment, cleared on load, and compared to a server-side SHA-256 hash. Setup is atomically disabled after the first password is saved. The public site shell exposes no household data. No money is transferred. Repayments record transfers already made outside the app. An odd cent is charged to the first person's share; this rule appears in settings and in the expense preview.
 
 ## Development
 
@@ -25,6 +25,8 @@ Validation:
 ```sh
 node --experimental-strip-types tests/domain.test.mjs
 node tests/api.test.mjs
+node tests/access.test.mjs
+node tests/communication.test.mjs
 node node_modules/typescript/bin/tsc --noEmit
 ```
 
@@ -32,6 +34,10 @@ The API tests execute real route handlers and authentication helpers against iso
 
 The app requires internet to load and save. It intentionally does not cache private financial data in a service worker. Home screen installation opens the live app.
 
-## Migration vers GitHub
+## Production configuration
 
-Ce dépôt conserve le code de la version existante, avec agenda, appels audio et notifications. Il ne contient aucune donnée du foyer ni les secrets de production. Cette version dépend encore de l’authentification ChatGPT/Sites et de Cloudflare D1. Le transfert sur GitHub ne constitue pas un déploiement indépendant : un hébergement et une authentification propre à l’application restent à mettre en place.
+Source code is mirrored on GitHub; runtime hosting and D1 remain on Sites/Cloudflare. GitHub Pages cannot execute these server routes. The site audience must permit anonymous access to the login page; all private data routes independently require a valid household session.
+
+Server-only secrets: `HOUSEHOLD_OWNER_ID` (existing records owner), `HOUSE_SETUP_HASH` (SHA-256 of initial setup token), and the existing VAPID keys. Never commit their values. A fresh installation requires these settings, the database migrations and a new bootstrap link. Do not replace an existing setup token or household owner during routine deployments. Password recovery currently requires an owner-assisted maintenance operation; no email recovery is implemented.
+
+After setup, share the ordinary site URL and the household password privately with the other partner. Each device can sign out independently. Adding the app to the iPhone/iPad or Android home screen is supported by its web manifest; cookie persistence depends on browser settings.

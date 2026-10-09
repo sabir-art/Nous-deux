@@ -30,3 +30,6 @@ export const activity=sqliteTable('activity',{
 export const calls=sqliteTable('calls',{
  userId:text('user_id').primaryKey(),id:text('id').notNull(),caller:integer('caller').notNull(),callerDevice:text('caller_device').notNull(),calleeDevice:text('callee_device').notNull().default(''),offer:text('offer').notNull(),answer:text('answer').notNull().default(''),state:text('state').notNull(),expiresAt:integer('expires_at').notNull(),createdAt:text('created_at').notNull(),
 });
+export const houseAccess=sqliteTable('house_access',{id:integer('id').primaryKey(),salt:text('salt').notNull(),passwordHash:text('password_hash').notNull()});
+export const houseSessions=sqliteTable('house_sessions',{tokenHash:text('token_hash').primaryKey(),expiresAt:integer('expires_at').notNull()});
+export const houseLoginLimits=sqliteTable('house_login_limits',{key:text('key').primaryKey(),attempts:integer('attempts').notNull(),expiresAt:integer('expires_at').notNull()});

@@ -1,4 +1,5 @@
 import HouseApp from './house-app';
-import {requireChatGPTUser} from './chatgpt-auth';
+import AccessForm from './access-form';
+import {getHouseUser} from '../lib/house-auth';
 export const dynamic='force-dynamic';
-export default async function Page(){await requireChatGPTUser('/');return <HouseApp/>;}
+export default async function Page(){return await getHouseUser()?<HouseApp/>:<AccessForm/>;}

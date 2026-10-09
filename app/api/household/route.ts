@@ -1,4 +1,4 @@
-import {getChatGPTUser} from '../../chatgpt-auth';
+import {getHouseUser} from '../../../lib/house-auth';
 import {getDb} from '../../../db';
 import {households,entries,items,appointments} from '../../../db/schema';
 import {and,eq,desc,sql} from 'drizzle-orm';
@@ -9,7 +9,7 @@ export const dynamic='force-dynamic';
 const json=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store, private','Vary':'Cookie','X-Content-Type-Options':'nosniff'}});
 const conflict=()=>json({error:'Cet élément a changé sur un autre appareil. Fermez ce formulaire puis rouvrez-le pour vérifier la dernière version.'},409);
 export async function GET(){
- const user=await getChatGPTUser();if(!user)return json({error:'Connectez-vous pour accéder à votre maison.'},401);
+ const user=await getHouseUser();if(!user)return json({error:'Connectez-vous pour accéder à votre maison.'},401);
  try{const db=getDb();const[home,ledger,lists,events]=await Promise.all([
  db.select().from(households).where(eq(households.userId,user.userId)),
  db.select().from(entries).where(eq(entries.userId,user.userId)).orderBy(desc(entries.date),desc(entries.createdAt)),
@@ -19,7 +19,7 @@ export async function GET(){
  }catch{return json({error:'Impossible de charger votre maison. Réessayez dans un instant.'},503);}
 }
 export async function POST(request:Request){
- const user=await getChatGPTUser();if(!user)return json({error:'Votre session a expiré. Reconnectez-vous.'},401);
+ const user=await getHouseUser();if(!user)return json({error:'Votre session a expiré. Reconnectez-vous.'},401);
  if(request.headers.get('sec-fetch-site')==='cross-site')return json({error:'Requête non autorisée.'},403);
  const origin=request.headers.get('origin');if(origin&&origin!==new URL(request.url).origin)return json({error:'Origine non autorisée.'},403);
  if(!request.headers.get('content-type')?.includes('application/json'))return json({error:'Format non valide.'},415);

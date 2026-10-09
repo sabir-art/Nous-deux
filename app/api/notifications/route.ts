@@ -1,4 +1,4 @@
-import {getChatGPTUser} from '../../chatgpt-auth';
+import {getHouseUser} from '../../../lib/house-auth';
 import {getDb} from '../../../db';
 import {devices,activity} from '../../../db/schema';
 import {eq,desc} from 'drizzle-orm';
@@ -7,14 +7,14 @@ import {pushKeys,sendToDevice} from '../../../lib/push';
 export const dynamic='force-dynamic';
 const json=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store, private','Vary':'Cookie'}});
 export async function GET(request:Request){
- const user=await getChatGPTUser();if(!user)return json({error:'Connectez-vous à votre maison.'},401);
+ const user=await getHouseUser();if(!user)return json({error:'Connectez-vous à votre maison.'},401);
  const id=deviceInput.safeParse(new URL(request.url).searchParams.get('device'));if(!id.success)return json({error:'Appareil invalide.'},400);
  try{const db=getDb();const [registered,events]=await Promise.all([db.select().from(devices).where(eq(devices.key,`${user.userId}:${id.data}`)),db.select().from(activity).where(eq(activity.userId,user.userId)).orderBy(desc(activity.id)).limit(50)]);
  return json({publicKey:pushKeys().publicKey,enabled:!!registered[0],preferences:registered[0]?JSON.parse(registered[0].preferences):defaultPreferences,activity:events});
  }catch{return json({error:'Notifications indisponibles. Réessayez.'},503);}
 }
 export async function POST(request:Request){
- const user=await getChatGPTUser();if(!user)return json({error:'Connectez-vous à votre maison.'},401);
+ const user=await getHouseUser();if(!user)return json({error:'Connectez-vous à votre maison.'},401);
  if(request.headers.get('sec-fetch-site')==='cross-site'||request.headers.get('origin')&&request.headers.get('origin')!==new URL(request.url).origin)return json({error:'Origine non autorisée.'},403);
  try{
  const raw=await request.text();if(raw.length>6000)return json({error:'Contenu trop volumineux.'},413);const p=JSON.parse(raw);const deviceId=deviceInput.parse(p.deviceId),key=`${user.userId}:${deviceId}`;const db=getDb();
