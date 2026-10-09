@@ -36,7 +36,8 @@ try{for(const engine of [webkit,chromium]){
   await page.setViewportSize({width,height:1000});
   for(const view of ['home','calendar','shopping','budget']){
    await page.goto(base+'/?view='+view);await page.locator('.topbar').waitFor();
-   const measurements=await page.evaluate(()=>{const center=el=>{const r=el.getBoundingClientRect();return r.y+r.height/2;};const nodes=[...document.querySelectorAll('.topbar .brand-mark:not(.dark-logo),.topbar-right>button,.topbar .profile-avatar')].filter(el=>el.getBoundingClientRect().width>0);const overflow=[...document.querySelectorAll('.topbar,main,.calendar-panel,.calendar-month-list,.shopping-columns,.shopping-row,.countdown-card,.budget-charts,.nd-chart,.couple-navigation')].filter(el=>el.scrollWidth>el.clientWidth+2).map(el=>({className:el.className,width:el.clientWidth,scroll:el.scrollWidth}));return{centers:nodes.map(center),overflow};});
+   // Decorative chart blobs intentionally extend beyond a clipped card; inspect its content instead.
+   const measurements=await page.evaluate(()=>{const center=el=>{const r=el.getBoundingClientRect();return r.y+r.height/2;};const nodes=[...document.querySelectorAll('.topbar .brand-mark:not(.dark-logo),.topbar-right>button,.topbar .profile-avatar')].filter(el=>el.getBoundingClientRect().width>0);const overflow=[...document.querySelectorAll('.topbar,main,.calendar-panel,.calendar-month-list,.shopping-columns,.shopping-row,.countdown-card,.budget-charts,.nd-chart>:not(.nd-chart-blob):not(.nd-chart-table),.couple-navigation')].filter(el=>el.scrollWidth>el.clientWidth+2).map(el=>({className:el.className,width:el.clientWidth,scroll:el.scrollWidth}));return{centers:nodes.map(center),overflow};});
    assert(Math.max(...measurements.centers)-Math.min(...measurements.centers)<=1.5,`${engine.name()} ${width}: header centers ${measurements.centers}`);
    assert.deepEqual(measurements.overflow,[],`${engine.name()} ${width} ${view}: horizontal overflow`);
   }

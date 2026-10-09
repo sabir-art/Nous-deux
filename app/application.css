@@ -198,3 +198,8 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}details[op
 @media(min-width:760px) and (max-width:1023px){.calendar-layout{grid-template-columns:minmax(0,1fr)}}
 @media(min-width:1024px){.shopping-columns{gap:24px}.calendar-layout{gap:24px}.countdown-grid{gap:20px}}
 @media(prefers-reduced-motion:reduce){.moment-pupils{animation:none}.buddy-motion-toggle{display:none}.shopping-row.purchase-leaving,.shopping-row.purchase-arriving{animation:none}.shopping-progress progress::-webkit-progress-value,.shopping-progress progress::-moz-progress-bar{transition:none}}
+
+/* Daily series keep every value and tooltip; seven date ticks stay legible on phones. */
+.budget-daily-chart{min-width:0}.budget-daily-chart>.nd-chart{height:100%}
+.budget-daily-chart .nd-xpills{grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:4px}
+.budget-daily-chart .nd-xpills>span:not(:nth-child(5n + 1)):not(:last-child){display:none}
