@@ -165,3 +165,36 @@ input::-webkit-date-and-time-value{text-align:left;min-width:0}
 @media(max-width:520px){.couple-navigation-tab.is-active{flex-basis:86px}.couple-navigation-classic .couple-navigation-tab.is-active{flex-basis:44px}}
 .app-tabbar:has(.couple-navigation-classic){bottom:0;padding:0 0 env(safe-area-inset-bottom,0px);background:var(--surface);border-top:1px solid var(--line)}
 @media(prefers-reduced-motion:reduce){.couple-navigation-tab{transition:none}}
+/* Explicit header geometry avoids Safari's native button baseline/inline-grid differences. */
+.topbar{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:12px}
+.topbar .brand{min-width:0;align-self:center;line-height:1.2}.topbar .brand-mark{flex:none;align-self:center}.topbar .brand>span{white-space:nowrap}
+.topbar-right{display:grid;grid-auto-flow:column;grid-auto-columns:auto;align-items:center;justify-content:end;min-height:44px}
+.topbar-right>button{appearance:none;-webkit-appearance:none;box-sizing:border-box;margin:0;height:44px;min-height:44px;align-self:center;vertical-align:middle;line-height:1;padding-block:0}
+.topbar-right>.icon-button,.topbar-right>.profile-picker{display:grid;place-items:center;width:44px;min-width:44px;padding:0}
+.topbar-right .profile-avatar{display:grid;place-items:center;width:40px;height:40px;line-height:1;vertical-align:middle;align-self:center;justify-self:center}
+.topbar-right .profile-avatar img{display:block;width:100%;height:100%;object-fit:cover}.topbar-right>button>svg{display:block;align-self:center;justify-self:center}
+@media(max-width:359px){.topbar .brand{font-size:18px;gap:6px}.topbar{column-gap:8px}}
+/* Five invitation companions; eye movements never displace the card or its text. */
+.countdown-heading{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:12px}.countdown-heading h2{margin:0;min-width:0}.buddy-motion-toggle{flex:none;background:var(--surface)}
+.moment-pupils{animation:buddy-look-around 7s ease-in-out infinite;transform-box:fill-box;transform-origin:center}.countdown-card:nth-child(even) .moment-pupils{animation-delay:-3s}.buddies-paused .moment-pupils{animation-play-state:paused}
+@keyframes buddy-look-around{0%,12%,92%,100%{transform:translate(0,0)}20%,34%{transform:translate(-5px,-1px)}43%,58%{transform:translate(2px,-2px)}67%,78%{transform:translate(-1px,2px)}}
+/* An acknowledged purchase checks first, leaves its list, then arrives at its destination. */
+.purchase-status{order:3;display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:50%;background:var(--menthe);color:var(--ink)}
+.shopping-row.purchase-saving .purchase-check{color:var(--ink)}.shopping-row.purchase-leaving[data-purchase-target=purchased] .purchase-check{background:var(--action);border-color:var(--action);color:var(--on-action)}
+.shopping-row.purchase-leaving[data-purchase-target=purchased] .purchase-check svg{animation:purchase-tick 180ms ease-out both}.shopping-row.purchase-leaving[data-purchase-target=purchased] .shopping-description strong{text-decoration:line-through}
+.shopping-row.purchase-leaving{animation:purchase-depart 360ms ease-in-out both;overflow:hidden;pointer-events:none}.shopping-row.purchase-arriving{animation:purchase-arrive 240ms ease-out both}
+@keyframes purchase-tick{from{transform:scale(.45);opacity:0}70%{transform:scale(1.16);opacity:1}to{transform:scale(1);opacity:1}}
+@keyframes purchase-depart{0%,48%{opacity:1;transform:translateY(0);max-height:var(--row-height);min-height:0}100%{opacity:0;transform:translateY(8px);max-height:0;min-height:0;margin-block:0;padding-block:0}}
+@keyframes purchase-arrive{from{opacity:.25;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.shopping-progress progress::-webkit-progress-value{transition:width 280ms ease-out}.shopping-progress progress::-moz-progress-bar{transition:width 280ms ease-out}
+/* Consistent acknowledgement for controls and reveal animations for newly opened content. */
+:where(.icon-button,.text-link,.catalog-add-button,.expense-shortcut,.booking-plan,.calendar-today,.purchase-check,.checkbox,.category-grid .nd-tile,.plant-parade>button,.countdown-card){transition:transform 160ms ease,background-color 180ms ease,box-shadow 180ms ease}
+:where(.icon-button,.text-link,.catalog-add-button,.expense-shortcut,.booking-plan,.calendar-today,.purchase-check,.checkbox,.category-grid .nd-tile,.plant-parade>button,.countdown-card):not(:disabled):active{transform:scale(.97)}
+:where(.segmented,.life-filters,.meal-tabs,.catalog-categories,.quantity-presets,.recurrence-presets)>button{transition:background-color 180ms ease,color 180ms ease,box-shadow 180ms ease}
+:where(.templates-panel,.save-template,.chat-emoji-picker,.place-map,.chat-message,.toast){animation:action-reveal 200ms ease-out both}
+dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}details[open]>*:not(summary){animation:action-reveal 180ms ease-out both}.item-row.done .checkbox svg{animation:purchase-tick 180ms ease-out both}
+@keyframes action-reveal{from{opacity:.35;translate:0 5px}to{opacity:1;translate:0 0}}@keyframes sheet-reveal{from{opacity:.4;translate:0 10px}to{opacity:1;translate:0 0}}
+.chat-image-loading{display:grid;place-items:center;gap:10px;min-height:160px;background:var(--surface);color:var(--ink-muted);border-radius:var(--radius-md);font-size:13px}.chat-image-preview{animation:action-reveal 200ms ease-out both}.chat-upload-list:has(.chat-upload-row:only-child) .chat-upload-row{flex-wrap:wrap}.chat-upload-row:only-child>img{width:100%;height:auto;max-height:250px;object-fit:contain;background:var(--surface)}
+@media(min-width:760px) and (max-width:1023px){.calendar-layout{grid-template-columns:minmax(0,1fr)}}
+@media(min-width:1024px){.shopping-columns{gap:24px}.calendar-layout{gap:24px}.countdown-grid{gap:20px}}
+@media(prefers-reduced-motion:reduce){.moment-pupils{animation:none}.buddy-motion-toggle{display:none}.shopping-row.purchase-leaving,.shopping-row.purchase-arriving{animation:none}.shopping-progress progress::-webkit-progress-value,.shopping-progress progress::-moz-progress-bar{transition:none}}

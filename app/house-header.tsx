@@ -1,0 +1,6 @@
+import type {ReactNode} from 'react';
+import {CloudCheck,CloudOff,Bell} from './icons';
+import {APP_BASE} from '../lib/api-client';
+export default function HouseHeader({synced,online,name,avatar,onHome,onRefresh,onNotifications,onProfile}:{synced:boolean;online:boolean;name:string;avatar?:ReactNode;onHome:()=>void;onRefresh:()=>void;onNotifications:()=>void;onProfile:()=>void}){
+ return <header className="topbar"><a className="brand" href={APP_BASE} aria-label="Nous deux, accueil" onClick={e=>{e.preventDefault();onHome();}}><img className="brand-mark" src={APP_BASE+'logos/nous-deux-symbole.svg'} alt=""/><img className="brand-mark dark-logo" src={APP_BASE+'logos/nous-deux-symbole-blanc.svg'} alt=""/><span>Nous deux</span></a><div className="topbar-right"><button className={`sync-status ${!synced?'unsynced':''}`} onClick={onRefresh} aria-label="Actualiser les données">{synced?<CloudCheck size={20}/>:<CloudOff size={20}/>}<span>{!online?'Hors ligne':synced?'À jour':'Actualiser'}</span></button><button className="icon-button" onClick={onNotifications} aria-label="Nos notifications"><Bell/></button>{avatar&&<button className="profile-picker" onClick={onProfile} aria-label={`Mon espace, ${name}`}>{avatar}</button>}</div></header>;
+}

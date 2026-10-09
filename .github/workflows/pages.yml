@@ -41,6 +41,11 @@ jobs:
       - run: node tests/accessibility.test.mjs
       - run: node tests/design-system.test.mjs
       - run: node tests/mobile-ui.test.mjs
+      - name: WebKit and Chromium interface checks
+        run: |
+          npm install --prefix "$RUNNER_TEMP/nous-deux-browsers" --no-package-lock --ignore-scripts playwright@1.62.1
+          node "$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright/cli.js" install --with-deps chromium webkit
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/browser-layout.test.mjs
       - run: pnpm run build:web
       - uses: actions/upload-pages-artifact@v3
         with:
