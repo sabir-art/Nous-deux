@@ -4,14 +4,17 @@ export class ApiError extends Error{constructor(public status:number,message:str
 export type State={household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number};
 const conflict=()=>{throw new ApiError(409,'Cet élément a changé sur un autre appareil. Fermez puis rouvrez le formulaire.');};
 export function householdMutation(s:State,p:any,actor:number){
+ if(actor!==0&&actor!==1)throw new ApiError(403,'Compte personnel requis.');
  const {action,payload}=p;const now=new Date().toISOString();
- if(action==='household'){const home=householdInput.parse(payload);if((s.household?.version||0)!==home.version)conflict();s.household={...home,version:home.version+1};}
+ if(action==='household'){const home=householdInput.parse(payload);if(s.household&&home[actor===0?'second':'first']!==s.household[actor===0?'second':'first'])throw new ApiError(403,'Vous ne pouvez pas modifier le profil de votre moitié.');if((s.household?.version||0)!==home.version)conflict();s.household={...home,version:home.version+1};}
  else{
   if(!s.household)throw new ApiError(400,'Configurez votre maison.');
   const list=action.includes('appointment')?'appointments':action.includes('entry')?'entries':action==='item'||action==='delete-item'?'items':null;
   if(!list)throw new ApiError(400,'Action inconnue.');
+  const existing=s[list].find(x=>x.id===payload?.id);if(existing&&existing.owner!==actor)throw new ApiError(403,'Seul l’auteur peut modifier ou supprimer cet élément.');
+  if(list==='entries'&&!action.startsWith('delete-')&&payload?.member!==actor)throw new ApiError(403,'Enregistrez uniquement vos propres paiements.');
   if(action.startsWith('delete-')){const v=deleteInput.parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0||s[list][i].version!==v.version)conflict();s[list].splice(i,1);}
-  else{const v=(list==='entries'?entryInput:list==='items'?itemInput:appointmentInput).parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0&&v.version!==0||i>=0&&s[list][i].version!==v.version)conflict();const value={...v,version:v.version+1,createdAt:i<0?now:s[list][i].createdAt};if(i<0)s[list].push(value);else s[list][i]=value;}
+  else{const v=(list==='entries'?entryInput:list==='items'?itemInput:appointmentInput).parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0&&v.version!==0||i>=0&&s[list][i].version!==v.version)conflict();const value={...v,owner:actor,version:v.version+1,createdAt:i<0?now:s[list][i].createdAt};if(i<0)s[list].push(value);else s[list][i]=value;}
  }
  const note=changeDescription(action,payload||{});if(note&&(actor===0||actor===1)){s.sequence=(s.sequence||0)+1;s.activity.unshift({id:s.sequence,actor,...note,createdAt:now});s.activity=s.activity.filter(e=>Date.parse(e.createdAt)>Date.now()-90*86400000).slice(0,500);return note;}return null;
 }

@@ -1,8 +1,8 @@
-export type Entry={id:string;kind:'expense'|'settlement';title:string;cents:number;member:number;category:string;date:string;note:string;version:number;createdAt:string};
-export type Item={id:string;kind:'shopping'|'task';title:string;quantity:string;assignee:number;due:string;priority:number;done:boolean;version:number;createdAt:string};
+export type Entry={owner?:number|null;id:string;kind:'expense'|'settlement';title:string;cents:number;member:number;category:string;date:string;note:string;version:number;createdAt:string};
+export type Item={owner?:number|null;id:string;kind:'shopping'|'task';title:string;quantity:string;assignee:number;due:string;priority:number;done:boolean;version:number;createdAt:string};
 export type Household={first:string;second:string;name:string;budget:number;version:number};
-export type Appointment={id:string;title:string;category:'medical'|'personal'|'admin'|'other';person:number;status:'to_book'|'scheduled'|'done';date:string;time:string;bookBy:string;location:string;note:string;createdAt:string;version:number};
-export type Data={household:Household|null;entries:Entry[];items:Item[];appointments:Appointment[]};
+export type Appointment={owner?:number|null;id:string;title:string;category:'medical'|'personal'|'admin'|'other';person:number;status:'to_book'|'scheduled'|'done';date:string;time:string;bookBy:string;location:string;note:string;createdAt:string;version:number};
+export type Data={member?:number;household:Household|null;entries:Entry[];items:Item[];appointments:Appointment[]};
 export const categories=['Courses','Maison','Factures','Sorties','Transport','Autre'];
 export function centsFromInput(value:string):number{
  const s=value.trim().replace(',','.');

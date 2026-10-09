@@ -18,3 +18,16 @@ callMutation(s,{action:'answer',id:callId,session:two,member:1,answer:offer});as
 assert.throws(()=>callMutation(s,{action:'end',id:callId,session:third,member:1}),e=>e.status===403);callMutation(s,{action:'end',id:callId,session:two,member:1});assert.equal(s.call.offer,'');
 assert.throws(()=>deviceMutation(s,{action:'subscribe',deviceId:crypto.randomUUID(),member:0,preferences:{shopping:true,tasks:true,expenses:true,calendar:true,calls:true},subscription:{endpoint:'http://127.0.0.1/private',keys:{p256dh:'x'.repeat(87),auth:'x'.repeat(22)}}}));
 console.log('PASS: expense validation, stale writes, appointment planning, call participants, answer races and push endpoint restrictions.');
+// Access control: visibility is shared, writes belong to the authenticated author.
+assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,version:2,member:1,owner:1}},1),e=>e.status===403);
+assert.throws(()=>householdMutation(s,{action:'delete-entry',payload:{id,version:2}},1),e=>e.status===403);
+assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,id:crypto.randomUUID(),version:0,member:1}},0),e=>e.status===403);
+const task={id:crypto.randomUUID(),kind:'task',title:'Test auteur',quantity:'',assignee:1,due:'',priority:0,done:false,version:0,owner:1};
+householdMutation(s,{action:'item',payload:task},0);assert.equal(s.items[0].owner,0);
+assert.throws(()=>householdMutation(s,{action:'item',payload:{...task,version:1,done:true}},1),e=>e.status===403);
+assert.throws(()=>householdMutation(s,{action:'delete-item',payload:{id:task.id,version:1}},1),e=>e.status===403);
+householdMutation(s,{action:'item',payload:{...task,version:1,done:true}},0);assert.equal(s.items[0].done,true);
+s.items[0].owner=null;assert.throws(()=>householdMutation(s,{action:'delete-item',payload:{id:task.id,version:2}},0),e=>e.status===403);
+assert.throws(()=>householdMutation(s,{action:'delete-appointment',payload:{id:aid,version:2}},0),e=>e.status===403);
+assert.throws(()=>householdMutation(s,{action:'household',payload:{...s.household,second:'Usurpe'}},0),e=>e.status===403);
+console.log('PASS: cross-account updates/deletes, forged payer/owner, legacy records and partner profile changes are denied.');
