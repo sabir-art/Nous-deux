@@ -54,6 +54,7 @@ jobs:
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/browser-layout.test.mjs
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/daily-browser.test.mjs
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/chat-controls-browser.test.mjs
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/app-navigation-browser.test.mjs
       - run: pnpm run build:web
       - uses: actions/upload-pages-artifact@v3
         with:

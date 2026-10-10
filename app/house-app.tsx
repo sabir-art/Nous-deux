@@ -1,4 +1,5 @@
 import HouseHeader from './house-header';
+import {useHouseNavigation,usePageSwipe,type HousePage as Tab} from './use-house-navigation';
 import {PlaceCard} from './house-places';
 import AISettings from './ai-settings';
 import DateField from './date-field';
@@ -30,7 +31,6 @@ import HouseCalendar,{CalendarSummary,AppointmentForm,type OpenAppointment} from
 import HouseShopping from './house-shopping';
 import HouseChat from './house-chat';
 import {weekStart} from '../lib/shopping';
-type Tab='meals'|'ideas'|'plants'|'chat'|'calls'|'notifications'|'home'|'expenses'|'shopping'|'tasks'|'calendar'|'settings';
 type Modal={kind:'quick-add'|'expense'|'settlement'|'shopping'|'task'|'delete'|'install'|'appointment';entry?:Entry;item?:Item;appointment?:Appointment;initialWeek?:string;initialDate?:string;initialStatus?:'to_book'|'scheduled'};
 const nav=[{id:'home',label:'Chez nous',icon:Home},{id:'expenses',label:'Budget',icon:Wallet},{id:'shopping',label:'Courses',icon:ShoppingBasket},{id:'calendar',label:'Calendrier',icon:CalendarDays},{id:'tasks',label:'À faire',icon:CheckCheck},{id:'calls',label:'Appels',icon:Phone},{id:'notifications',label:'Nouveautés',icon:Bell},{id:'meals',label:'À table !',icon:Coffee},{id:'ideas',label:'Nos idées',icon:Heart},{id:'plants',label:'Nos plantes',icon:Leaf},{id:'chat',label:'Discussion',icon:MessageCircle},{id:'settings',label:'Notre espace',icon:Settings}] as const;
 const catIcons=[ShoppingBasket,Home,Lightbulb,Coffee,Car,Shapes];
@@ -47,11 +47,12 @@ export default function HouseApp(){
  const[callRequest,setCallRequest]=useState<{mode:'audio'|'video';key:number;actor:number}|null>(null);
  const[shoppingWeek,setShoppingWeek]=useState(weekStart);const[quickShopping,setQuickShopping]=useState(false);const[createTarget,setCreateTarget]=useState('');
  const[calendarDate,setCalendarDate]=useState(''),[ideaToOpen,setIdeaToOpen]=useState('');
- const[data,setData]=useState<Data|null>(null);const[tab,setTab]=useState<Tab>('home');const[modal,setModal]=useState<Modal|null>(null);
+ const[data,setData]=useState<Data|null>(null);const[modal,setModal]=useState<Modal|null>(null);
  const[active,setActive]=useState(0);const[month,setMonth]=useState(today().slice(0,7));const[search,setSearch]=useState('');const[category,setCategory]=useState('Toutes');const[taskFilter,setTaskFilter]=useState('all');
  const[busy,setBusy]=useState(false);const[loading,setLoading]=useState(true);const[online,setOnline]=useState(true);const[error,setError]=useState('');const[formError,setFormError]=useState('');const[notice,setNotice]=useState('');const[synced,setSynced]=useState(false);const[needsAuth,setNeedsAuth]=useState(false);
  const sequence=useRef(0);const mutating=useRef(false);const submitting=useRef(false);const toastTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const toast=(message:string)=>{setNotice(message);if(toastTimer.current)clearTimeout(toastTimer.current);toastTimer.current=setTimeout(()=>setNotice(''),4200);};
+ const {page:tab,navigate:setTab,direction}=useHouseNavigation(toast);
  const refresh=useCallback(async(quiet=false)=>{
   if(mutating.current)return false;const requestNumber=++sequence.current;
   try{const response=await apiFetch('/api/household',{cache:'no-store'});if(response.status===401){setNeedsAuth(true);throw new Error('Votre session a expiré. Reconnectez-vous.');}
@@ -61,7 +62,6 @@ export default function HouseApp(){
   finally{if(requestNumber===sequence.current)setLoading(false);}
  },[]);
  useEffect(()=>{
-  const view=new URLSearchParams(location.search).get('view');if(view&&nav.some(n=>n.id===view))setTab(view as Tab);
   setOnline(navigator.onLine);refresh();
   const wake=()=>{setOnline(navigator.onLine);if(document.visibilityState==='visible')refresh(true);};
   const offline=()=>{setOnline(false);setSynced(false);};
@@ -71,7 +71,8 @@ export default function HouseApp(){
  },[refresh]);
  const mealVotes=useMealVotes(active,data?.meals);
  const contentRef=useRef<HTMLElement>(null);
- useEffect(()=>{const node=contentRef.current;node?.closest('.workspace')?.scrollTo({top:0,behavior:'instant'});if(node&&!matchMedia('(prefers-reduced-motion: reduce)').matches)node.animate([{opacity:.6,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:170,easing:'ease-out'});document.title=(nav.find(n=>n.id===tab)?.label||'Notre maison')+' · Nous deux';},[tab]);
+ usePageSwipe(contentRef,tab,setTab);
+ useEffect(()=>{const node=contentRef.current;node?.closest('.workspace')?.scrollTo({top:0,behavior:'instant'});if(node&&!matchMedia('(prefers-reduced-motion: reduce)').matches)node.animate([{opacity:.6,transform:`translateX(${direction.current*24}px)`},{opacity:1,transform:'translateX(0)'}],{duration:170,easing:'ease-out'});document.title=(nav.find(n=>n.id===tab)?.label||'Notre maison')+' · Nous deux';},[tab]);
  const canEdit=(record?:{owner?:number|null})=>!record||record.owner===active;
  const record=modal?.entry||modal?.item||modal?.appointment;const readOnly=!!record&&(!canEdit(record)||!!modal?.appointment?.sourceIdeaId);
  const open=(m:Modal)=>{setFormError('');setModal(m);};
@@ -114,8 +115,8 @@ export default function HouseApp(){
    {tab==='ideas'&&<HouseIdeas openId={ideaToOpen} onOpened={()=>setIdeaToOpen('')} onCalendar={date=>{setCalendarDate(date);setTab('calendar');}} create={createTarget==='ideas'} onCreated={()=>setCreateTarget('')} ideas={ideas} active={active} names={names} busy={busy} error={formError} save={save}/>}
    {tab==='plants'&&<HousePlants create={createTarget==='plants'} onCreated={()=>setCreateTarget('')} plants={plants} active={active} names={names} busy={busy} error={formError} save={save} onNotifications={()=>setTab('notifications')}/>}
    {tab==='meals'&&<Suspense fallback={<p role="status">On ouvre le carnet gourmand…</p>}><HouseMeals active={active} create={createTarget==='recipe'} openPlans={createTarget==='menu'} onCreated={()=>setCreateTarget('')} meals={mealVotes.meals} names={names} onVote={mealVotes.vote}/></Suspense>}
-   {tab==='chat'&&<HouseChat key={active} active={active} names={names} onCall={mode=>{setCallRequest({mode,key:Date.now(),actor:active});setTab('calls');}}/>}
-   <HouseCalls key={active} request={callRequest} active={active} names={names} expanded={tab==='calls'} onOpen={()=>setTab('calls')}/>
+   {tab==='chat'&&<HouseChat key={`chat-${active}`} active={active} names={names} onCall={mode=>{setCallRequest({mode,key:Date.now(),actor:active});setTab('calls');}}/>}
+   <HouseCalls key={`calls-${active}`} request={callRequest} active={active} names={names} expanded={tab==='calls'} onOpen={()=>setTab('calls')}/>
    {tab==='notifications'&&<HouseNotifications active={active} names={names} onNavigate={t=>{if(nav.some(n=>n.id===t))setTab(t as Tab);}}/>}
    {tab==='calendar'&&<HouseCalendar initialDate={calendarDate} active={active} appointments={appointments} names={names} onOpen={openAppointment}/>}
    {tab==='settings'&&<div className="settings-grid"><section className="panel settings-panel"><h2>Les deux de la maison</h2><ThemePicker/><ProfilePhoto member={active} name={names[active]} busy={busy} save={save}/><SettingsForm active={active} key={home.version} initial={home} busy={busy} error={formError} onSave={h=>save('household',h,'Votre espace a été mis à jour.')}/></section><div className="settings-right"><AISettings active={active} names={names}/><section className="panel settings-panel"><span className="settings-icon"><Smartphone size={23}/></span><h2>Toujours à portée de main</h2><button className="text-link" onClick={()=>setTab('notifications')}><Bell size={17}/>Régler mes notifications</button><p>Ouvrez ce lien sur vos autres appareils et connectez-vous avec votre compte personnel. Vos dépenses et vos listes sont communes.</p><div className="device-profile"><span>Connecté·e en tant que <strong>{names[active]}</strong></span><LockKeyhole size={16}/></div><button className="secondary wide" onClick={()=>open({kind:'install'})}><Plus size={17}/>Ajouter à l’écran d’accueil</button><button className="text-link settings-link" onClick={async()=>{try{await navigator.clipboard.writeText(location.origin+APP_BASE);toast('Lien de la maison copié.');}catch{toast('Copiez le lien dans la barre d’adresse de votre navigateur.');}}}>Copier le lien de notre maison <ArrowUpRight size={15}/></button></section><section className="panel settings-panel"><h2>Vos données, au clair</h2><p>Les dépenses sont partagées à 50/50. Pour un centime indivisible, la part de {names[0]} est arrondie au centime supérieur.</p><button className="secondary wide" onClick={exportCsv}><Download size={17}/>Exporter toutes les dépenses</button><button className="text-link settings-link" onClick={async()=>{const r=await apiFetch("/api/access",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"logout"})});if(r.ok)location.replace(APP_BASE);else toast("Déconnexion impossible. Réessayez.");}}><LogOut size={16}/>Déconnecter cet appareil</button></section></div></div>}
