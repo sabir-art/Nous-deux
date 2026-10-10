@@ -1,60 +1,82 @@
 'use client';
-import {apiFetch,APP_BASE} from '../lib/api-client';
-import {useState,useEffect,useRef} from 'react';
-import {Phone,PhoneOff,Mic,MicOff,Volume2} from './icons';
-type Call={id:string;caller:number;callerDevice:string;calleeDevice:string;offer:string;answer:string;state:string;expiresAt:number};
-const iceServers=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}];
-export default function HouseCalls({active,names,expanded,onOpen}:{active:number;names:string[];expanded:boolean;onOpen:()=>void}){
- const [call,setCall]=useState<Call|null>(null),[status,setStatus]=useState(''),[busy,setBusy]=useState(false),[muted,setMuted]=useState(false),[connected,setConnected]=useState(false),[elapsed,setElapsed]=useState(0),[audioBlocked,setAudioBlocked]=useState(false),[available,setAvailable]=useState(false);
- const session=useRef(''),peer=useRef<RTCPeerConnection|null>(null),stream=useRef<MediaStream|null>(null),audio=useRef<HTMLAudioElement|null>(null),current=useRef<Call|null>(null),localId=useRef(''),localMember=useRef(active),generation=useRef(0),operation=useRef(false),lastHeartbeat=useRef(0),connectionTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
- const post=async(action:string,id:string,extra:Record<string,unknown>={})=>{const r=await apiFetch('/api/calls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,id,session:session.current,member:localMember.current,...extra})});const d=await r.json() as {error?:string;call:Call|null};if(!r.ok)throw new Error(d.error||'Appel indisponible.');return d;};
- const cleanup=()=>{generation.current++;if(connectionTimer.current)clearTimeout(connectionTimer.current);connectionTimer.current=null;const pc=peer.current;peer.current=null;pc?.close();stream.current?.getTracks().forEach(t=>t.stop());stream.current=null;if(audio.current)audio.current.srcObject=null;localId.current='';setConnected(false);setMuted(false);setElapsed(0);setAudioBlocked(false);};
- const end=async()=>{const id=localId.current||current.current?.id;cleanup();current.current=null;setCall(null);setStatus('Appel terminé.');if(id)try{await post('end',id);}catch(e){setStatus(e instanceof Error?e.message:'Appel arrêté sur cet appareil.');}};
- const fail=(message:string)=>{const id=localId.current;cleanup();setStatus(message);if(id)void post('end',id).catch(()=>{});};
+import {useEffect,useRef,useState,type ReactNode,type RefObject} from 'react';
+import {useDialog} from './use-dialog';
+import {apiFetch} from '../lib/api-client';
+import {Phone,PhoneOff,Mic,MicOff,Volume2,Video,VideoOff,SwitchCamera,ChevronDown,Headphones,Clock} from './icons';
+import {ProfileAvatar} from './profile-photo';
+import {createCallEngine,type CallEngine,type CallMedia} from './daily-engine';
+import {useCallRingtone} from './call-ringtone';
+import LifeDialog from './life-dialog';
+export type Call={id:string;caller:number;mode:'audio'|'video';state:string;mine:boolean;createdAt:number;expiresAt:number;maxExpiresAt:number;connectedAt:number|null;endedAt:number|null;endReason:string|null};
+type Result={configured?:boolean;call:Call|null;history?:Call[];estimatedMinutes?:number;join?:{url:string;token:string};ended?:Call;error?:string};
+type Props={active:number;names:string[];expanded:boolean;onOpen:()=>void;request?:{mode:'audio'|'video';key:number;actor:number}|null};
+const duration=(ms:number)=>{const seconds=Math.max(0,Math.floor(ms/1000));return `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;};
+const endedLabel=(call?:Call)=>call?.state==='missed'?'Appel manqué':call?.state==='declined'?'Appel refusé':call?.state==='failed'?'Connexion perdue':call?.endReason==='time_limit'?'Limite de deux heures atteinte':'Appel terminé';
+function Track({track,video=false,muted=false,onBlocked,audioRef}:{track?:MediaStreamTrack;video?:boolean;muted?:boolean;onBlocked?:()=>void;audioRef?:RefObject<HTMLAudioElement|null>}){
+ const ref=useRef<HTMLMediaElement|null>(null),blocked=useRef(onBlocked);blocked.current=onBlocked;
+ useEffect(()=>{const element=ref.current;if(!element)return;element.srcObject=track?new MediaStream([track]):null;if(track)void element.play().catch(()=>blocked.current?.());return()=>{element.srcObject=null;};},[track]);
+ return video?<video ref={el=>{ref.current=el;}} autoPlay playsInline muted={muted}/>:<audio ref={el=>{ref.current=el;if(audioRef)audioRef.current=el;}} autoPlay playsInline/>;
+}
+function CallModal({children,video,onMinimize}:{children:ReactNode;video:boolean;onMinimize:()=>void}){const ref=useRef<HTMLDialogElement|null>(null);useDialog(ref);return <dialog ref={ref} className={`daily-call-stage daily-call-overlay ${video?'with-video':''}`} aria-label="Appel privé à deux" onCancel={e=>{e.preventDefault();onMinimize();}}>{children}</dialog>;}
+function CallSurface({children,video,immersive,onMinimize}:{children:ReactNode;video:boolean;immersive:boolean;onMinimize:()=>void}){return immersive?<CallModal video={video} onMinimize={onMinimize}>{children}</CallModal>:<section className="daily-call-stage" aria-label="Appel privé à deux">{children}</section>;}
+export default function HouseCalls({active,names,expanded,onOpen,request}:Props){
+ const[call,setCall]=useState<Call|null>(null),[history,setHistory]=useState<Call[]>([]),[configured,setConfigured]=useState<boolean|null>(null),[estimated,setEstimated]=useState(0),[busy,setBusy]=useState(false),[status,setStatus]=useState(''),[network,setNetwork]=useState(''),[media,setMedia]=useState<CallMedia>({}),[muted,setMuted]=useState(false),[camera,setCamera]=useState(false),[now,setNow]=useState(Date.now),[audioBlocked,setAudioBlocked]=useState(false),[deviceOpen,setDeviceOpen]=useState(false),[devices,setDevices]=useState<MediaDeviceInfo[]>([]),[output,setOutput]=useState('default'),[input,setInput]=useState(''),[minimized,setMinimized]=useState(false);
+ const engine=useRef<CallEngine|null>(null),current=useRef<Call|null>(null),localId=useRef(''),session=useRef(''),alive=useRef(true),generation=useRef(0),operation=useRef(false),polling=useRef(false),lastBeat=useRef(0),lastRequest=useRef(0),remotePresent=useRef(false),audio=useRef<HTMLAudioElement|null>(null),ending=useRef(false),pollRef=useRef<()=>Promise<void>>(async()=>{});
+ const incoming=!!call&&call.caller!==active&&call.state==='ringing'&&!call.mine;
+ const {soundReady,unlock}=useCallRingtone(incoming&&!busy);
+ function apply(c:Call|null){current.current=c;setCall(c);}
+ async function post(action:string,id:string,extra:Record<string,unknown>={}){const r=await apiFetch('/api/daily-calls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,id,session:session.current,...extra}),signal:AbortSignal.timeout(45000)});const d=await r.json() as Result;if(!r.ok)throw new Error(d.error||'Appel indisponible.');return d;}
+ async function release(){generation.current++;const e=engine.current;engine.current=null;localId.current='';remotePresent.current=false;setMedia({});setCamera(false);setMuted(false);setNetwork('');setAudioBlocked(false);if(e)await e.destroy().catch(()=>{});}
+ async function finish(action='end',reason=''){
+  if(ending.current)return;ending.current=true;const id=localId.current||current.current?.id;await release();setBusy(false);setStatus(action==='decline'?'Appel refusé':'Appel terminé');apply(null);
+  try{if(id){const d=await post(action,id);setStatus(reason||endedLabel(d.ended));}}catch{setStatus('Appel arrêté sur cet appareil. La session distante expirera automatiquement.');}finally{ending.current=false;void pollRef.current();}
+ }
  useEffect(()=>{
-  session.current=crypto.randomUUID();setAvailable(!!navigator.mediaDevices?.getUserMedia&&'RTCPeerConnection'in window);
-  let stopped=false,polling=false;
-  const poll=async()=>{if(polling||operation.current||document.visibilityState!=='visible'&&!peer.current)return;polling=true;try{
-   const r=await apiFetch('/api/calls',{cache:'no-store'});if(!r.ok)throw new Error();const d=await r.json() as {error?:string;call:Call|null};if(stopped||operation.current)return;
-   const next:Call|null=d.call;current.current=next;setCall(next);
-   if(localId.current&&(!next||next.id!==localId.current)){cleanup();setStatus('Appel terminé ou sans réponse.');}
-   if(next&&peer.current&&next.id===localId.current&&next.callerDevice===session.current&&next.answer&&!peer.current.currentRemoteDescription){await peer.current.setRemoteDescription({type:'answer',sdp:next.answer});}
-   if(next&&localId.current===next.id&&next.state==='connected'&&Date.now()-lastHeartbeat.current>12000){lastHeartbeat.current=Date.now();await post('heartbeat',next.id);}
-  }catch{if(!stopped&&peer.current)setStatus('Connexion interrompue. Tentative de reconnexion…');}finally{polling=false;}};
-  void poll();const timer=setInterval(poll,3000);document.addEventListener('visibilitychange',poll);
-  return()=>{stopped=true;clearInterval(timer);document.removeEventListener('visibilitychange',poll);const id=localId.current;if(id)void post('end',id).catch(()=>{});cleanup();};
- // This component stays mounted across tabs so calls continue inside the application.
+  alive.current=true;try{session.current=sessionStorage.getItem('nous-deux-call-device')||crypto.randomUUID();sessionStorage.setItem('nous-deux-call-device',session.current);}catch{session.current=crypto.randomUUID();}
+  async function poll(){if(!alive.current||polling.current||operation.current||ending.current||document.visibilityState!=='visible'&&!engine.current)return;polling.current=true;const revision=generation.current;
+   try{const r=await apiFetch('/api/daily-calls?session='+session.current,{signal:AbortSignal.timeout(12000)});const d=await r.json() as Result;if(!r.ok)throw new Error(d.error||'Appels indisponibles.');if(!alive.current||operation.current||ending.current||revision!==generation.current)return;setConfigured(!!d.configured);setHistory(d.history||[]);setEstimated(d.estimatedMinutes||0);apply(d.call);
+    if(localId.current&&(!d.call||d.call.id!==localId.current)){const ended=d.history?.find(c=>c.id===localId.current);await release();setStatus(endedLabel(ended));}
+    if(d.call&&engine.current&&localId.current===d.call.id&&Date.now()-lastBeat.current>12000){lastBeat.current=Date.now();await post('heartbeat',d.call.id,{connected:remotePresent.current});}
+   }catch(e){if(alive.current&&revision===generation.current&&!ending.current){if(engine.current)setNetwork('reconnecting');else setStatus(e instanceof Error?e.message:'Connexion interrompue.');}}finally{polling.current=false;}}
+  pollRef.current=poll;void poll();const timer=setInterval(poll,2000),clock=setInterval(()=>setNow(Date.now()),1000);
+  const push=(event:MessageEvent)=>{if(event.data?.type==='nousdeux-call'){void poll();if(event.data.open){setMinimized(false);onOpen();}}};
+  document.addEventListener('visibilitychange',poll);window.addEventListener('online',poll);navigator.serviceWorker?.addEventListener('message',push);
+  return()=>{alive.current=false;clearInterval(timer);clearInterval(clock);document.removeEventListener('visibilitychange',poll);window.removeEventListener('online',poll);navigator.serviceWorker?.removeEventListener('message',push);const id=localId.current;if(id)void post('end',id).catch(()=>{});void release();};
+ // Calls remain mounted across tabs; account changes remount this component.
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[]);
- useEffect(()=>{if(active!==localMember.current){const id=localId.current;cleanup();if(id)void post('end',id).catch(()=>{});localMember.current=active;setStatus('');}},[active]);
- useEffect(()=>{if(!connected)return;const t=setInterval(()=>setElapsed(s=>s+1),1000);return()=>clearInterval(t);},[connected]);
- async function prepare(){
-  const attempt=generation.current;
-  const media=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true},video:false});
-  if(attempt!==generation.current){media.getTracks().forEach(t=>t.stop());throw new Error('Appel annulé.');}
-  stream.current=media;const pc=new RTCPeerConnection({iceServers});peer.current=pc;media.getTracks().forEach(t=>pc.addTrack(t,media));
-  pc.ontrack=e=>{if(audio.current){audio.current.srcObject=e.streams[0]||new MediaStream([e.track]);audio.current.play().catch(()=>setAudioBlocked(true));}};
-  pc.onconnectionstatechange=()=>{if(peer.current!==pc)return;if(pc.connectionState==='connected'){if(connectionTimer.current)clearTimeout(connectionTimer.current);setConnected(true);setStatus('Vous êtes en ligne.');}else if(pc.connectionState==='failed'){fail('La liaison audio n’a pas pu être établie sur ce réseau. Essayez un autre Wi-Fi.');}else if(pc.connectionState==='disconnected'){setStatus('Liaison audio interrompue…');if(connectionTimer.current)clearTimeout(connectionTimer.current);connectionTimer.current=setTimeout(()=>fail('Appel interrompu par le réseau.'),15000);}};
-  return pc;
- }
- const gather=(pc:RTCPeerConnection)=>new Promise<void>(resolve=>{if(pc.iceGatheringState==='complete'){resolve();return;}const finished=()=>{clearTimeout(timer);pc.removeEventListener('icegatheringstatechange',changed);resolve();};const changed=()=>{if(pc.iceGatheringState==='complete')finished();};const timer=setTimeout(finished,7000);pc.addEventListener('icegatheringstatechange',changed);});
- async function dial(answer=false){
-  if(operation.current)return;const attempt=generation.current;operation.current=true;setBusy(true);setStatus('Autorisez le microphone pour préparer l’appel.');
+ useEffect(()=>{if(expanded)setMinimized(false);},[expanded]);
+ useEffect(()=>{if(!request||request.actor!==active||request.key===lastRequest.current||configured===null)return;lastRequest.current=request.key;if(!current.current)void dial(request.mode);},[request,configured]);
+ async function dial(mode:'audio'|'video',answer=false,rejoin=false){
+  if(operation.current||ending.current||engine.current)return;if(!configured){setStatus('Les appels Daily attendent leur activation.');return;}if(!navigator.mediaDevices?.getUserMedia){setStatus('Ouvrez Nous deux dans une version récente de Safari ou Chrome.');return;}
+  operation.current=true;setBusy(true);setMinimized(false);setStatus('Autorisez le microphone'+(mode==='video'?' et la caméra':'')+' pour démarrer.');void unlock();const attempt=generation.current;let id=answer||rejoin?current.current?.id:crypto.randomUUID();
   try{
-   const incoming=current.current;if(answer&&(!incoming||incoming.caller===active))throw new Error('Cet appel n’est plus disponible.');
-   const pc=await prepare();const id=answer?incoming!.id:crypto.randomUUID();localId.current=id;
-   if(answer){await pc.setRemoteDescription({type:'offer',sdp:incoming!.offer});await pc.setLocalDescription(await pc.createAnswer());}else{await pc.setLocalDescription(await pc.createOffer());}
-   await gather(pc);if(peer.current!==pc)throw new Error('Appel annulé.');
-   const d=await post(answer?'answer':'start',id,{[answer?'answer':'offer']:pc.localDescription?.sdp});if(attempt!==generation.current){await post('end',id).catch(()=>{});return;}current.current=d.call;setCall(d.call);setStatus(answer?'Connexion audio en cours…':'Invitation envoyée. En attente de réponse…');
-   if(pc.connectionState!=='connected')connectionTimer.current=setTimeout(()=>fail('Sans réponse ou liaison impossible. Vous pouvez réessayer.'),answer?40000:125000);
-  }catch(e){const message=e instanceof DOMException&&e.name==='NotAllowedError'?'Microphone refusé. Autorisez-le dans les réglages du navigateur.':e instanceof Error?e.message:'Impossible de démarrer l’appel.';fail(message);}finally{operation.current=false;setBusy(false);}
+   if(!id)throw new Error('Cet appel n’est plus disponible.');
+   const e=await createCallEngine({media:m=>{if(!alive.current||attempt!==generation.current)return;setMedia(m);remotePresent.current=!!m.remote;setMuted(m.local?.audio===false);setCamera(m.local?.video===true);},network:n=>{if(alive.current&&attempt===generation.current)setNetwork(n);},error:(message,fatal)=>{if(attempt!==generation.current)return;setStatus(message);if(fatal)void finish('end',message);},left:()=>{if(attempt===generation.current&&!ending.current)void finish();}});
+   if(attempt!==generation.current){await e.destroy();return;}engine.current=e;await e.prepare(mode==='video');if(attempt!==generation.current)return;
+   localId.current=id;setStatus(answer?'Connexion…':'Appel en cours…');const d=await post(rejoin?'join':answer?'accept':'start',id,{mode});
+   if(attempt!==generation.current){await post('end',id).catch(()=>{});return;}if(!d.join)throw new Error('Accès à l’appel indisponible.');apply(d.call);setStatus(answer?'Connexion…':'Ça sonne…');await e.join(d.join.url,d.join.token);setStatus('');
+  }catch(e){await release();if(id)void post('end',id).catch(()=>{});apply(null);setStatus(e instanceof DOMException&&e.name==='NotAllowedError'?'Autorisation refusée. Activez le microphone et, pour la vidéo, la caméra dans les réglages du navigateur.':e instanceof Error?e.message:'L’appel n’a pas pu démarrer.');}finally{operation.current=false;if(alive.current)setBusy(false);void pollRef.current();}
  }
- const mine=!!call&&(call.callerDevice===session.current||call.calleeDevice===session.current),incoming=!!call&&call.caller!==active&&call.state==='ringing';
- const time=`${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}`;
- return <><audio ref={audio} autoPlay playsInline/>{!expanded&&(incoming||mine)&&<div className="call-banner" role="status"><Phone size={18}/><span>{incoming?`${names[call!.caller]} vous appelle`:connected?`Appel · ${time}`:'Appel en cours'}</span><button className="secondary" onClick={onOpen}>{incoming?'Répondre':'Ouvrir'}</button></div>}
- {expanded&&<section className="panel call-panel"><div className="call-avatar"><Phone size={35}/></div><span className="eyebrow">Juste entre nous · bêta</span><h2>{incoming?`${names[call!.caller]} vous appelle`:connected?names[1-active]:`Un appel à ${names[1-active]}`}</h2><p role="status">{connected?time:status||'Un moment pour se parler, directement dans votre maison.'}</p>
- {!available&&<p className="form-error">Les appels audio ne sont pas disponibles dans ce navigateur. Ouvrez Nous deux dans Safari ou Chrome.</p>}
- <div className="call-actions">{incoming&&!mine?<><button className="primary" disabled={busy||!available} onClick={()=>dial(true)}><Phone size={19}/>Répondre</button><button className="danger" disabled={busy} onClick={end}><PhoneOff size={19}/>Refuser</button></>:mine||busy?<><button className="secondary" disabled={!stream.current} aria-pressed={muted} onClick={()=>{stream.current?.getAudioTracks().forEach(t=>t.enabled=muted);setMuted(!muted);}}>{muted?<MicOff size={19}/>:<Mic size={19}/>} {muted?'Réactiver le micro':'Couper le micro'}</button><button className="danger" onClick={end}><PhoneOff size={19}/>Raccrocher</button></>:<button className="primary" disabled={!available||!!call||busy} onClick={()=>dial()}><Phone size={19}/>{call?'Appel ouvert sur un autre appareil':`Appeler ${names[1-active]}`}</button>}</div>
- {audioBlocked&&<button className="secondary" onClick={()=>audio.current?.play().then(()=>setAudioBlocked(false)).catch(()=>setStatus('Touchez à nouveau pour activer le son.'))}><Volume2 size={19}/>Activer le son</button>}
- <div className="call-help"><p>Gardez l’application ouverte pendant l’appel. Si votre moitié a activé les invitations aux appels, une notification lui propose d’ouvrir Nous deux.</p><p>Cette première version utilise une connexion directe : certains réseaux mobiles ou Wi-Fi peuvent empêcher l’appel. La sonnerie sur écran verrouillé n’est pas prise en charge. Aucun son n’est enregistré.</p></div></section>}</>;
+ async function listDevices(){try{setDevices(await navigator.mediaDevices.enumerateDevices());setDeviceOpen(true);}catch{setStatus('Les appareils audio ne sont pas accessibles dans ce navigateur.');}}
+ const mine=!!call?.mine,live=mine&&!!engine.current,connected=!!media.remote,showStage=(expanded&&!minimized)||incoming||(live&&!minimized),video=!!media.remote?.video||camera;
+ const remoteVideo=media.remote?.tracks.video.state==='playable'?media.remote.tracks.video.persistentTrack:undefined;
+ const remoteAudio=media.remote?.tracks.audio.state==='playable'?media.remote.tracks.audio.persistentTrack:undefined;
+ const localVideo=media.local?.tracks.video.state==='playable'?media.local.tracks.video.persistentTrack:undefined;
+ const label=incoming?'Vous appelle…':network==='reconnecting'?'Connexion perdue · reconnexion…':connected?'Connecté':call?.state==='ringing'?'Ça sonne…':live?'Connexion…':status||`Un moment avec ${names[1-active]}`;
+ return <><Track track={remoteAudio} audioRef={audio} onBlocked={()=>setAudioBlocked(true)}/>
+ {!showStage&&live&&<button className="call-mini" onClick={()=>{setMinimized(false);onOpen();}}><Phone size={18}/><span>{names[1-active]} · {connected&&call?.connectedAt?duration(now-call.connectedAt):label}</span></button>}
+ {showStage&&<CallSurface video={video} immersive={incoming||live} onMinimize={()=>{if(!incoming)setMinimized(true);}}>
+ <header className="daily-call-header"><span>{video?'Un tête-à-tête':'Juste votre voix'}</span>{live&&<button className="icon-button" aria-label="Réduire l’appel" onClick={()=>{setMinimized(true);}}><ChevronDown/></button>}</header>
+ <div className="daily-call-scene">{remoteVideo&&<div className="daily-remote-video"><Track track={remoteVideo} video muted/></div>}<div className={`daily-caller ${remoteVideo?'over-video':''}`}><ProfileAvatar member={1-active} name={names[1-active]} className="daily-call-avatar"/><h2>{names[1-active]}</h2><p role="status">{label}</p>{connected&&call?.connectedAt&&<time aria-label="Durée de l’appel">{duration(now-call.connectedAt)}</time>}</div>{localVideo&&<div className="daily-local-video"><Track track={localVideo} video muted/><span>Vous</span></div>}</div>
+ {configured===false&&<p className="call-notice">Les appels Daily attendent leur activation.</p>}
+ {incoming&&!soundReady&&<button className="secondary" onClick={unlock}><Volume2 size={18}/>Activer la sonnerie</button>}
+ <div className="daily-call-controls">{incoming?<><button className="call-control accept" disabled={busy} onClick={()=>dial(call!.mode,true)}><Phone/><span>Répondre</span></button><button className="call-control hangup" disabled={busy} onClick={()=>finish('decline')}><PhoneOff/><span>Refuser</span></button></>:live||busy?<><button className={`call-control ${muted?'is-off':''}`} disabled={busy} aria-pressed={muted} onClick={()=>engine.current?.mute(!muted)}>{muted?<MicOff/>:<Mic/>}<span>{muted?'Micro coupé':'Micro'}</span></button><button className={`call-control ${camera?'':'is-off'}`} disabled={busy} aria-pressed={camera} onClick={()=>engine.current?.camera(!camera).catch(()=>setStatus('Autorisez la caméra dans les réglages du navigateur.'))}>{camera?<Video/>:<VideoOff/>}<span>Caméra</span></button>{camera&&<button className="call-control" onClick={()=>engine.current?.flip().catch(()=>setStatus('Impossible de changer de caméra.'))}><SwitchCamera/><span>Retourner</span></button>}<button className="call-control" disabled={busy} onClick={listDevices}><Headphones/><span>Audio</span></button><button className="call-control hangup" onClick={()=>finish()}><PhoneOff/><span>Raccrocher</span></button></>:mine?<button className="primary" onClick={()=>dial(call!.mode,false,true)}><Phone size={18}/>Rejoindre l’appel</button>:<><button className="primary" disabled={!configured||!!call} onClick={()=>dial('audio')}><Phone size={20}/>Appel audio</button><button className="secondary" disabled={!configured||!!call} onClick={()=>dial('video')}><Video size={20}/>Appel vidéo</button></>}</div>
+ {call&&!mine&&!incoming&&<p>Un appel est ouvert sur un autre appareil.</p>}
+ {audioBlocked&&<button className="secondary" onClick={()=>audio.current?.play().then(()=>setAudioBlocked(false)).catch(()=>setStatus('Touchez à nouveau pour autoriser le son.'))}><Volume2 size={18}/>Écouter l’appel</button>}
+ {status&&live&&<p className="call-notice" role="status">{status}</p>}
+ <p className="daily-call-note">Gardez l’application ouverte. La sortie audio dépend de votre téléphone et de vos écouteurs. Aucun enregistrement. Limite : 2 h par appel.</p>
+ </CallSurface>}
+ {expanded&&!live&&!incoming&&<section className="panel call-history"><h2>Nos derniers appels</h2>{history.length?history.map(c=><article key={c.id}><span className={`call-history-icon ${c.state==='missed'?'missed':''}`}>{c.mode==='video'?<Video size={20}/>:<Phone size={20}/>}</span><div><strong>{endedLabel(c)}</strong><small>{c.caller===active?'Sortant':'Entrant'} · {new Date(c.createdAt).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}{c.connectedAt&&c.endedAt?' · '+duration(c.endedAt-c.connectedAt):''}</small></div><button className="icon-button" aria-label={'Rappeler '+names[1-active]} disabled={!configured||!!call} onClick={()=>dial(c.mode)}><Phone size={18}/></button></article>):<p>Vos appels et vos appels manqués apparaîtront ici.</p>}<p className="helper-copy"><Clock size={14}/> Estimation ce mois : {estimated.toLocaleString('fr-FR')} minutes-participants sur les 10 000 gratuites. Le compteur Daily fait foi.</p>{estimated>=8000&&<p className="form-error">Vous approchez ou dépassez les minutes gratuites. Vérifiez votre consommation Daily avant de poursuivre.</p>}</section>}
+ {deviceOpen&&<LifeDialog title="Le son de notre appel" onClose={()=>setDeviceOpen(false)}><div className="form"><label>Microphone<select value={input} onChange={async e=>{const id=e.target.value;try{await engine.current?.microphone(id);setInput(id);}catch{setStatus('Ce microphone n’est pas disponible.');}}}><option value="">Choix du téléphone</option>{devices.filter(d=>d.kind==='audioinput').map(d=><option key={d.deviceId} value={d.deviceId}>{d.label||'Microphone'}</option>)}</select></label>{audio.current&&'setSinkId'in audio.current&&devices.filter(d=>d.kind==='audiooutput').length>1?<label>Écouter avec<select value={output} onChange={async e=>{const id=e.target.value;try{await (audio.current as HTMLAudioElement&{setSinkId:(id:string)=>Promise<void>}).setSinkId(id);setOutput(id);}catch{setStatus('Cette sortie audio ne peut pas être sélectionnée dans ce navigateur.');}}}><option value="default">Choix du téléphone</option>{devices.filter(d=>d.kind==='audiooutput'&&d.deviceId!=='default').map(d=><option key={d.deviceId} value={d.deviceId}>{d.label||'Sortie audio'}</option>)}</select></label>:<p>Le navigateur laisse votre téléphone choisir la sortie audio. Pour utiliser vos écouteurs, connectez-les au téléphone. Le passage écouteur interne / haut-parleur n’est pas garanti dans cette version web.</p>}</div></LifeDialog>}</>;
 }
