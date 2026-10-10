@@ -1,0 +1,15 @@
+import {useEffect,useState,type RefObject} from 'react';
+import {Headphones,Volume2} from './icons';
+type Output={id:string;label:string;group:string};
+type AudioElement=HTMLAudioElement&{setSinkId?:(id:string)=>Promise<void>;sinkId?:string};
+export default function CallAudioOutput({audio,disabled=false}:{audio:RefObject<HTMLAudioElement|null>;disabled?:boolean}){
+ const[devices,setDevices]=useState<Output[]>([]),[selected,setSelected]=useState(''),[open,setOpen]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
+ useEffect(()=>{let alive=true;async function update(){try{const list=await navigator.mediaDevices.enumerateDevices();if(!alive)return;const outputs=list.filter(d=>d.kind==='audiooutput'&&d.deviceId!=='communications');const defaultDevice=outputs.find(d=>d.deviceId==='default');const unique=outputs.filter(d=>d.deviceId==='default'||!defaultDevice?.groupId||d.groupId!==defaultDevice.groupId);setDevices(unique.map(d=>({id:d.deviceId,label:d.label||'Sortie audio',group:d.groupId})));setSelected((audio.current as AudioElement)?.sinkId||'default');}catch{if(alive)setDevices([]);}}void update();navigator.mediaDevices?.addEventListener('devicechange',update);return()=>{alive=false;navigator.mediaDevices?.removeEventListener('devicechange',update);};},[audio]);
+ const canSelect=typeof (audio.current as AudioElement)?.setSinkId==='function'&&devices.length>1;
+ const active=devices.find(d=>d.id===(selected||'default'));
+ const speaker=!!active&&/speaker|haut.parleur/i.test(active.label);
+ const internalOnly=devices.length===2&&devices.every(d=>/speaker|haut.parleur|earpiece|receiver|écouteur interne|téléphone/i.test(d.label))&&!devices.some(d=>/bluetooth|headphone|headset|airpod|casque/i.test(d.label));
+ async function select(id:string){if(busy)return;setBusy(true);setMessage('');try{const element=audio.current as AudioElement;if(!element?.setSinkId)throw Error();await element.setSinkId(id);setSelected(id);setOpen(false);}catch{setMessage('Cette sortie n’est pas disponible. Le son reste sur la sortie précédente.');}finally{setBusy(false);}}
+ function click(){if(canSelect&&internalOnly){const next=devices.find(d=>d.id!==(selected||'default'));if(next)void select(next.id);}else setOpen(!open);}
+ return <div className="call-audio-control"><button className="call-control" disabled={disabled||busy} onClick={click} aria-label="Choisir la sortie audio" aria-expanded={internalOnly?undefined:open} aria-pressed={internalOnly?speaker:undefined}>{speaker?<Volume2/>:<Headphones/>}<span>{speaker?'Haut-parleur':'Audio'}</span></button>{open&&<div className="call-audio-options" role="group" aria-label="Sortie audio">{canSelect?devices.map(d=><button key={d.id} disabled={busy} aria-pressed={d.id===(selected||'default')} onClick={()=>void select(d.id)}>{d.label.replace(/^Default - /,'')}</button>):<p className="call-audio-help">La sortie est gérée par votre téléphone. Utilisez ses commandes audio pour vos écouteurs ; le navigateur ne permet pas ici de basculer le haut-parleur.</p>}</div>}{message&&<p className="call-audio-help" role="status">{message}</p>}</div>;
+}

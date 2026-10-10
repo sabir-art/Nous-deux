@@ -34,7 +34,8 @@ export function useHouseNavigation(notify:(message:string)=>void){
   }
   addEventListener('popstate',pop);document.addEventListener('visibilitychange',rearm);return()=>{removeEventListener('popstate',pop);document.removeEventListener('visibilitychange',rearm);if(exitTimer.current)clearTimeout(exitTimer.current);};
  },[]);
- return {page,navigate,direction};
+ const back=useCallback(()=>{if(depth.current>0){history.back();return;}current.current='home';direction.current=-1;write({page:'home',depth:0},true);setPage('home');},[]);
+ return {page,navigate,direction,back};
 }
 /** Horizontal swipes belong to the page except on controls, recipe cards and carousels. */
 export function usePageSwipe(ref:RefObject<HTMLElement|null>,page:HousePage,navigate:(page:HousePage)=>void){
