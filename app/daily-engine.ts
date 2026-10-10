@@ -1,4 +1,5 @@
 import type {DailyCall,DailyParticipant} from '@daily-co/daily-js';
+import {callFailureMessage} from './call-errors';
 export type CallMedia={local?:DailyParticipant;remote?:DailyParticipant};
 export type CallEngineCallbacks={media:(m:CallMedia)=>void;network:(state:'connecting'|'connected'|'reconnecting')=>void;error:(message:string,fatal:boolean)=>void;left:()=>void};
 export async function createCallEngine(callbacks:CallEngineCallbacks){
@@ -11,7 +12,7 @@ export async function createCallEngine(callbacks:CallEngineCallbacks){
  call.on('joined-meeting',()=>{callbacks.network('connecting');update();});
  call.on('network-connection',e=>{if(e?.event==='interrupted')callbacks.network('reconnecting');if(e?.event==='connected')update();});
  call.on('camera-error',()=>callbacks.error('Vérifiez l’accès au microphone et à la caméra dans les réglages du navigateur.',false));
- call.on('error',()=>callbacks.error('La connexion à l’appel a échoué. Vous pouvez réessayer.',true));
+ call.on('error',e=>callbacks.error(callFailureMessage(e),true));
  call.on('left-meeting',()=>{if(!destroyed)callbacks.left();});
  return {
   async prepare(video:boolean){await call.startCamera({startVideoOff:!video,startAudioOff:false});update();},
