@@ -49,7 +49,7 @@ export default function HouseCalls({active,names,expanded,onOpen,request}:Props)
  useEffect(()=>{if(!request||request.actor!==active||request.key===lastRequest.current||configured===null)return;lastRequest.current=request.key;if(!current.current)void dial(request.mode);},[request,configured]);
  async function dial(mode:'audio'|'video',answer=false,rejoin=false){
   if(operation.current||ending.current||engine.current)return;if(!configured){setStatus('Les appels Daily attendent leur activation.');return;}if(!navigator.mediaDevices?.getUserMedia){setStatus('Ouvrez Nous deux dans une version récente de Safari ou Chrome.');return;}
-  operation.current=true;setBusy(true);setMinimized(false);setStatus('Autorisez le microphone'+(mode==='video'?' et la caméra':'')+' pour démarrer.');await unlock();const attempt=generation.current;let id=answer||rejoin?current.current?.id:crypto.randomUUID();
+  operation.current=true;setBusy(true);setMinimized(false);setStatus('Autorisez le microphone'+(mode==='video'?' et la caméra':'')+' pour démarrer.');void unlock();const attempt=generation.current;let id=answer||rejoin?current.current?.id:crypto.randomUUID();
   try{
    if(!id)throw new Error('Cet appel n’est plus disponible.');
    const e=await createCallEngine({media:m=>{if(!alive.current||attempt!==generation.current)return;setMedia(m);remotePresent.current=!!m.remote;setMuted(m.local?.audio===false);setCamera(m.local?.video===true);},network:n=>{if(alive.current&&attempt===generation.current)setNetwork(n);},error:(message,fatal)=>{if(attempt!==generation.current)return;setStatus(message);if(fatal)void finish('end',message);},left:()=>{if(attempt===generation.current&&!ending.current)void finish();}});

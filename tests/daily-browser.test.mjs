@@ -50,11 +50,11 @@ try{for(const browserType of [webkit,chromium]){
   await page.evaluate(()=>window.callCallbacks.network('reconnecting'));await page.getByText('Connexion perdue · reconnexion…',{exact:true}).waitFor();
   await page.getByRole('button',{name:'Réduire l’appel'}).click();await page.locator('.call-mini').waitFor();assert.equal(await page.locator('dialog[open]').count(),0);
   await page.locator('.call-mini').click();await page.getByRole('button',{name:'Raccrocher',exact:true}).click();await page.getByRole('heading',{name:'Nos derniers appels'}).waitFor();assert.equal(await page.evaluate(()=>window.destroyed),1);
-  assert.equal(await page.locator('.call-history article').count(),1);
+  await page.locator('.call-history article').waitFor();assert.equal(await page.locator('.call-history article').count(),1);
  }
  await page.goto(base);await page.getByRole('button',{name:'Appel audio',exact:true}).click();await page.getByRole('button',{name:'Raccrocher',exact:true}).waitFor();
  await page.evaluate(()=>window.unmountCall());await page.waitForFunction(()=>window.destroyed===1&&window.actions.includes('end'));
- await page.goto(base+'/?incoming');await page.getByRole('button',{name:'Refuser',exact:true}).click();await page.getByRole('heading',{name:'Nos derniers appels'}).waitFor();assert.equal(await page.locator('.call-history article').count(),1);
+ await page.goto(base+'/?incoming');await page.getByRole('button',{name:'Refuser',exact:true}).click();await page.getByRole('heading',{name:'Nos derniers appels'}).waitFor();await page.locator('.call-history article').waitFor();assert.equal(await page.locator('.call-history article').count(),1);
  assert.deepEqual(errors,[]);console.log('PASS: '+browserType.name()+' Daily incoming, answer, decline, mute, camera, reconnect, minimize, hangup, unmount and responsive layouts.');await context.close();
  }finally{await browser.close();}
 }}finally{await new Promise(r=>server.close(r));}
