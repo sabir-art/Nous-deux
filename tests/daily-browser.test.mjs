@@ -42,6 +42,11 @@ try{for(const browserType of [webkit,chromium]){
   await page.setViewportSize({width,height:900});await page.goto(base+'/?incoming');await page.getByRole('button',{name:'Répondre',exact:true}).waitFor();
   const geometry=await page.evaluate(()=>({width:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth,buttons:[...document.querySelectorAll('.call-control')].map(b=>{const r=b.getBoundingClientRect();return {x:r.x,right:r.right,width:r.width,height:r.height};})}));
   assert(geometry.scroll<=geometry.width,JSON.stringify({width,...geometry}));for(const b of geometry.buttons){assert(b.width>=44&&b.height>=44);assert(b.x>=0&&b.right<=width);}
+  for(const theme of ['light','dark']){
+   const contrast=await page.evaluate(theme=>{document.documentElement.dataset.theme=theme;const rgb=value=>value.match(/[\d.]+/g).slice(0,3).map(Number);const lum=value=>rgb(value).map(n=>{n/=255;return n<=.04045?n/12.92:((n+.055)/1.055)**2.4;}).reduce((s,n,i)=>s+n*[.2126,.7152,.0722][i],0);const note=document.querySelector('.daily-call-note'),a=lum(getComputedStyle(note).color),b=lum(getComputedStyle(document.querySelector('.daily-call-stage')).backgroundColor);return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);},theme);
+   assert(contrast>=4.5,theme+' call notice contrast: '+contrast);
+  }
+  await page.evaluate(()=>document.documentElement.dataset.theme='light');
   await page.getByRole('button',{name:'Répondre',exact:true}).click();await page.getByRole('button',{name:'Raccrocher',exact:true}).waitFor();
   await page.waitForFunction(()=>window.actions?.includes('heartbeat'));
   assert(await page.locator('dialog[open]').isVisible());
