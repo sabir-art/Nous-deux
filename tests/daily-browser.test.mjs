@@ -12,29 +12,30 @@ export async function apiFetch(path,init={}){
  if(!path.startsWith('/api/daily-calls'))throw Error('Unexpected fixture API: '+path);
  if(!init.body)return Response.json({configured:true,call,history,estimatedMinutes:8});
  const p=JSON.parse(init.body);(window.actions??=[]).push(p.action);
- if(p.action==='start')call={id:p.id,caller:0,mode:p.mode,state:'ringing',mine:true,createdAt:Date.now(),expiresAt:time+90000,maxExpiresAt:time+7200000,connectedAt:null,endedAt:null,endReason:null};
+ if(p.action==='start')call={id:p.id,caller:0,mode:p.mode,state:p.deferNotification?'preparing':'ringing',mine:true,createdAt:Date.now(),expiresAt:time+90000,maxExpiresAt:time+7200000,connectedAt:null,endedAt:null,endReason:null};
+ if(p.action==='ready')call={...call,state:'ringing'};
  if(p.action==='accept')call={...call,state:'connecting',mine:true};
  if(p.action==='heartbeat'&&p.connected)call={...call,state:'connected',connectedAt:call.connectedAt||Date.now()};
  if(p.action==='end'||p.action==='decline'){const ended={...call,state:p.action==='decline'?'declined':'ended',endedAt:Date.now()};history.unshift(ended);call=null;return Response.json({call,ended});}
  return Response.json({call,join:{url:'https://fixture.daily.co/private',token:'fixture'}});
 }`;
-const engine=`export async function createCallEngine(cb){
+const engine=`import {callFailureMessage} from './app/call-errors';export async function createCallEngine(cb){
  let local={local:true,audio:true,video:false,tracks:{audio:{state:'off'},video:{state:'off'}}},remote;
  function update(){cb.media({local:{...local},remote});}
  window.callCallbacks=cb;
- return {async prepare(video){local.video=video;update();},async join(){remote={local:false,audio:true,video:false,tracks:{audio:{state:'off'},video:{state:'off'}}};update();cb.network('connected');},mute(value){local.audio=!value;update();},async camera(value){local.video=value;update();},async flip(){window.flips=(window.flips||0)+1;},async microphone(){},async destroy(){window.destroyed=(window.destroyed||0)+1;}};
+ return {async prepare(video){local.video=video;update();},async join(){if(location.search.includes('payment-error')){cb.error(callFailureMessage({errorMsg:'account-missing-payment-method'}),true);cb.left();throw 'account-missing-payment-method';}remote={local:false,audio:true,video:false,tracks:{audio:{state:'off'},video:{state:'off'}}};update();cb.network('connected');},mute(value){local.audio=!value;update();},async camera(value){local.video=value;update();},async flip(){window.flips=(window.flips||0)+1;},async microphone(){},async destroy(){window.destroyed=(window.destroyed||0)+1;}};
 }`;
 const source=`import React,{useState} from 'react';import {createRoot} from 'react-dom/client';import HouseCalls from './app/house-calls';
 function Fixture(){const [mounted,setMounted]=useState(true);window.unmountCall=()=>setMounted(false);return <main className="app-shell">{mounted&&<HouseCalls active={0} names={['Alex','Camille']} expanded onOpen={()=>{}}/>}</main>;}createRoot(document.getElementById('root')).render(<Fixture/>);`;
-const bundle=await build({stdin:{contents:source,loader:'tsx',resolveDir:process.cwd()},bundle:true,platform:'browser',format:'esm',write:false,jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'},plugins:[{name:'isolated-calls',setup(b){b.onResolve({filter:/api-client$/},()=>({path:'api',namespace:'fixture'}));b.onResolve({filter:/daily-engine$/},()=>({path:'engine',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:args.path==='api'?api:engine}));}}]});
+const bundle=await build({stdin:{contents:source,loader:'tsx',resolveDir:process.cwd()},bundle:true,platform:'browser',format:'esm',write:false,jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'},plugins:[{name:'isolated-calls',setup(b){b.onResolve({filter:/api-client$/},()=>({path:'api',namespace:'fixture'}));b.onResolve({filter:/daily-engine$/},()=>({path:'engine',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:args.path==='api'?api:engine,resolveDir:process.cwd()}));}}]});
 if(process.argv.includes('--bundle-only')){console.log('PASS: Daily isolated UI fixture compiles.');process.exit(0);}
 const css=['design-system/tokens/tokens.css','design-system/components/bundle.css','app/application.css'].map(p=>readFileSync(p,'utf8')).join('\n');
 const csp=readFileSync('index.html','utf8').match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)[1];
 const server=createServer((req,res)=>{if(req.url==='/fixture.js'){res.setHeader('Content-Type','text/javascript');res.end(bundle.outputFiles[0].text);}else if(req.url==='/fixture.css'){res.setHeader('Content-Type','text/css');res.end(css);}else{res.setHeader('Content-Type','text/html');res.end(`<!doctype html><html lang="fr" data-theme="light"><head><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta http-equiv="Content-Security-Policy" content="${csp}"><link rel="stylesheet" href="/fixture.css"></head><body><div id="root"></div><script type="module" src="/fixture.js"></script></body></html>`);}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
 const {webkit,chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-try{for(const browserType of [webkit,chromium]){
- const browser=await browserType.launch({headless:true});
+try{for(const browserType of process.env.CHROMIUM_EXECUTABLE?[chromium]:[webkit,chromium]){
+ const browser=await browserType.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE,args:['--no-sandbox','--disable-dev-shm-usage']}: {})});
  try{const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:'reduce'});
  await context.route('**/*',route=>route.request().url().startsWith(base)?route.continue():route.abort());
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -58,8 +59,26 @@ try{for(const browserType of [webkit,chromium]){
   await page.locator('.call-history article').waitFor();assert.equal(await page.locator('.call-history article').count(),1);
  }
  await page.goto(base);await page.getByRole('button',{name:'Appel audio',exact:true}).click();await page.getByRole('button',{name:'Raccrocher',exact:true}).waitFor();
+ await page.waitForFunction(()=>window.actions?.includes('ready'));assert.deepEqual((await page.evaluate(()=>window.actions)).filter(a=>a==='start'||a==='ready'),['start','ready']);
  await page.evaluate(()=>window.unmountCall());await page.waitForFunction(()=>window.destroyed===1&&window.actions.includes('end'));
  await page.goto(base+'/?incoming');await page.getByRole('button',{name:'Refuser',exact:true}).click();await page.getByRole('heading',{name:'Nos derniers appels'}).waitFor();await page.locator('.call-history article').waitFor();assert.equal(await page.locator('.call-history article').count(),1);
+ await page.addInitScript(()=>{if(!location.search.includes('ringtone'))return;window.allowAudio=false;window.tones=0;window.stops=0;window.AudioContext=class{
+ constructor(){this.state='suspended';this.currentTime=0;this.destination={};window.ringtoneContext=this;}
+ async resume(){this.state=window.allowAudio?'running':'suspended';this.onstatechange?.();}
+ async close(){this.state='closed';this.onstatechange?.();}
+ createOscillator(){return {frequency:{value:0},connect(){},disconnect(){},start(){window.tones++;},stop(){window.stops++;}};}
+ createGain(){return {gain:{setValueAtTime(){},linearRampToValueAtTime(){}},connect(){},disconnect(){}};}
+ };});
+ await page.goto(base+'/?incoming&ringtone');await page.getByRole('button',{name:'Activer la sonnerie',exact:true}).waitFor();
+ await page.evaluate(()=>window.allowAudio=true);await page.getByRole('button',{name:'Activer la sonnerie',exact:true}).click();await page.waitForFunction(()=>window.tones>=2);
+ await page.evaluate(()=>{window.allowAudio=false;window.ringtoneContext.state='suspended';window.ringtoneContext.onstatechange();});
+ await page.getByRole('button',{name:'Activer la sonnerie',exact:true}).waitFor();
+ await page.evaluate(()=>{window.allowAudio=true;document.dispatchEvent(new Event('touchend'));});await page.waitForFunction(()=>window.tones>=4);
+ await page.getByRole('button',{name:'Refuser',exact:true}).click();const tones=await page.evaluate(()=>window.tones);await page.waitForTimeout(2500);assert.equal(await page.evaluate(()=>window.tones),tones,'Ringtone stops when declining');
+ await page.goto(base+'/?payment-error');await page.getByRole('button',{name:'Appel audio',exact:true}).click();
+ await page.getByText('Daily bloque les appels : ajoutez un moyen de paiement dans la rubrique Billing de votre compte Daily, puis réessayez.',{exact:true}).waitFor();
+ await page.waitForFunction(()=>window.actions?.includes('end'));assert(!(await page.evaluate(()=>window.actions)).includes('ready'),'Never ring after provider rejection');
+ await page.waitForTimeout(2200);assert(await page.getByText(/Daily bloque les appels/).isVisible(),'Polling and left-meeting must preserve the useful failure reason');
  assert.deepEqual(errors,[]);console.log('PASS: '+browserType.name()+' Daily incoming, answer, decline, mute, camera, reconnect, minimize, hangup, unmount and responsive layouts.');await context.close();
  }finally{await browser.close();}
 }}finally{await new Promise(r=>server.close(r));}

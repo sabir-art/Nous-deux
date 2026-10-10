@@ -79,3 +79,11 @@ Phases : créer les projets natifs et identités ; adapter le moteur sans dupliq
 - Mettre l’expiration d’une salle dans le passé est rejeté. La fermeture programme donc l’expiration à cinq secondes, expulse les deux identités immédiatement puis supprime la salle. Une réponse 404 à l’expulsion d’une salle sans participant est normale.
 
 Les deux migrations ont été appliquées au projet le 10 octobre 2026. Vérification réelle : RLS activée, accès direct `anon` et `authenticated` refusé, suppression et vidage de l’historique refusés au rôle serveur.
+
+### Incident de connexion du 10 octobre 2026
+
+Un essai avec le vrai SDK et une salle privée temporaire a reproduit `account-missing-payment-method` lors de `join()`. La création REST des salles et des jetons ne prouve donc pas que le compte est autorisé à rejoindre une session. Le compte Daily doit être régularisé dans Billing ; aucun moyen de paiement n’a été ajouté par l’assistant. La salle de diagnostic a été supprimée et la fonction temporaire désactivée.
+
+Le nouveau frontend demande une préparation silencieuse (`deferNotification`), rejoint Daily, puis confirme `ready`. Le serveur cache cette préparation au destinataire et n’envoie l’invitation qu’après cette confirmation. Les anciens clients restent compatibles. Les erreurs connues sont traduites sans afficher les charges utiles Daily ni les jetons ; un événement `left-meeting` pendant l’échec ne remplace plus le motif par « Appel terminé ».
+
+La sonnerie suit désormais les interruptions de l’AudioContext : reprise au retour au premier plan et lors des gestes suivants, bouton explicite si le navigateur bloque le son, arrêt immédiat en répondant/refusant. Cela n’ajoute pas une sonnerie native en arrière-plan ou sur écran verrouillé. Les tests couvrent le refus réel du fournisseur, l’absence d’invitation après échec, l’acceptation après `ready`, et l’interruption/reprise de la sonnerie.

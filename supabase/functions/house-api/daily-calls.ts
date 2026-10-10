@@ -21,6 +21,7 @@ export function transition(c:DailyRow,action:string,actor:number,device:string,n
   return {state:'declined',ended_at:now,end_reason:'declined',cleanup_pending:true};
  }
  if(!mine)throw new DailyError(403,'Cet appel est ouvert sur un autre appareil.');
+ if(action==='ready'){if(actor!==c.caller)throw new DailyError(403,'Seule la personne qui appelle peut lancer la sonnerie.');if(c.state==='ringing'||c.state==='connecting'||c.state==='connected')return {};if(c.state!=='preparing'||!c.room_url)throw new DailyError(409,'La salle n’est pas prête.');return {state:'ringing',expires_at:Math.min(now+90000,c.max_expires_at),caller_seen:now};}
  if(action==='end')return ACTIVE.includes(c.state)?{state:'ended',ended_at:now,end_reason:c.connected_at?'completed':'cancelled',cleanup_pending:true}:{};
  if(!ACTIVE.includes(c.state))throw new DailyError(410,'Cet appel est terminé.');
  if(action==='heartbeat'){
@@ -51,13 +52,14 @@ export async function handleDailyCalls(method:string,url:URL,p:any,o:Options){
  };if(o.defer)o.defer(maintenance().catch(()=>{}));else await maintenance();
  const snapshot=async()=>{
   const rows:DailyRow[]=await db('nd_daily_calls?order=created_at.desc&limit=31');
+  const visible=rows.filter(c=>c.state!=='preparing'||c.caller===actor);
   const month=new Date(now());month.setUTCDate(1);month.setUTCHours(0,0,0,0);
   const usage=await db('rpc/nd_daily_usage','POST',{month_start:month.getTime(),at_time:now()});
-  return {configured:true,call:rows.find(c=>ACTIVE.includes(c.state))?callProjection(rows.find(c=>ACTIVE.includes(c.state))!,actor,device):null,history:rows.filter(c=>!ACTIVE.includes(c.state)).slice(0,30).map(c=>callProjection(c,actor,device)),estimatedMinutes:Number(usage)||0};
+  return {configured:true,call:visible.find(c=>ACTIVE.includes(c.state))?callProjection(visible.find(c=>ACTIVE.includes(c.state))!,actor,device):null,history:rows.filter(c=>!ACTIVE.includes(c.state)).slice(0,30).map(c=>callProjection(c,actor,device)),estimatedMinutes:Number(usage)||0};
  };
  if(method==='GET')return snapshot();
  if(!UUID.test(p.id||''))throw new DailyError(400,'Identifiant d’appel invalide.');
- if(!['start','accept','join','heartbeat','end','decline'].includes(p.action))throw new DailyError(400,'Action inconnue.');
+ if(!['start','ready','accept','join','heartbeat','end','decline'].includes(p.action))throw new DailyError(400,'Action inconnue.');
  let c=await read(p.id);
  if(p.action==='start'){
   if(!['audio','video'].includes(p.mode))throw new DailyError(400,'Choisissez audio ou vidéo.');
@@ -69,7 +71,7 @@ export async function handleDailyCalls(method:string,url:URL,p:any,o:Options){
    catch{const existing=await read(p.id);if(existing&&existing.caller===actor&&existing.caller_device===device)c=existing;else throw new DailyError(409,'Un autre appel est déjà en cours.');}
   }
   if(c!.state==='preparing'){
-   try{const room=await provider.room(c!.room_name,c!.max_expires_at);const ready=await patch(c!,{room_url:room,state:'ringing',expires_at:now()+90000});c=ready||await read(p.id);}
+   try{const room=await provider.room(c!.room_name,c!.max_expires_at);const ready=await patch(c!,{room_url:room,state:p.deferNotification===true?'preparing':'ringing',expires_at:Math.min(now()+(p.deferNotification===true?45000:90000),c!.max_expires_at)});c=ready||await read(p.id);}
    catch(e){const current=await read(p.id);if(current&&current.state==='preparing')await patch(current,{state:'failed',ended_at:now(),end_reason:'provider',cleanup_pending:true});throw e;}
   }
  }else{
@@ -77,11 +79,13 @@ export async function handleDailyCalls(method:string,url:URL,p:any,o:Options){
   let updated=false;for(let attempt=0;attempt<4;attempt++){const change=transition(c!,p.action,actor,device,now(),p.connected===true);if(!Object.keys(change).length){updated=true;break;}const next=await patch(c!,change);if(next){c=next;updated=true;break;}c=await read(p.id);if(!c)break;}if(!updated)throw new DailyError(409,'L’appel a changé. Réessayez.');
  }
  if(!c)throw new DailyError(410,'Cet appel est terminé.');
+ const invite=async()=>{if(!c!.notified&&c!.state==='ringing'){const claimed=await patch(c!,{notified:true});if(claimed){c=claimed;try{await o.notify(c);}catch{/* Foreground polling remains available. */}}}};
+ if(p.action==='ready')await invite();
  if(['start','accept','join'].includes(p.action)){
   transition(c,'join',actor,device,now());if(!c.room_url)throw new DailyError(409,'La salle se prépare encore. Réessayez.');
   const token=await provider.token(c.room_name,actor,names[actor]||'Nous deux',c.mode==='video',now());
   const fresh=await read(c.id);if(!fresh||!ACTIVE.includes(fresh.state)||expiredState(fresh,now()))throw new DailyError(410,'Cet appel est terminé.');c=fresh;
-  if(p.action==='start'&&!c.notified&&c.state==='ringing'){const claimed=await patch(c,{notified:true});if(claimed){c=claimed;try{await o.notify(c);}catch{/* Foreground polling still works; don't send duplicate pushes. */}}}
+  if(p.action==='start'&&p.deferNotification!==true)await invite();
   return {call:callProjection(c,actor,device),join:{url:c.room_url,token}};
  }
  if(c.cleanup_pending){try{await provider.close(c.room_name);const fresh=await read(c.id);if(fresh)await patch(fresh,{cleanup_pending:false});}catch{}}

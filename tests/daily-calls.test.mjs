@@ -44,6 +44,21 @@ const rejects=(promise,status)=>assert.rejects(promise,e=>e.status===status);
  assert.equal((await f.run(0,a)).history.length,1);assert.equal(f.rows.length,1,'History is retained');
 }
 {
+ const f=fixture(),call=id();const start=await f.run(0,a,{action:'start',id:call,mode:'audio',deferNotification:true});
+ assert.equal(start.call.state,'preparing');assert(start.join.token);assert.equal(f.notifications,0);
+ assert.equal((await f.run(1,b)).call,null,'Do not ring before the caller joins Daily');
+ await rejects(f.run(1,b,{action:'ready',id:call}),403);
+ await rejects(f.run(1,b,{action:'accept',id:call}),409);
+ await f.run(0,a,{action:'ready',id:call});assert.equal(f.notifications,1);assert.equal((await f.run(1,b)).call.state,'ringing');
+ await f.run(0,a,{action:'ready',id:call});assert.equal(f.notifications,1,'A retry never sends duplicate notifications');
+ await f.run(1,b,{action:'accept',id:call});await f.run(0,a,{action:'ready',id:call});assert.equal(f.rows[0].state,'connecting');
+}
+{
+ const f=fixture(),call=id();await f.run(0,a,{action:'start',id:call,mode:'audio',deferNotification:true});
+ await f.run(0,a,{action:'end',id:call});assert.equal(f.notifications,0,'A failed Daily join never notifies the partner');
+ assert.equal((await f.run(1,b)).call,null);
+}
+{
  const f=fixture();const starts=await Promise.allSettled([f.run(0,a,{action:'start',id:id(),mode:'video'}),f.run(1,b,{action:'start',id:id(),mode:'audio'})]);
  assert.equal(starts.filter(r=>r.status==='fulfilled').length,1);assert.equal(starts.find(r=>r.status==='rejected').reason.status,409);assert.equal(f.rows.length,1);
 }
