@@ -445,24 +445,25 @@ import * as React from 'react';
         h("path", { key: 18, className: "pig-line", d: high ? "M188 134q8-5 16 0" : "M188 130q8 6 16 0" }),
         high ? h("g", { key: 19 }, drop(196, 50)) : null];
     },
-    bulle: function (pct, high, id) {
+    bulle: function (pct, high, id, mood) {
       var y = 170 - pct * 134;
       return [h("defs", { key: "d" }, h("clipPath", { id: id }, h("ellipse", { cx: 116, cy: 104, rx: 94, ry: 68 }))),
         h("path", { key: 1, className: "bul-tail", d: "M26 98c-14-4-12-20 0-18 10 2 4 16-6 12" }),
         h("rect", { key: 2, className: "bul", x: 56, y: 146, width: 30, height: 30, rx: 15 }), h("rect", { key: 3, className: "bul", x: 146, y: 146, width: 30, height: 30, rx: 15 }),
-        h("path", { key: 4, className: "bul", d: "M70 58C58 28 76 18 104 40z" }), h("path", { key: 5, className: "bul", d: "M140 40c26-22 44-12 34 18z" }),
+        h("path", { key: 4, className: "bul pig-ear", d: "M70 58C58 28 76 18 104 40z" }), h("path", { key: 5, className: "bul pig-ear", d: "M140 40c26-22 44-12 34 18z" }),
         h("ellipse", { key: 6, className: "bul", cx: 116, cy: 104, rx: 94, ry: 68 }),
         h("path", { key: 7, className: "bul-fill", d: wavePath(y), clipPath: "url(#" + id + ")" }),
         h("ellipse", { key: 8, className: "bul-shine", cx: 70, cy: 76, rx: 18, ry: 10, transform: "rotate(-30 70 76)" }),
         h("rect", { key: 9, className: "pig-pupil", x: 92, y: 38, width: 44, height: 8, rx: 4 }),
         h("circle", { key: 10, className: "coin", cx: 114, cy: 4, r: 14 }),
         h("circle", { key: 11, className: "bul-eye", cx: 150, cy: 86, r: 12 }), h("circle", { key: 12, className: "bul-eye", cx: 182, cy: 82, r: 12 }),
-        h("circle", { key: 13, className: "pig-pupil", cx: high ? 151 : 153, cy: high ? 82 : 88, r: 7 }), h("circle", { key: 14, className: "pig-pupil", cx: high ? 183 : 185, cy: high ? 78 : 84, r: 7 }),
+        h("circle", { key: 13, className: "pig-pupil pig-eye-pupil", cx: high ? 151 : 153, cy: high ? 82 : 88, r: 7 }), h("circle", { key: 14, className: "pig-pupil pig-eye-pupil", cx: high ? 183 : 185, cy: high ? 78 : 84, r: 7 }),
         high ? h("path", { key: 15, className: "bul-brow", d: "M140 66l18 4M174 66l18-6" }) : null,
         h("ellipse", { key: 16, className: "bul-snout", cx: 196, cy: 112, rx: 22, ry: 16 }),
         h("ellipse", { key: 17, className: "pig-pupil", cx: 190, cy: 112, rx: 3, ry: 5 }), h("ellipse", { key: 18, className: "pig-pupil", cx: 202, cy: 112, rx: 3, ry: 5 }),
         h("circle", { key: 19, className: "pig-cheek", cx: 150, cy: 112, r: 9 }),
-        high ? h("g", { key: 20 }, drop(208, 52)) : null];
+        h("path", {key:21,className:"pig-mouth",d:mood==="over"?"M166 144q10-12 20 0":high?"M166 141h18":"M164 137q12 14 24 0"}),
+        high ? h("g", { key: 20, className:"pig-sweat" }, drop(208, 52)) : null];
     },
     geo: function (pct, high, id) {
       var y = 176 - pct * 144;
@@ -489,13 +490,15 @@ import * as React from 'react';
   };
   function PiggyBank(p) {
     var hasGoal = p.goal > 0, goal = p.goal || 1, pct = hasGoal ? Math.max(0, Math.min(1, (p.value || 0) / goal)) : 0, mode = p.mode || "budget", variant = p.variant || "classique";
-    var high = mode === "budget" && pct >= .9;
+    var ratio=hasGoal?(p.value||0)/goal:0, high = mode === "budget" && ratio >= .9, mood=!hasGoal?"calm":mode==="budget"&&ratio>1?"over":high?"worried":"happy";
+    var pause=useState(false), paused=pause[0];
     var note = p.note || (mode === "budget" ? (high ? "Attention, presque tout est dépensé" : "Il reste " + euros(goal - p.value) + " ce mois-ci") : "Encore " + euros(goal - p.value) + " pour l'objectif");
     var id = useState(function () { return "pig" + (++uid); })[0];
-    return h("div", { className: cx("nd-piggy", "nd-piggy-" + variant), "data-level": high ? "high" : "ok" },
+    return h("div", { className: cx("nd-piggy", "nd-piggy-" + variant), "data-level": high ? "high" : "ok", "data-mood":mood, "data-paused":paused },
       h("div", { className: "nd-piggy-head" }, h("div", { className: "nd-money-label" }, p.label),
-        h("span", { className: cx("nd-status", high ? "nd-status-soon" : "nd-status-paid") }, (hasGoal ? Math.round(pct * 100) + " %" : "Sans plafond"), h("span", { className: "nd-sr" }, !hasGoal ? " : aucun budget défini" : high ? " : budget presque épuisé" : mode === "budget" ? " du budget utilisé" : " de l'objectif"))),
-      h("svg", { viewBox: "0 -14 240 204", role: "img", "aria-label": hasGoal ? "Tirelire remplie à " + Math.round(pct * 100) + " %" : "Notre petite tirelire" }, (PIGS[variant] || PIGS.classique)(pct, high, id)),
+        h("span", { className: cx("nd-status", high ? "nd-status-soon" : "nd-status-paid") }, (hasGoal ? Math.round(ratio * 100) + " %" : "Sans plafond"), h("span", { className: "nd-sr" }, !hasGoal ? " : aucun budget défini" : mood==="over"?" : budget dépassé":high ? " : budget presque épuisé" : mode === "budget" ? " du budget utilisé" : " de l'objectif"))),
+      h("svg", { key:p.value,className:"pig-character",viewBox: "0 -14 240 204", role: "img", "aria-label": mood==="over"?"Notre tirelire est triste : budget dépassé":mood==="worried"?"Notre tirelire s’inquiète : le budget est presque utilisé":hasGoal?"Notre tirelire est contente : le budget est respecté":"Notre petite tirelire attend son budget" }, (PIGS[variant] || PIGS.classique)(pct, high, id,mood)),
+      h("button",{type:"button",className:"pig-motion-toggle","aria-pressed":paused,onClick:function(){pause[1](!paused);}},paused?"Animer la tirelire":"Mettre la tirelire en pause"),
       h("div", { className: "nd-piggy-amount" }, euros(p.value), hasGoal ? h("small", null, " / " + euros(goal)) : null),
       h("div", { className: "nd-piggy-note" }, note),
       p.envelopes ? h("div", { className: "nd-envelopes" }, p.envelopes.map(function (e) {

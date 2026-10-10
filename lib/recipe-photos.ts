@@ -25,20 +25,20 @@ export const recipePhotos:Record<string,RecipePhoto>={
   "title": "File:Tacos de carne asada en mercado Santa Anita en Mérida, Yucatán 01.jpg"
  },
  "Carrot soup": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/M%C3%B6hrensuppe-92056.jpg/960px-M%C3%B6hrensuppe-92056.jpg",
-  "author": "Raimond Spekking",
-  "license": "CC BY-SA 4.0",
-  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:M%C3%B6hrensuppe-92056.jpg",
-  "title": "File:Möhrensuppe-92056.jpg"
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ab/Carrot_soup.jpg/960px-Carrot_soup.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source": "https://commons.wikimedia.org/wiki/File:Carrot_soup.jpg",
+  "title": "File:Carrot soup.jpg",
+  "author": "jules / stone soup",
+  "license": "CC BY 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
  },
  "Chicken curry": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Chicken_Curry_9.jpg/960px-Chicken_Curry_9.jpg",
-  "author": "Gaurav Dhwaj Khadka",
-  "license": "CC BY-SA 4.0",
-  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Chicken_Curry_9.jpg",
-  "title": "File:Chicken Curry 9.jpg"
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Chicken_curry_served_in_an_Indonesian_restaurant%3B_February_2010.jpg/960px-Chicken_curry_served_in_an_Indonesian_restaurant%3B_February_2010.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source": "https://commons.wikimedia.org/wiki/File:Chicken_curry_served_in_an_Indonesian_restaurant;_February_2010.jpg",
+  "title": "File:Chicken curry served in an Indonesian restaurant; February 2010.jpg",
+  "author": "Alpha from Melbourne, Australia",
+  "license": "CC BY-SA 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
  },
  "Chicken noodles": {
   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Chinese_Chicken_Chow_Mein.JPG/960px-Chinese_Chicken_Chow_Mein.JPG",
@@ -58,7 +58,7 @@ export const recipePhotos:Record<string,RecipePhoto>={
  },
  "Chicken tagine": {
   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Chicken_Veg_Tagine_Rabat_Nov25_A7CR_08908.jpg/960px-Chicken_Veg_Tagine_Rabat_Nov25_A7CR_08908.jpg",
-  "author": "\n\n\nThis Photo was taken by Timothy A. Gonsalves.  Feel free to use my photos, but please mention me as the author.  I would much appreciate if you send me an email tagooty@yahoo.com or write on my talk page, for my information.  Please contact me bef",
+  "author": "Timothy A. Gonsalves",
   "license": "CC BY-SA 4.0",
   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
   "source": "https://commons.wikimedia.org/wiki/File:Chicken_Veg_Tagine_Rabat_Nov25_A7CR_08908.jpg",
@@ -73,28 +73,28 @@ export const recipePhotos:Record<string,RecipePhoto>={
   "title": "File:Chicken Tikka Masala KellySue.JPG"
  },
  "Chicken wrap": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Chicken_wrap_2.jpg/960px-Chicken_wrap_2.jpg",
-  "author": "HutheMeow",
-  "license": "CC BY-SA 4.0",
-  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Chicken_wrap_2.jpg",
-  "title": "File:Chicken wrap 2.jpg"
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/08/Crispy_Chick%27n_Caesar_Wrap.jpg/960px-Crispy_Chick%27n_Caesar_Wrap.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source": "https://commons.wikimedia.org/wiki/File:Crispy_Chick%27n_Caesar_Wrap.jpg",
+  "title": "File:Crispy Chick'n Caesar Wrap.jpg",
+  "author": "Mx. Granger",
+  "license": "CC0",
+  "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
  },
  "Chickpea curry": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Chana_Masala_in_Paul%C3%ADnia%2C_2023-10-16.jpg/960px-Chana_Masala_in_Paul%C3%ADnia%2C_2023-10-16.jpg",
-  "author": "Parzeus",
-  "license": "CC BY-SA 4.0",
-  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Chana_Masala_in_Paul%C3%ADnia,_2023-10-16.jpg",
-  "title": "File:Chana Masala in Paulínia, 2023-10-16.jpg"
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2c/Butter_chicken_curry%2C_chana_masala%2C_garlic_naan%2C_samosa_%2824536534723%29.jpg/960px-Butter_chicken_curry%2C_chana_masala%2C_garlic_naan%2C_samosa_%2824536534723%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source": "https://commons.wikimedia.org/wiki/File:Butter_chicken_curry,_chana_masala,_garlic_naan,_samosa_(24536534723).jpg",
+  "title": "File:Butter chicken curry, chana masala, garlic naan, samosa (24536534723).jpg",
+  "author": "T.Tseng",
+  "license": "CC BY 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
  },
  "Chili con carne": {
-  "title": "File:Chili con carne.jpg",
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Chili_con_carne.jpg/960px-Chili_con_carne.jpg",
-  "source": "https://commons.wikimedia.org/wiki/File:Chili_con_carne.jpg",
-  "author": "Tobias Urban",
-  "license": "Public domain",
-  "licenseUrl": "https://commons.wikimedia.org"
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/29/Chili_con_carne_%284431800858%29.jpg/960px-Chili_con_carne_%284431800858%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source": "https://commons.wikimedia.org/wiki/File:Chili_con_carne_(4431800858).jpg",
+  "title": "File:Chili con carne (4431800858).jpg",
+  "author": "cyclonebill from Copenhagen, Denmark",
+  "license": "CC BY-SA 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
  },
  "Dal lentils": {
   "title": "File:Dal Tadka 01 (36779549481).jpg",
@@ -105,12 +105,12 @@ export const recipePhotos:Record<string,RecipePhoto>={
   "source": "https://commons.wikimedia.org/wiki/File:Dal_Tadka_01_(36779549481).jpg"
  },
  "Falafel": {
-  "title": "File:Falafel - Zaytinya - March 2018 - Sarah Stierch 09.jpg",
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Falafel_-_Zaytinya_-_March_2018_-_Sarah_Stierch_09.jpg/960px-Falafel_-_Zaytinya_-_March_2018_-_Sarah_Stierch_09.jpg",
-  "author": "Missvain",
-  "license": "CC BY 4.0",
-  "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Falafel_-_Zaytinya_-_March_2018_-_Sarah_Stierch_09.jpg"
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/20/4pcs_Falafel%2C_Petra_Restaurant%2C_2026_%2801%29.jpg/960px-4pcs_Falafel%2C_Petra_Restaurant%2C_2026_%2801%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source": "https://commons.wikimedia.org/wiki/File:4pcs_Falafel,_Petra_Restaurant,_2026_(01).jpg",
+  "title": "File:4pcs Falafel, Petra Restaurant, 2026 (01).jpg",
+  "author": "Bahnfrend",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
  },
  "Garlic shrimp": {
   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Gambas_Al_Ajillo_%28Spanish_Garlic_Shrimp%29.jpg/960px-Gambas_Al_Ajillo_%28Spanish_Garlic_Shrimp%29.jpg",
@@ -121,44 +121,44 @@ export const recipePhotos:Record<string,RecipePhoto>={
   "title": "File:Gambas Al Ajillo (Spanish Garlic Shrimp).jpg"
  },
  "Greek salad": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/-2019-06-05_Tomato%2C_black_olive_and_feta_Greek_salad.JPG/960px--2019-06-05_Tomato%2C_black_olive_and_feta_Greek_salad.JPG",
-  "author": "\n\n\n\nKolforn (Kolforn)\nI'd appreciate if you could mail me (Kolforn@gmail.com) if you want to use this picture out of the Wikimedia project scope.\n\n\n\n This file is licensed under the Creative Commons Attribution-Share Alike 4.0 International license.\n",
-  "license": "CC BY-SA 4.0",
-  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:-2019-06-05_Tomato,_black_olive_and_feta_Greek_salad.JPG",
-  "title": "File:-2019-06-05 Tomato, black olive and feta Greek salad.JPG"
+  "url": "https://upload.wikimedia.org/wikipedia/commons/5/5f/Greek_Salad_Choriatiki.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+  "source": "https://commons.wikimedia.org/wiki/File:Greek_Salad_Choriatiki.jpg",
+  "title": "File:Greek Salad Choriatiki.jpg",
+  "author": "zone41 (Flickr)",
+  "license": "CC BY 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
  },
  "Hummus": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Homemade_hummus_and_pita_03.jpg/960px-Homemade_hummus_and_pita_03.jpg",
-  "author": "Satdeep Gill",
-  "license": "CC BY-SA 4.0",
-  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Homemade_hummus_and_pita_03.jpg",
-  "title": "File:Homemade hummus and pita 03.jpg"
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/Hummus_with_Olive_Oil.jpg/960px-Hummus_with_Olive_Oil.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source": "https://commons.wikimedia.org/wiki/File:Hummus_with_Olive_Oil.jpg",
+  "title": "File:Hummus with Olive Oil.jpg",
+  "author": "TechnoKittyCat",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0"
  },
  "Kofta": {
-  "title": "File:Kofta.jpg",
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Kofta.jpg/960px-Kofta.jpg",
-  "author": "Rashmeet Kaur",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a7/Tunisian_Kefta.jpg/960px-Tunisian_Kefta.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source": "https://commons.wikimedia.org/wiki/File:Tunisian_Kefta.jpg",
+  "title": "File:Tunisian Kefta.jpg",
+  "author": "Emna Mizouni",
   "license": "CC BY-SA 4.0",
-  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Kofta.jpg"
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
  },
  "Lentil soup": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Lentil_soup_from_Sicily.jpg/960px-Lentil_soup_from_Sicily.jpg",
-  "author": "Emna Mizouni ",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bf/Moroccan_Lentil_Soup.jpg/960px-Moroccan_Lentil_Soup.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source": "https://commons.wikimedia.org/wiki/File:Moroccan_Lentil_Soup.jpg",
+  "title": "File:Moroccan Lentil Soup.jpg",
+  "author": "Emna Mizouni",
   "license": "CC BY-SA 4.0",
-  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Lentil_soup_from_Sicily.jpg",
-  "title": "File:Lentil soup from Sicily.jpg"
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
  },
  "Mushroom omelette": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Mushroom_Omelette_-_Breakfast_At_Tiffany%27s_Brighton.jpg/960px-Mushroom_Omelette_-_Breakfast_At_Tiffany%27s_Brighton.jpg",
-  "author": "Andy Li",
-  "license": "CC0",
-  "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
-  "source": "https://commons.wikimedia.org/wiki/File:Mushroom_Omelette_-_Breakfast_At_Tiffany%27s_Brighton.jpg",
-  "title": "File:Mushroom Omelette - Breakfast At Tiffany's Brighton.jpg"
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/61/Hungarian_Mushroom_Omelette_%288414795810%29.jpg/960px-Hungarian_Mushroom_Omelette_%288414795810%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source": "https://commons.wikimedia.org/wiki/File:Hungarian_Mushroom_Omelette_(8414795810).jpg",
+  "title": "File:Hungarian Mushroom Omelette (8414795810).jpg",
+  "author": "Cajsa Lilliehook from Portland",
+  "license": "CC BY-SA 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
  },
  "Mushroom pizza": {
   "title": "File:Italian Pizza (funghi).jpg",
@@ -169,20 +169,20 @@ export const recipePhotos:Record<string,RecipePhoto>={
   "source": "https://commons.wikimedia.org/wiki/File:Italian_Pizza_(funghi).jpg"
  },
  "Mushroom risotto": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Wild_Mushroom_Risotto_Borough_Market_2024-01-11.jpg/960px-Wild_Mushroom_Risotto_Borough_Market_2024-01-11.jpg",
-  "author": "Tom Page",
-  "license": "CC BY-SA 2.0",
-  "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Wild_Mushroom_Risotto_Borough_Market_2024-01-11.jpg",
-  "title": "File:Wild Mushroom Risotto Borough Market 2024-01-11.jpg"
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Risottoa_onddoekin.jpg/960px-Risottoa_onddoekin.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source": "https://commons.wikimedia.org/wiki/File:Risottoa_onddoekin.jpg",
+  "title": "File:Risottoa onddoekin.jpg",
+  "author": "Artsuaga",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
  },
  "Pasta pesto": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Grilled_Vegetable_With_Pasta_Pesto_Salad_-_Hyatt_Hyderabad_Gachibowli_-_Hyderabad_2023-04-28_7792.jpg/960px-Grilled_Vegetable_With_Pasta_Pesto_Salad_-_Hyatt_Hyderabad_Gachibowli_-_Hyderabad_2023-04-28_7792.jpg",
-  "author": "Biswarup Ganguly",
-  "license": "CC BY 3.0",
-  "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Grilled_Vegetable_With_Pasta_Pesto_Salad_-_Hyatt_Hyderabad_Gachibowli_-_Hyderabad_2023-04-28_7792.jpg",
-  "title": "File:Grilled Vegetable With Pasta Pesto Salad - Hyatt Hyderabad Gachibowli - Hyderabad 2023-04-28 7792.jpg"
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d0/Pasta_al_pesto_fatto_in_casa.jpg/960px-Pasta_al_pesto_fatto_in_casa.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source": "https://commons.wikimedia.org/wiki/File:Pasta_al_pesto_fatto_in_casa.jpg",
+  "title": "File:Pasta al pesto fatto in casa.jpg",
+  "author": "Marco Del Torchio 95",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
  },
  "Pasta tomato sauce": {
   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Pasta%2C_Tomato_Sauce%2C_Red_Lentils_%26_Sprouts_%284368525956%29.jpg/960px-Pasta%2C_Tomato_Sauce%2C_Red_Lentils_%26_Sprouts_%284368525956%29.jpg",
@@ -209,12 +209,12 @@ export const recipePhotos:Record<string,RecipePhoto>={
   "source": "https://commons.wikimedia.org/wiki/File:Ratatouille.jpg"
  },
  "Roast chicken potatoes": {
-  "title": "File:Sweet and Spicy Roast Chicken 1.jpg",
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Sweet_and_Spicy_Roast_Chicken_1.jpg/960px-Sweet_and_Spicy_Roast_Chicken_1.jpg",
-  "author": "Burkhard Mücke",
-  "license": "CC BY 4.0",
-  "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Sweet_and_Spicy_Roast_Chicken_1.jpg"
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/84/Roast_chicken_legs_with_roast_veg%2C_peas_and_gravy_%2834753963294%29.jpg/960px-Roast_chicken_legs_with_roast_veg%2C_peas_and_gravy_%2834753963294%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source": "https://commons.wikimedia.org/wiki/File:Roast_chicken_legs_with_roast_veg,_peas_and_gravy_(34753963294).jpg",
+  "title": "File:Roast chicken legs with roast veg, peas and gravy (34753963294).jpg",
+  "author": "CharmaineZoe's Marvelous Melange from England",
+  "license": "CC BY 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
  },
  "Shakshuka": {
   "title": "File:Shakshuka Dish.jpg",
@@ -256,14 +256,6 @@ export const recipePhotos:Record<string,RecipePhoto>={
   "source": "https://commons.wikimedia.org/wiki/File:Tuna_pasta_salad.jpg",
   "title": "File:Tuna pasta salad.jpg"
  },
- "Tuna rice salad": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Tuna_pasta_salad.jpg/960px-Tuna_pasta_salad.jpg",
-  "author": "FotoosVanRobin from Netherlands",
-  "license": "CC BY-SA 2.0",
-  "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Tuna_pasta_salad.jpg",
-  "title": "File:Tuna pasta salad.jpg"
- },
  "Vegetable couscous": {
   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Vegetarian_Couscous.jpg/960px-Vegetarian_Couscous.jpg",
   "author": "Emna Mizouni",
@@ -273,12 +265,12 @@ export const recipePhotos:Record<string,RecipePhoto>={
   "title": "File:Vegetarian Couscous.jpg"
  },
  "Vegetable noodles": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Noodles_with_vegetable_dish.jpg/960px-Noodles_with_vegetable_dish.jpg",
-  "author": "CNEcija12345",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Indian_homemade_veg_Chow_mein_in_Howrah%2C_West_Bengal%2C_photographed_by_Yogabrata_Chakraborty_on_December_13%2C_2022.jpg/960px-Indian_homemade_veg_Chow_mein_in_Howrah%2C_West_Bengal%2C_photographed_by_Yogabrata_Chakraborty_on_December_13%2C_2022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source": "https://commons.wikimedia.org/wiki/File:Indian_homemade_veg_Chow_mein_in_Howrah,_West_Bengal,_photographed_by_Yogabrata_Chakraborty_on_December_13,_2022.jpg",
+  "title": "File:Indian homemade veg Chow mein in Howrah, West Bengal, photographed by Yogabrata Chakraborty on December 13, 2022.jpg",
+  "author": "Billjones94",
   "license": "CC BY-SA 4.0",
-  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Noodles_with_vegetable_dish.jpg",
-  "title": "File:Noodles with vegetable dish.jpg"
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
  },
  "Vegetable tagine": {
   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Vegetable_Tajine_%285342012559%29.jpg/960px-Vegetable_Tajine_%285342012559%29.jpg",
@@ -297,12 +289,12 @@ export const recipePhotos:Record<string,RecipePhoto>={
   "title": "File:Bowl of chili.jpg"
  },
  "Vegetarian lasagna": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Vegetarian-lasagna_.jpg/960px-Vegetarian-lasagna_.jpg",
-  "author": "FloGalsen",
-  "license": "CC BY-SA 4.0",
-  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Vegetarian-lasagna_.jpg",
-  "title": "File:Vegetarian-lasagna .jpg"
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Vegetarian_Lasagne_-_Pronto_in_Tavola_2024-10-16.jpg/960px-Vegetarian_Lasagne_-_Pronto_in_Tavola_2024-10-16.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source": "https://commons.wikimedia.org/wiki/File:Vegetarian_Lasagne_-_Pronto_in_Tavola_2024-10-16.jpg",
+  "title": "File:Vegetarian Lasagne - Pronto in Tavola 2024-10-16.jpg",
+  "author": "Andy Li",
+  "license": "CC0",
+  "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
  },
  "Fish en papillote": {
   "title": "File:Cod en papillote.jpg",
@@ -319,5 +311,13 @@ export const recipePhotos:Record<string,RecipePhoto>={
   "author": "Andy Li",
   "license": "CC0",
   "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+ },
+ "Tuna rice salad": {
+  "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Tuna_pasta_salad.jpg/960px-Tuna_pasta_salad.jpg",
+  "author": "FotoosVanRobin from Netherlands",
+  "license": "CC BY-SA 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Tuna_pasta_salad.jpg",
+  "title": "File:Tuna pasta salad.jpg"
  }
 };

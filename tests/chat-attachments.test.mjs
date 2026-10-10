@@ -15,6 +15,7 @@ globalThis.fetch=async(url,init={})=>{
  }
  if(u.pathname.endsWith('/nd_sessions'))return Response.json([{member:actor}]);
  if(u.pathname.endsWith('/rpc/nd_rate_hit'))return Response.json(1);
+ if(u.pathname.endsWith('/rpc/nd_chat_change')){const p=JSON.parse(init.body),m=messages.find(m=>m.id===p.p_id);if(m?.member!==actor)return Response.json({status:403,error:'Interdit'});if(m.version!==p.p_version)return Response.json({status:409,error:'Version'});if(p.p_action==='edit')return Response.json({status:400,error:'Pas de modification de fichier'});const id=m.attachment_id;m.attachment_id=null;m.text='';m.deleted='everyone';return Response.json({ok:true,cleanup:[{attachmentId:id}]});}
  const list=u.pathname.endsWith('/nd_attachments')?files:u.pathname.endsWith('/nd_messages')?messages:null;assert(list,'Unexpected '+u.pathname);
  const filtered=()=>list.filter(row=>['id','owner','member','version','attachment_id'].every(k=>!u.searchParams.has(k)||String(row[k])===u.searchParams.get(k).slice(3)));
  if(method==='GET')return Response.json(filtered());
@@ -46,8 +47,8 @@ assert.equal((await handler(request('chat',{action:'send',id:crypto.randomUUID()
 assert.equal((await handler(request('chat',{action:'edit',id:message,version:1,text:'Cannot replace file'}))).status,400);
 assert.equal((await handler(request('attachments',{action:'discard',id}))).status,409);
 actor=1;const signed=await(await handler(request('attachments&id='+id))).json();assert(signed.url.startsWith('https://db.test/storage/v1/object/sign/nous-deux-chat/0/'));assert.equal(new URL(signed.download).searchParams.get('download'),'Notre voyage.pdf');assert(!JSON.stringify(signed).includes('server-only-test-key'));
-assert.equal((await handler(request('chat',{action:'delete',id:message,version:1}))).status,403);
-actor=0;assert.equal((await handler(request('chat',{action:'delete',id:message,version:2}))).status,409);assert.equal((await handler(request('chat',{action:'delete',id:message,version:1}))).status,200);assert.equal(files.length,0);assert.equal(messages.length,0);assert.equal(objects.size,0);
+assert.equal((await handler(request('chat',{action:'delete',id:message,version:1,scope:'everyone'}))).status,403);
+actor=0;assert.equal((await handler(request('chat',{action:'delete',id:message,version:2,scope:'everyone'}))).status,409);assert.equal((await handler(request('chat',{action:'delete',id:message,version:1,scope:'everyone'}))).status,200);assert.equal(files.length,0);assert.equal(messages[0].deleted,'everyone');assert.equal(objects.size,0);
 actor=1;assert.equal((await handler(request('attachments&id='+id))).status,404);
 actor=0;const formats=[['photo.jpg',new Uint8Array([255,216,255,224,0,16,0,0]),'image/jpeg'],['photo.png',new Uint8Array([137,80,78,71,13,10,26,10]),'image/png'],['photo.heic',new Uint8Array([0,0,0,24,102,116,121,112,104,101,105,99,0,0,0,0]),'image/heic'],['notes.txt',new TextEncoder().encode('Coucou 💕'),'text/plain'],['menu.docx',new Uint8Array([80,75,3,4,0,0]),'application/vnd.openxmlformats-officedocument.wordprocessingml.document']];
 for(const [name,body,mime] of formats){const fileId=crypto.randomUUID();assert.equal((await handler(upload(fileId,{name,body}))).status,200);assert.equal(files.at(-1).mime,mime);assert.equal((await handler(request('attachments',{action:'discard',id:fileId}))).status,200);}

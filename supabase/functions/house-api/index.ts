@@ -1,3 +1,4 @@
+import {notificationPhotoURL,serveNotificationPhoto} from './notification-photo.ts';
 import {handleDailyCalls,DailyError} from './daily-calls.ts';
 import {uploadAttachment,signedAttachment,deleteAttachment,AttachmentError} from './attachments.ts';
 import {searchPlaces,placeMutation,PlaceError} from './places.ts';
@@ -10,7 +11,7 @@ import {mealProjection,mealVote,mealDraw,MealError} from './meals.ts';
 import {parisDate} from './life.ts';
 import {chatInput,chatCursorInput,photoInput} from './validation.ts';
 import {buildPushPayload} from 'npm:@block65/webcrypto-web-push@2.0.0';
-import {claimPlantReminders,authorizeChat,visibleAppointments,ApiError,householdMutation,callMutation,deviceMutation,type State} from './model.ts';
+import {claimPlantReminders,visibleAppointments,ApiError,householdMutation,callMutation,deviceMutation,type State} from './model.ts';
 import {defaultPreferences,deviceInput,allowedPushEndpoint} from './communication.ts';
 const ORIGIN='https://sabir-art.github.io',BASE='/Nous-deux/';
 const enc=new TextEncoder();
@@ -46,6 +47,7 @@ export async function handler(req:Request):Promise<Response>{
  try{
  const url=new URL(req.url),route=url.searchParams.get('route')||'',token=req.headers.get('x-house-session')||'';
  let p:any={};if(req.method==='POST'&&!['voice-upload','attachment-upload'].includes(route)){if(!req.headers.get('content-type')?.includes('application/json'))return json({error:'Format invalide.'},415);const raw=await req.text();if(raw.length>(route==='photos'?361000:36000))return json({error:'Contenu trop long.'},413);p=JSON.parse(raw);}
+ if(route==='notification-photo'){if(req.method!=='GET')return json({error:'Méthode non autorisée.'},405);return await serveNotificationPhoto(url,secret(),db,async()=>(await state()).data,cors);}
  if(route==='plant-reminders'){
   if(req.method!=='POST')return json({error:'Méthode non autorisée.'},405);
   const credential=req.headers.get('x-plant-reminder')||'';if(!/^[a-f0-9]{64}$/.test(credential))return json({error:'Accès réservé au planificateur.'},401);
@@ -133,12 +135,18 @@ export async function handler(req:Request):Promise<Response>{
   if(!old){const photos=await db('nd_photos?owner=eq.'+actor+'&select=id&limit=1000');if(photos.length>=1000)throw new ApiError(400,'Limite de photos atteinte.');}
   await db('nd_photos?on_conflict=id','POST',{id:v.id,data:v.data,owner:actor},'resolution=ignore-duplicates,return=representation');return json({id:v.id});
  }
+ if(route==='chat-settings'){
+  if(req.method==='POST'){
+   if(!['rose','lavande','menthe','beurre','peche','neutre'].includes(p.theme))throw new ApiError(400,'Couleur invalide.');
+   await db('nd_chat_preferences?on_conflict=member','POST',{member:actor,theme:p.theme},'resolution=merge-duplicates,return=representation');
+  }
+  const settings=(await db('nd_chat_preferences?member=eq.'+actor+'&select=theme'))[0];return json({theme:settings?.theme||'rose'});
+ }
  if(route==='chat'){
   if(req.method==='GET'){
-   const before=url.searchParams.get('before');let filter='';
-   if(before){const c=chatCursorInput.parse({before,beforeId:url.searchParams.get('beforeId')});filter='&or='+encodeURIComponent(`(created_at.lt.${c.before},and(created_at.eq.${c.before},id.lt.${c.beforeId}))`);}
-   const messages=await db('nd_messages?select=id,member,text,voice_id,voice_duration,attachment_id,attachment_name,attachment_mime,attachment_bytes,created_at,edited_at,version&order=created_at.desc,id.desc&limit=60'+filter);
-   return json({messages:messages.reverse(),hasMore:messages.length===60});
+   const before=url.searchParams.get('before');const cursor=before?chatCursorInput.parse({before,beforeId:url.searchParams.get('beforeId')}):null;
+   const ids=(url.searchParams.get('ids')||'').split(',').filter(Boolean);if(ids.length>120)throw new ApiError(400,'Trop de messages à actualiser.');ids.forEach(id=>deviceInput.parse(id));
+   return json(await db('rpc/nd_chat_read','POST',{p_actor:actor,p_before:cursor?.before||null,p_before_id:cursor?.beforeId||null,p_ids:ids}));
   }
   const v=chatInput.parse(p);
   if(v.action==='send'){
@@ -146,11 +154,18 @@ export async function handler(req:Request):Promise<Response>{
    const previous=(await db('nd_messages?id=eq.'+v.id+'&select=id,member'))[0];if(previous){if(previous.member!==actor)throw new ApiError(403,'Ce message appartient à votre moitié.');return json({ok:true});}
    let voice:any=null;if(v.voiceId){voice=(await db('nd_voices?id=eq.'+v.voiceId))[0];if(!voice?.ready||voice.owner!==actor)throw new ApiError(403,'Vous pouvez envoyer uniquement vos propres enregistrements.');if((await db('nd_messages?voice_id=eq.'+v.voiceId+'&select=id&limit=1')).length)throw new ApiError(409,'Ce vocal a déjà été envoyé.');}
    let attachment:any=null;if(v.attachmentId){attachment=(await db('nd_attachments?id=eq.'+v.attachmentId))[0];if(!attachment?.ready||attachment.owner!==actor)throw new ApiError(403,'Vous pouvez envoyer uniquement vos propres fichiers.');if((await db('nd_messages?attachment_id=eq.'+v.attachmentId+'&select=id&limit=1')).length)throw new ApiError(409,'Ce fichier a déjà été envoyé.');}
-   await db('nd_messages?on_conflict=id','POST',{id:v.id,member:actor,text:v.text||'',...(voice?{voice_id:voice.id,voice_duration:voice.duration_ms}:{}),...(attachment?{attachment_id:attachment.id,attachment_name:attachment.name,attachment_mime:attachment.mime,attachment_bytes:attachment.bytes}:{})},'resolution=ignore-duplicates,return=representation');return json({ok:true});
+   const inserted=await db('nd_messages?on_conflict=id','POST',{id:v.id,member:actor,text:v.text||'',...(voice?{voice_id:voice.id,voice_duration:voice.duration_ms}:{}),...(attachment?{attachment_id:attachment.id,attachment_name:attachment.name,attachment_mime:attachment.mime,attachment_bytes:attachment.bytes}:{})},'resolution=ignore-duplicates,return=representation');
+   if(inserted?.length){const task=(async()=>{const {data:s}=await state();const icon=await notificationPhotoURL(s,actor,Deno.env.get('SUPABASE_URL')!,secret());await Promise.allSettled(s.devices.filter(d=>d.member!==actor&&({...defaultPreferences,...d.preferences}).chat).map(d=>send(d,{title:actor===0?s.household.first:s.household.second,body:voice?'🎙️ Un message vocal':attachment?'📎 Un fichier dans votre discussion':'💬 Un nouveau message',category:'chat',icon,tag:'nousdeux-chat-'+v.id})));})();if(typeof EdgeRuntime!=='undefined')EdgeRuntime.waitUntil(task.catch(()=>{}));else await task.catch(()=>{});}
+   return json({ok:true});
   }
-  const old=(await db('nd_messages?id=eq.'+v.id))[0];authorizeChat(old,actor,v.version);if((old.voice_id||old.attachment_id)&&v.action==='edit')throw new ApiError(400,'Un vocal ou un fichier ne se modifie pas. Vous pouvez le supprimer.');
-  const rows=await db('nd_messages?id=eq.'+v.id+'&member=eq.'+actor+'&version=eq.'+v.version,v.action==='delete'?'DELETE':'PATCH',v.action==='delete'?undefined:{text:v.text,edited_at:new Date().toISOString(),version:v.version!+1});
-  if(!rows.length)throw new ApiError(409,'Ce message a changé. Actualisez la discussion.');if(v.action==='delete'&&old.voice_id)try{await deleteVoice(old.voice_id,actor,db,Deno.env.get('SUPABASE_URL')!,secret());}catch{/* Message removed; an unlinked attachment remains private to its author if storage is unavailable. */}if(v.action==='delete'&&old.attachment_id)try{await deleteAttachment(old.attachment_id,actor,db,Deno.env.get('SUPABASE_URL')!,secret());}catch{/* Unlinked files remain private if storage is temporarily unavailable. */}return json({ok:true});
+  const result=await db('rpc/nd_chat_change','POST',{p_actor:actor,p_action:v.action,p_id:v.id||null,p_version:v.version||null,p_text:v.text||null,p_scope:v.scope});
+  if(!result.ok)throw new ApiError(result.status||400,result.error||'Action impossible.');
+  // The transaction has already revoked attachment access. Physical cleanup can retry later.
+  const cleanup=Promise.allSettled((result.cleanup||[]).flatMap((file:any)=>[
+   ...(file.voiceId?[deleteVoice(file.voiceId,actor,db,Deno.env.get('SUPABASE_URL')!,secret())]:[]),
+   ...(file.attachmentId?[deleteAttachment(file.attachmentId,actor,db,Deno.env.get('SUPABASE_URL')!,secret())]:[])
+  ]));if(typeof EdgeRuntime!=='undefined')EdgeRuntime.waitUntil(cleanup);else await cleanup;
+  return json({ok:true});
  }
  if(route==='daily-calls'){
   const callSession=deviceInput.parse(req.method==='GET'?url.searchParams.get('session'):p.session);
@@ -158,7 +173,8 @@ export async function handler(req:Request):Promise<Response>{
   const {data:s}=await state();
   if(req.method==='POST'&&p.action==='start'&&s.call&&s.call.state!=='ended'&&s.call.expiresAt>Date.now())throw new DailyError(409,'Terminez d’abord l’appel en cours.');
   const result=await handleDailyCalls(req.method,url,p,{db,key:Deno.env.get('DAILY_API_KEY')||'',actor,device,defer:task=>{if(typeof EdgeRuntime!=='undefined')EdgeRuntime.waitUntil(task);},names:[s.household?.first||'Abdellah',s.household?.second||'Laura'],notify:async call=>{
-   const task=Promise.allSettled(s.devices.filter(d=>d.member!==actor&&({...defaultPreferences,...d.preferences}).calls).map(d=>send(d,{title:call.mode==='video'?'📹 Un appel vidéo pour vous':'📞 Votre moitié vous appelle',body:'Ouvrez Nous deux pour répondre.',category:'calls',callId:call.id,expiresAt:call.expires_at,tag:'nousdeux-call-'+call.id})));
+   const icon=await notificationPhotoURL(s,actor,Deno.env.get('SUPABASE_URL')!,secret());
+   const task=Promise.allSettled(s.devices.filter(d=>d.member!==actor&&({...defaultPreferences,...d.preferences}).calls).map(d=>send(d,{title:(actor===0?s.household.first:s.household.second)+(call.mode==='video'?' vous appelle en vidéo':' vous appelle'),icon,body:'Ouvrez Nous deux pour répondre.',category:'calls',callId:call.id,expiresAt:call.expires_at,tag:'nousdeux-call-'+call.id})));
    if(typeof EdgeRuntime!=='undefined')EdgeRuntime.waitUntil(task);else await task;
   }});return json(result);
  }
