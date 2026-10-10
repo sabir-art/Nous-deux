@@ -21,6 +21,7 @@ globalThis.fetch=async(url,init={})=>{
  if(u.pathname.endsWith('/nd_sessions'))return Response.json([{member:actor}]);
  if(u.pathname.endsWith('/rpc/nd_rate_hit'))return Response.json(1);
  if(u.pathname.endsWith('/nd_state')){if(method==='PATCH'){if(u.searchParams.get('version')!=='eq.'+version)return Response.json([]);const p=JSON.parse(init.body);Object.assign(household,p.data);version=p.version;}return Response.json([{version,data:household}]);}
+ if(u.pathname.endsWith('/rpc/nd_chat_change')){const p=JSON.parse(init.body),m=messages.find(m=>m.id===p.p_id);if(m?.member!==actor)return Response.json({status:403,error:'Interdit'});if(m.version!==p.p_version)return Response.json({status:409,error:'Version'});if(p.p_action==='edit')return Response.json({status:400,error:'Pas de modification de fichier'});const id=m.voice_id;m.voice_id=null;m.text='';m.deleted='everyone';return Response.json({ok:true,cleanup:[{voiceId:id}]});}
  const list=u.pathname.endsWith('/nd_voices')?voices:u.pathname.endsWith('/nd_messages')?messages:null;assert(list,'Unexpected '+u.pathname);
  const filtered=()=>list.filter(row=>['id','owner','member','version','voice_id'].every(k=>!u.searchParams.has(k)||String(row[k])===u.searchParams.get(k).slice(3)));
  if(method==='GET')return Response.json(filtered());
@@ -53,8 +54,8 @@ assert.equal((await handler(request('chat',{action:'send',id:crypto.randomUUID()
 assert.equal((await handler(request('chat',{action:'edit',id:message,version:1,text:'Cannot edit voice'}))).status,400);
 assert.equal((await handler(request('voices',{action:'discard',id}))).status,409,'Cannot delete linked attachment directly');
 actor=1;const listen=await(await handler(request('voices&id='+id))).json();assert(listen.url.startsWith('https://db.test/storage/v1/object/sign/nous-deux-voices/0/'));assert(!listen.url.includes('test-server-key'));
-assert.equal((await handler(request('chat',{action:'delete',id:message,version:1}))).status,403);
-actor=0;assert.equal((await handler(request('chat',{action:'delete',id:message,version:1}))).status,200);assert.equal(messages.length,0);assert.equal(voices.length,0);assert.equal(objects.size,0);
+assert.equal((await handler(request('chat',{action:'delete',id:message,version:1,scope:'everyone'}))).status,403);
+actor=0;assert.equal((await handler(request('chat',{action:'delete',id:message,version:1,scope:'everyone'}))).status,200);assert.equal(messages[0].deleted,'everyone');assert.equal(voices.length,0);assert.equal(objects.size,0);
 const mp4=new Uint8Array([0,0,0,20,102,116,121,112,77,52,65,32,...new Array(20).fill(0)]),mp4id=crypto.randomUUID();assert.equal((await handler(upload(mp4id,{body:mp4,mime:'audio/mp4'}))).status,200);assert.equal(voices[0].mime,'audio/mp4');assert.equal((await handler(request('voices',{action:'discard',id:mp4id}))).status,200);assert.equal(voices.length,0);
 assert.equal((await handler(request('place-search&q=Paris&restaurants=1',undefined,false))).status,401);assert.equal(placeQueries,0);
 assert.equal((await handler(request('place-search&q=ab&restaurants=1'))).status,400);

@@ -32,3 +32,5 @@ Documentation vérifiée :
 - https://supabase.com/docs/guides/functions/secrets
 
 Tests : `node tests/recipe-discovery.test.mjs`, `node tests/ai-settings.test.mjs` et `node tests/chat-api.test.mjs`.
+
+Les photos candidates de Wikimedia Commons sont contrôlées visuellement par le modèle avant publication (plat correspondant aux ingrédients, cadrage, netteté et présentation). Une absence de choix fiable exclut la recette de cette découverte ; aucune image de façade ou de produit n’est utilisée par défaut. Ce contrôle reste probabiliste. Les photos personnelles et messages ne sont jamais envoyés à ce processus. Au plus quatre contrôles visuels, six candidates chacun, par découverte hebdomadaire.

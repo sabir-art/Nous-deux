@@ -40,7 +40,7 @@ export async function uploadAttachment(req:Request,actor:number,db:DB,base:strin
 }
 export async function signedAttachment(id:string,actor:number,db:DB,base:string,key:string){
  const row=(await db('nd_attachments?id=eq.'+attachmentId(id)))[0];if(!row?.ready)throw new AttachmentError(404,'Ce fichier n’est plus disponible.');
- if(row.owner!==actor&&!(await db('nd_messages?attachment_id=eq.'+id+'&select=id&limit=1')).length)throw new AttachmentError(403,'Ce fichier n’a pas été partagé.');
+const linked=(await db('nd_messages?attachment_id=eq.'+id+'&select=id,deleted_at,removed_for,hidden_for&limit=1'))[0];if((!linked&&row.owner!==actor)||(linked&&(linked.deleted_at||linked.removed_for?.includes(actor)||linked.hidden_for?.includes(actor))))throw new AttachmentError(403,'Ce fichier n’est pas visible dans votre discussion.');
  const r=await storage(base,key,'object/sign/'+BUCKET+'/'+row.path,'POST',JSON.stringify({expiresIn:600}),{'Content-Type':'application/json'}),data=await r.json();
  if(typeof data.signedURL!=='string'||!data.signedURL.startsWith('/object/sign/'+BUCKET+'/'))throw new AttachmentError(503,'Ouverture indisponible. Réessayez.');
  const url=base+'/storage/v1'+data.signedURL,download=new URL(url);download.searchParams.set('download',row.name);

@@ -5,7 +5,7 @@ import {Bell,BellOff,Check,RefreshCw} from './icons';
 import {defaultPreferences,notificationCategories,type Preferences} from '../lib/communication';
 import {deviceId} from '../lib/device';
 type Event={id:number;actor:number;category:string;message:string;createdAt:string};
-const labels={shopping:'Courses',tasks:'Tâches',expenses:'Dépenses et remboursements',calendar:'Rendez-vous',calls:'Invitations aux appels',ideas:'Idées et invitations',plants:'Entretien des plantes'};
+const labels={shopping:'Courses',tasks:'Tâches',expenses:'Dépenses et remboursements',calendar:'Rendez-vous',calls:'Invitations aux appels',ideas:'Idées et invitations',plants:'Entretien des plantes',chat:'Messages privés'};
 const jsonPost=async(body:unknown)=>{const r=await apiFetch('/api/notifications',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json() as {error?:string};if(!r.ok)throw new Error(data.error||'Enregistrement impossible.');return data;};
 export default function HouseNotifications({active,names,onNavigate}:{active:number;names:string[];onNavigate:(tab:string)=>void}){
  const [preferences,setPreferences]=useState<Preferences>(defaultPreferences),[enabled,setEnabled]=useState(false),[supported,setSupported]=useState(false),[busy,setBusy]=useState(false),[ready,setReady]=useState(false),[message,setMessage]=useState(''),[key,setKey]=useState(''),[events,setEvents]=useState<Event[]>([]),[seen,setSeen]=useState(0);
