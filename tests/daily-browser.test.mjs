@@ -52,7 +52,7 @@ try{for(const browserType of process.env.CHROMIUM_EXECUTABLE?[chromium]:[webkit,
   await page.waitForFunction(()=>window.actions?.includes('heartbeat'));
   await page.evaluate(()=>{const avatar=document.querySelector('.daily-call-avatar');avatar.textContent='';const img=new Image();img.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="400"><rect width="200" height="400" fill="#ccc9ef"/><rect width="200" height="45" fill="#a3ddcc"/><circle cx="100" cy="160" r="60" fill="#ffd4b7"/><rect y="355" width="200" height="45" fill="#f1b8d2"/></svg>');avatar.append(img);});
   await page.waitForFunction(()=>document.querySelector('.daily-call-avatar img').naturalWidth===200);
-  assert.equal(await page.locator('.daily-call-avatar').evaluate(el=>getComputedStyle(el).overflow),'visible');assert.equal(await page.locator('.daily-call-avatar img').evaluate(el=>getComputedStyle(el).objectFit),'contain');
+  assert.equal(await page.locator('.daily-call-avatar').evaluate(el=>getComputedStyle(el).overflow),'hidden');assert.equal(await page.locator('.daily-call-avatar img').evaluate(el=>getComputedStyle(el).objectFit),'cover');
   if(process.env.UX_SCREENSHOTS&&width===390)await page.screenshot({path:process.env.UX_SCREENSHOTS+'/call-avatar.png'});
   assert(await page.locator('dialog[open]').isVisible());
   await page.getByRole('button',{name:'Micro',exact:true}).click();assert.equal(await page.getByRole('button',{name:'Micro coupé',exact:true}).getAttribute('aria-pressed'),'true');
