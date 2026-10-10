@@ -114,7 +114,7 @@ export default function HouseApp(){
    {tab==='ideas'&&<HouseIdeas openId={ideaToOpen} onOpened={()=>setIdeaToOpen('')} onCalendar={date=>{setCalendarDate(date);setTab('calendar');}} create={createTarget==='ideas'} onCreated={()=>setCreateTarget('')} ideas={ideas} active={active} names={names} busy={busy} error={formError} save={save}/>}
    {tab==='plants'&&<HousePlants create={createTarget==='plants'} onCreated={()=>setCreateTarget('')} plants={plants} active={active} names={names} busy={busy} error={formError} save={save} onNotifications={()=>setTab('notifications')}/>}
    {tab==='meals'&&<Suspense fallback={<p role="status">On ouvre le carnet gourmand…</p>}><HouseMeals active={active} create={createTarget==='recipe'} openPlans={createTarget==='menu'} onCreated={()=>setCreateTarget('')} meals={mealVotes.meals} names={names} onVote={mealVotes.vote}/></Suspense>}
-   {tab==='chat'&&<HouseChat active={active} names={names} onCall={mode=>{setCallRequest({mode,key:Date.now(),actor:active});setTab('calls');}}/>}
+   {tab==='chat'&&<HouseChat key={active} active={active} names={names} onCall={mode=>{setCallRequest({mode,key:Date.now(),actor:active});setTab('calls');}}/>}
    <HouseCalls key={active} request={callRequest} active={active} names={names} expanded={tab==='calls'} onOpen={()=>setTab('calls')}/>
    {tab==='notifications'&&<HouseNotifications active={active} names={names} onNavigate={t=>{if(nav.some(n=>n.id===t))setTab(t as Tab);}}/>}
    {tab==='calendar'&&<HouseCalendar initialDate={calendarDate} active={active} appointments={appointments} names={names} onOpen={openAppointment}/>}
