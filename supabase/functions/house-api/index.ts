@@ -1,3 +1,4 @@
+import {handleDailyCalls,DailyError} from './daily-calls.ts';
 import {uploadAttachment,signedAttachment,deleteAttachment,AttachmentError} from './attachments.ts';
 import {searchPlaces,placeMutation,PlaceError} from './places.ts';
 import {uploadVoice,signedVoice,deleteVoice,VoiceError} from './voices.ts';
@@ -23,7 +24,7 @@ async function db(path:string,method='GET',body?:unknown,prefer='return=represen
 async function state(){const rows=await db('nd_state?id=eq.1&select=version,data');if(!rows[0])throw new Error('Household missing');return rows[0] as {version:number;data:State};}
 async function mutate<T>(fn:(s:State)=>T){for(let i=0;i<4;i++){const snapshot=await state();const result=fn(snapshot.data);const rows=await db('nd_state?id=eq.1&version=eq.'+snapshot.version,'PATCH',{data:snapshot.data,version:snapshot.version+1});if(rows.length)return {result,data:snapshot.data};}throw new ApiError(409,'Modification simultanée. Réessayez.');}
 async function config(){return (await db('nd_config?id=eq.1&select=data'))[0].data;}
-async function send(device:any,data:any){if(!allowedPushEndpoint(device.subscription.endpoint))return false;const keys=(await config()).vapid;const payload=await buildPushPayload({data:JSON.stringify({...data,url:BASE+'?view='+(data.category||'settings')}),options:{ttl:data.category==='calls'?90:3600}},device.subscription,{...keys,subject:ORIGIN+BASE});const r=await fetch(device.subscription.endpoint,{...payload,redirect:'manual',signal:AbortSignal.timeout(5000)});if(r.status===404||r.status===410)await mutate(s=>{s.devices=s.devices.filter(d=>d.deviceId!==device.deviceId);});return r.ok;}
+async function send(device:any,data:any){if(!allowedPushEndpoint(device.subscription.endpoint))return false;const keys=(await config()).vapid;const payload=await buildPushPayload({data:JSON.stringify({...data,url:data.callId?BASE+'?view=calls&call='+data.callId:BASE+'?view='+(data.category||'settings')}),options:{ttl:data.category==='calls'?90:3600}},device.subscription,{...keys,subject:ORIGIN+BASE});const r=await fetch(device.subscription.endpoint,{...payload,redirect:'manual',signal:AbortSignal.timeout(5000)});if(r.status===404||r.status===410)await mutate(s=>{s.devices=s.devices.filter(d=>d.deviceId!==device.deviceId);});return r.ok;}
 async function notify(s:State,actor:number,category:string,message:string,originDevice=''){await Promise.allSettled(s.devices.filter(d=>d.member!==actor&&d.deviceId!==originDevice&&({...defaultPreferences,...d.preferences})[category]).map(d=>send(d,{title:category==='ideas'?'💌 Une invitation pour nous deux':'À deux',body:category==='ideas'?'✨ '+message+' 💛':message,category,tag:category==='calls'?'adeux-call':undefined})));}
 const aiKey=async()=>{const stored=await db('rpc/nd_openai_key_get','POST',{});return typeof stored==='string'&&validAIKey(stored)?stored:Deno.env.get('OPENAI_API_KEY')||'';};
 const aiModel=()=>Deno.env.get('OPENAI_RECIPE_MODEL')||'gpt-5.4-mini';
@@ -151,8 +152,19 @@ export async function handler(req:Request):Promise<Response>{
   const rows=await db('nd_messages?id=eq.'+v.id+'&member=eq.'+actor+'&version=eq.'+v.version,v.action==='delete'?'DELETE':'PATCH',v.action==='delete'?undefined:{text:v.text,edited_at:new Date().toISOString(),version:v.version!+1});
   if(!rows.length)throw new ApiError(409,'Ce message a changé. Actualisez la discussion.');if(v.action==='delete'&&old.voice_id)try{await deleteVoice(old.voice_id,actor,db,Deno.env.get('SUPABASE_URL')!,secret());}catch{/* Message removed; an unlinked attachment remains private to its author if storage is unavailable. */}if(v.action==='delete'&&old.attachment_id)try{await deleteAttachment(old.attachment_id,actor,db,Deno.env.get('SUPABASE_URL')!,secret());}catch{/* Unlinked files remain private if storage is temporarily unavailable. */}return json({ok:true});
  }
+ if(route==='daily-calls'){
+  const callSession=deviceInput.parse(req.method==='GET'?url.searchParams.get('session'):p.session);
+  const device=await hash(token+':'+callSession);
+  const {data:s}=await state();
+  if(req.method==='POST'&&p.action==='start'&&s.call&&s.call.state!=='ended'&&s.call.expiresAt>Date.now())throw new DailyError(409,'Terminez d’abord l’appel en cours.');
+  const result=await handleDailyCalls(req.method,url,p,{db,key:Deno.env.get('DAILY_API_KEY')||'',actor,device,defer:task=>{if(typeof EdgeRuntime!=='undefined')EdgeRuntime.waitUntil(task);},names:[s.household?.first||'Abdellah',s.household?.second||'Laura'],notify:async call=>{
+   const task=Promise.allSettled(s.devices.filter(d=>d.member!==actor&&({...defaultPreferences,...d.preferences}).calls).map(d=>send(d,{title:call.mode==='video'?'📹 Un appel vidéo pour vous':'📞 Votre moitié vous appelle',body:'Ouvrez Nous deux pour répondre.',category:'calls',callId:call.id,expiresAt:call.expires_at,tag:'nousdeux-call-'+call.id})));
+   if(typeof EdgeRuntime!=='undefined')EdgeRuntime.waitUntil(task);else await task;
+  }});return json(result);
+ }
  if(route==='calls'){
   if(req.method==='GET'){const {data:s}=await state();return json({call:s.call&&s.call.state!=='ended'&&s.call.expiresAt>Date.now()?s.call:null});}
+  if(p.action==='start'&&Deno.env.get('DAILY_API_KEY'))throw new DailyError(409,'Actualisez l’application pour utiliser les nouveaux appels.');
   const {result,data}=await mutate(s=>callMutation(s,{...p,member:actor}));if(p.action==='start')try{await notify(data,actor,'calls','Votre moitié vous appelle. Ouvrez À deux pour répondre.');}catch{}return json(result);
  }
  if(route==='notifications'){
@@ -161,6 +173,6 @@ export async function handler(req:Request):Promise<Response>{
   await mutate(s=>{const d=s.devices.find(d=>d.deviceId===p.deviceId);if(d&&d.member!==actor)throw new ApiError(403,'Cet appareil appartient à un autre compte.');deviceMutation(s,{...p,member:actor});});return json({ok:true});
  }
  return json({error:'Route inconnue.'},404);
- }catch(e){if(e instanceof AttachmentError||e instanceof PlaceError||e instanceof VoiceError||e instanceof ApiError||e instanceof MealError||e instanceof RecipeError||e instanceof AISettingsError)return json({error:e.message},e.status);if(e instanceof SyntaxError||e&&typeof e==='object'&&'issues'in e)return json({error:'Vérifiez les champs du formulaire.'},400);return json({error:'Service temporairement indisponible. Réessayez.'},503);}
+ }catch(e){if(e instanceof DailyError||e instanceof AttachmentError||e instanceof PlaceError||e instanceof VoiceError||e instanceof ApiError||e instanceof MealError||e instanceof RecipeError||e instanceof AISettingsError)return json({error:e.message},e.status);if(e instanceof SyntaxError||e&&typeof e==='object'&&'issues'in e)return json({error:'Vérifiez les champs du formulaire.'},400);return json({error:'Service temporairement indisponible. Réessayez.'},503);}
 }
 Deno.serve(handler);

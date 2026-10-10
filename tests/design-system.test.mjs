@@ -16,6 +16,6 @@ assert(v.spent.includes('123,45'));assert(v.spent.includes('Tableau'));assert(v.
 assert(v.pig.includes('123,45'));assert(v.zero.includes('0 %'));assert(v.day.includes('aria-current="date"'));
 assert(v.nav.includes('aria-label="Ajouter"'));assert(v.nav.includes('aria-current="page"'));assert(v.nav.includes('Argent'));assert(v.nav.includes('Nous'));
 assert(v.plant.includes('nd-plantb'));assert(!v.plant.includes('aria-label="Modifier Monstera"'),'Partner may perform care, but cannot edit ownership-protected plant settings');
-assert(readFileSync('app/house-app.tsx','utf8').includes('<HouseCalls active={active} names={names} expanded={tab===\'calls\'}'),'Calls stay mounted during navigation');
+assert(readFileSync('app/house-app.tsx','utf8').includes('<HouseCalls key={active} request={callRequest} active={active} names={names} expanded={tab===\'calls\'}'),'Calls stay mounted during navigation');
 assert(!readFileSync('app/house-meals.tsx','utf8').includes('partnerLikes'),'Do not ship the demo client-side partner ballots');
 console.log('PASS: zero and nonzero budgets, cents, actual reimbursement balance, chart table, supplied navigation/calendar/plant rendering, plant edit ownership and private meal adapter.');

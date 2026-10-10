@@ -2,13 +2,15 @@ name: Deploy Nous deux to GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
   pages: write
   id-token: write
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   build:
@@ -24,6 +26,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run check:web
       - run: node tests/supabase-model.test.mjs
+      - run: node tests/daily-calls.test.mjs
       - run: node tests/calendar.test.mjs
       - run: node tests/invitation-calendar.test.mjs
       - run: node tests/chat-api.test.mjs
@@ -43,14 +46,17 @@ jobs:
       - run: node tests/mobile-ui.test.mjs
       - name: WebKit and Chromium interface checks
         run: |
-          npm install --prefix "$RUNNER_TEMP/nous-deux-browsers" --no-package-lock --ignore-scripts playwright@1.62.1
+          npm install --prefix "$RUNNER_TEMP/nous-deux-browsers" --no-package-lock --ignore-scripts playwright@1.62.1 @electric-sql/pglite@0.3.14
+          PGLITE_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/@electric-sql/pglite" node tests/daily-database.test.mjs
           node "$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright/cli.js" install --with-deps chromium webkit
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/browser-layout.test.mjs
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/daily-browser.test.mjs
       - run: pnpm run build:web
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist-web
   deploy:
+    if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     environment:
