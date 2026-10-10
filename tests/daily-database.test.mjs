@@ -5,8 +5,9 @@ import {readFileSync} from 'node:fs';
 const {PGlite}=createRequire(import.meta.url)(process.env.PGLITE_MODULE||'@electric-sql/pglite');
 const db=new PGlite();
 try{
- await db.exec('create role anon;create role authenticated;create role service_role bypassrls;');
- await db.exec(readFileSync('supabase/migrations/20261010001105_daily_private_calls.sql','utf8'));
+ await db.exec('create role anon;create role authenticated;create role service_role bypassrls;alter default privileges in schema public grant all on tables to service_role;');
+ await db.exec(readFileSync('supabase/migrations/20261010130433_daily_private_calls.sql','utf8'));
+ await db.exec(readFileSync('supabase/migrations/20261010130611_daily_call_history_permissions.sql','utf8'));
  const id=crypto.randomUUID(),t=Date.UTC(2026,9,10),device='a'.repeat(64);
  const insert=(id,state='ringing')=>db.query(`insert into public.nd_daily_calls (id,caller,mode,state,caller_device,room_name,created_at,expires_at,max_expires_at,caller_seen) values ($1,0,'audio',$2,$3,$4,$5,$6,$7,$5)`,[id,state,device,'nd-'+id,t,t+90000,t+7200000]);
  await db.exec('set role service_role');await insert(id);

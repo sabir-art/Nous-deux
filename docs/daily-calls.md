@@ -1,6 +1,6 @@
 # Appels privés avec Daily — mise en service
 
-État au 10 octobre 2026 : intégration sur la branche `feature/daily-calls`, pas déployée en production. Aucun secret Daily n'a été obtenu. Les tests isolés ne remplacent pas un appel réel sur les deux téléphones. Aucune modification des données existantes n'est nécessaire.
+État au 10 octobre 2026 : secret `DAILY_API_KEY` ajouté par le propriétaire dans Supabase. Validation réelle réussie depuis le serveur : création d’une salle privée à deux, deux jetons distincts audio/vidéo, expiration anticipée et suppression de la salle. Aucun enregistrement ni notification n’a été produit. Les tests isolés PostgreSQL, WebKit et Chromium passent ; la conversation sur les deux téléphones reste à vérifier avec les utilisateurs.
 
 ## Configuration à fournir
 
@@ -9,7 +9,7 @@
 3. Ajouter le secret nommé exactement **`DAILY_API_KEY`**, avec la clé Daily comme valeur. Ce secret est commun aux deux comptes ; Laura n'a rien à saisir sur son téléphone.
 4. Indiquer que le secret a été ajouté. Il reste alors à réaliser les étapes de mise en service ci-dessous ; ajouter la clé seul ne publie pas le code de cette branche.
 
-Le navigateur de cette session affichait la connexion Daily et l'authentification n'a pas été validée. Aucun changement du dashboard, abonnement, carte bancaire ou clé n'a été effectué.
+Le propriétaire a connecté Daily puis enregistré lui-même la clé dans Supabase. Le secret n’a pas été lu ni exporté par l’agent. Une fonction de diagnostic temporaire, protégée par un justificatif à durée limitée, a exécuté la validation côté serveur. Elle est désormais désactivée (réponse 410, JWT requis, aucun accès Daily dans son code). Aucun abonnement ni moyen de paiement n’a été modifié.
 
 ## Architecture et protection des données
 
@@ -35,10 +35,10 @@ La sonnerie locale nécessite l'autorisation audio du navigateur. Un bouton perm
 
 1. Vérifier la branche et les tests automatisés. La CI de cette branche construit une version de test mais **ne déploie pas GitHub Pages**.
 2. Ajouter `DAILY_API_KEY` dans les secrets Supabase, sans l'afficher ni le committer.
-3. Appliquer uniquement la migration additive `supabase/migrations/20261010001105_daily_private_calls.sql` et déployer `house-api` avec ses fichiers existants et les deux nouveaux modules Daily. L'authentification personnalisée existante doit rester en place ; ne pas activer une validation JWT Supabase incompatible avec elle.
+3. Appliquer les migrations `supabase/migrations/20261010130433_daily_private_calls.sql` et `supabase/migrations/20261010130611_daily_call_history_permissions.sql` et déployer `house-api` avec ses fichiers existants et les deux nouveaux modules Daily. L'authentification personnalisée existante doit rester en place ; ne pas activer une validation JWT Supabase incompatible avec elle.
 4. Vérifier côté Daily avec une salle temporaire : propriété privée, limite de deux, absence d'enregistrement, refus sans jeton, durée d'admission et terminaison effective par l'API. Supprimer la salle de test. Ne pas appeler ni notifier l'autre personne à son insu.
-5. Servir la branche en prévisualisation HTTPS et effectuer un appel consenti entre les deux comptes : iPhone Safari/PWA et Samsung Chrome/PWA, puis ordinateur. Tester audio seul, vidéo, photo/prénom, muet, retour caméra, caméra arrière, refus, sans réponse, deux appareils qui répondent, raccrochage des deux côtés, perte/rétablissement réseau, changement de vue, écran verrouillé et retour dans l'app. Vérifier sur le dashboard qu'aucun participant ne reste connecté après raccrochage.
-6. Contrôler les logs sans journaliser de clés ni de jetons, et comparer l'historique au dashboard. Une fois ces essais réels réussis, fusionner la branche pour publier GitHub Pages.
+5. Après la validation serveur et les tests automatiques, publier la version et effectuer un appel consenti entre les deux comptes : iPhone Safari/PWA et Samsung Chrome/PWA, puis ordinateur. Tester audio seul, vidéo, photo/prénom, muet, retour caméra, caméra arrière, refus, sans réponse, deux appareils qui répondent, raccrochage des deux côtés, perte/rétablissement réseau, changement de vue, écran verrouillé et retour dans l'app. Vérifier sur le dashboard qu'aucun participant ne reste connecté après raccrochage.
+6. Contrôler les logs sans journaliser de clés ni de jetons, et comparer l'historique au dashboard. Les essais sur appareils réels doivent confirmer notamment le Bluetooth et les limites de mise en arrière-plan ; ne pas les présenter comme validés par les tests automatiques.
 
 Retour arrière : remettre la version précédente du frontend et de `house-api`, retirer le secret Daily si nécessaire. Garder la table d'historique ; ne pas supprimer les données du foyer. Les salles restantes expirent au plus tard à leur limite de deux heures, et peuvent être arrêtées depuis Daily.
 
@@ -72,3 +72,10 @@ Phases : créer les projets natifs et identités ; adapter le moteur sans dupliq
 - https://supabase.com/docs/guides/functions/secrets
 - https://developer.apple.com/documentation/pushkit/responding-to-voip-notifications-from-pushkit
 - https://developer.android.com/develop/connectivity/telecom/voip-app/telecom
+
+### Particularités Daily constatées pendant la validation réelle
+
+- Daily accepte `enable_recording: false` mais renvoie une chaîne vide pour l’état désactivé ; la vérification accepte ces deux représentations, et refuse les modes d’enregistrement actifs.
+- Mettre l’expiration d’une salle dans le passé est rejeté. La fermeture programme donc l’expiration à cinq secondes, expulse les deux identités immédiatement puis supprime la salle. Une réponse 404 à l’expulsion d’une salle sans participant est normale.
+
+Les deux migrations ont été appliquées au projet le 10 octobre 2026. Vérification réelle : RLS activée, accès direct `anon` et `authenticated` refusé, suppression et vidage de l’historique refusés au rôle serveur.
