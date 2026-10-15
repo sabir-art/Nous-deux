@@ -10,4 +10,8 @@ assert.equal(balance([{kind:'expense',member:1,cents:10001}]),-5001);
 assert.equal(balance([{kind:'expense',member:0,cents:10000},{kind:'settlement',member:1,cents:2000}]),3000);
 assert.equal(balance([{kind:'expense',member:0,cents:10000},{kind:'settlement',member:1,cents:7000}]),-2000);
 for(let amount=1;amount<10000;amount++){const first=Math.ceil(amount/2),second=Math.floor(amount/2);assert.equal(first+second,amount);assert.equal(balance([{kind:'expense',member:0,cents:amount}]),second);assert.equal(balance([{kind:'expense',member:1,cents:amount}]),-first);}
-console.log('PASS: decimal input, dates, equal split, odd cents, repayments and overpayments.');
+assert.equal(balance([{kind:'expense',member:0,cents:10001,split:'full'}]),10001);
+assert.equal(balance([{kind:'expense',member:1,cents:4000,split:'full'}]),-4000);
+assert.equal(balance([{kind:'expense',member:0,cents:10000},{kind:'expense',member:1,cents:3000,split:'full'},{kind:'settlement',member:1,cents:2000}]),0);
+assert.equal(balance([{kind:'expense',member:0,cents:10001,split:'half'}]),5000);
+console.log('PASS: decimal input, dates, equal split, full repayment split, odd cents, repayments and overpayments.');
