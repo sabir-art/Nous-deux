@@ -6,10 +6,10 @@ Ce document est un état daté, pas un contrôle permanent de production. Vérif
 
 - Dépôt : `sabir-art/Nous-deux`, branche principale `main`.
 - Dernier commit de code vérifié avant cette documentation : `e1438f5d408a4809893dca17fed5cc805f42a2d6` (PR #6, photo d'appel ronde), publié avec succès le 10 octobre.
-- Le 15 octobre, le propriétaire a rendu le dépôt privé. L'API GitHub a ensuite renvoyé `private: true` et `has_pages: false`. L'ancien lien affiche une erreur GitHub Pages. Ce problème d'hébergement ne signifie pas que Supabase ou le code ont disparu.
-- Ancien lien : https://sabir-art.github.io/Nous-deux/
+- Le 15 octobre, le passage en privé a désactivé Pages. Le propriétaire a ensuite remis le dépôt public et choisi GitHub Actions dans Settings → Pages. Le job de publication échoué du workflow `38787893619` a été relancé avec succès ; le commit `46115740a6d3a10346e3e8b055067280841f7f4d` est publié. Vérification HTTP 200 et présence des assets de l’application après publication. Aucun changement Supabase.
+- Lien actif : https://sabir-art.github.io/Nous-deux/
 - Cloudflare a été proposé pour garder le code privé et rétablir un hébergement gratuit. Aucune migration Cloudflare n'est effectuée ou validée dans cette reprise. Ne pas considérer les anciens fichiers Workers/Vinext comme une migration déjà prête.
-- Ne pas repasser le dépôt public, acheter GitHub Pro ou changer d'hébergeur sans demande correspondante. Le workflow Pages reste présent et son déploiement peut échouer tant que Pages n'est pas réactivé avec une offre compatible.
+- Le dépôt est désormais public par choix explicite du propriétaire. Ne pas modifier de nouveau sa visibilité ni changer d’hébergeur sans demande. GitHub Pages gratuit nécessite ici de garder le dépôt public.
 - Laura a, selon le propriétaire, accepté les accès GitHub et Supabase, sélectionné ce dépôt dans Claude Code et connecté Supabase. Son rôle a été passé administrateur après un blocage de connexion en développeur ; ce témoignage ne prouve pas que tous les MCP exigent ce rôle. Vérifier les accès de la session sans afficher les secrets.
 
 ## Dernières évolutions du code

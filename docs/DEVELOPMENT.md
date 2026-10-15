@@ -66,7 +66,7 @@ Ou utiliser le MCP Supabase pour appliquer la migration puis déployer la foncti
 
 ## Frontend et hébergement
 
-Historique : `.github/workflows/pages.yml` exécute les tests et construit `dist-web/`, puis déploie GitHub Pages sur `main`. Une PR teste mais ne publie pas la production. Le dépôt étant désormais privé et Pages désactivé lors du dernier contrôle, consulter `CURRENT-STATUS.md` avant toute promesse de publication.
+Historique : `.github/workflows/pages.yml` exécute les tests et construit `dist-web/`, puis déploie GitHub Pages sur `main`. Une PR teste mais ne publie pas la production. Après son passage temporaire en privé, le propriétaire a remis le dépôt public et réactivé Pages le 15 octobre ; le déploiement a été relancé et vérifié. Consulter `CURRENT-STATUS.md` et vérifier l’état réel avant toute promesse de publication.
 
 Une future migration d'hébergement doit examiner au minimum :
 
