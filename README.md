@@ -1,10 +1,21 @@
 # Nous deux
 
+## Reprendre le projet avec Claude ou ChatGPT
+
+Commencer par [CLAUDE.md](CLAUDE.md) pour Claude Code ou [AGENTS.md](AGENTS.md) pour les consignes communes.
+
+- [Contexte du produit et architecture](docs/PROJECT-CONTEXT.md)
+- [État actuel, blocages et dernières livraisons](docs/CURRENT-STATUS.md)
+- [Installation, tests et publication](docs/DEVELOPMENT.md)
+- [Design system fourni](design-system/GUIDE-IA-nous-deux.md)
+
+**État au 15 octobre 2026 :** dépôt désormais privé, GitHub Pages désactivé lors du dernier contrôle. L’ancien lien est indisponible. Une migration d’hébergement a été discutée mais n’a pas été réalisée. Les instructions Pages ci-dessous décrivent le déploiement historique, pas une publication actuellement opérationnelle.
+
 Application privée de gestion du quotidien à deux : dépenses, remboursements, listes, calendrier et notifications.
 
 ## Hébergement indépendant
 
-La version de production utilise **GitHub Pages** pour l'interface React et **Supabase** pour les données et l'API. Elle ne nécessite aucun compte ChatGPT ou GitHub pour ses utilisateurs.
+La dernière version publiée utilisait **GitHub Pages** pour l'interface React et **Supabase** pour les données et l'API. Elle ne nécessite aucun compte ChatGPT ou GitHub pour ses utilisateurs.
 
 - Interface : `https://sabir-art.github.io/Nous-deux/`
 - Projet Supabase : `jvjwyalusdygvkyzmiez`
@@ -37,7 +48,7 @@ supabase functions deploy house-api --project-ref jvjwyalusdygvkyzmiez --no-veri
 
 Chaque personne active son compte via son propre lien à usage unique et choisit un mot de passe personnel de 12 caractères minimum. Les liens ne sont pas stockés dans GitHub. Les sessions sont associées côté serveur au membre et expirent après 90 jours. Les anciennes sessions partagées sont refusées.
 
-Les deux comptes voient les dépenses, listes et rendez-vous. Seul l'auteur peut modifier, cocher ou supprimer son élément. Un paiement ne peut être enregistré qu'au nom du compte connecté. Les anciens paiements sont rattachés au payeur déjà enregistré ; les autres éléments anciens sans auteur restent en lecture seule. Le prénom de l'autre compte ne peut pas être modifié. Le nom de la maison et le budget restent des paramètres communs.
+Les deux comptes voient les dépenses, listes et rendez-vous partagés ; les rendez-vous privés restent réservés à leur auteur. Seul l’auteur peut modifier ou supprimer son élément. Les courses ont une exception : chacun peut acheter un article de l’autre et l’acheteur peut annuler sa coche. Un paiement ne peut être enregistré qu'au nom du compte connecté. Les anciens paiements sont rattachés au payeur déjà enregistré ; les autres éléments anciens sans auteur restent en lecture seule. Le prénom de l'autre compte ne peut pas être modifié. Le nom de la maison et le budget restent des paramètres communs.
 
 Le complément de schéma est conservé dans `supabase/sql/personal-accounts.sql`.
 
@@ -49,7 +60,7 @@ Le dépôt ne contient ni données personnelles, ni mots de passe, ni clés priv
 
 Ouvrir l'application dans Safari, se connecter, puis Partager → Sur l'écran d'accueil. Réactiver les notifications depuis cette nouvelle installation : les autorisations de l'ancienne adresse ne sont pas transférables. Une connexion Internet reste nécessaire pour charger et synchroniser les données.
 
-L'appel audio reste expérimental et dépend de la compatibilité réseau (STUN sans relais TURN).
+Les appels audio/vidéo utilisent désormais Daily. Les limites des appels web en arrière-plan et du routage audio iPhone restent applicables ; voir [le guide des appels](docs/daily-calls.md).
 
 ## Calendrier personnel et partagé
 
@@ -67,7 +78,7 @@ Les tests `tests/calendar.test.mjs` et `tests/supabase-model.test.mjs` couvrent 
 - Les courses sont regroupées du lundi au dimanche. Les achats cochés restent visibles dans « Acheté », avec la personne et la date de l’achat. Les articles non achetés des semaines précédentes restent accessibles ; ils ne sont ni effacés ni déplacés automatiquement.
 - Chaque membre peut acheter un article ajouté par l’autre. Le serveur détermine `purchasedBy` depuis la session, indépendamment du propriétaire de l’article. Seul l’acheteur peut annuler sa coche ; seul l’auteur de l’article peut modifier son intitulé ou le supprimer. Les anciennes coches restent sans attribution inventée.
 - Les listes types, partagées, recopient titres et quantités dans la semaine choisie avec de nouveaux identifiants et des cases non cochées. Limites : 50 modèles, 200 articles par modèle. Le créateur peut supprimer son modèle sans supprimer les courses copiées. Une clé d’opération rend les nouvelles tentatives d’une même copie idempotentes.
-- Discussion texte privée dans `nd_messages`, réservée aux deux sessions personnelles. Messages de 2 000 caractères maximum, historique paginé, modification/suppression par l’auteur uniquement, contrôles de version contre les écrasements concurrents. Actualisation toutes les trois secondes lorsque l’écran de discussion est visible. Aucun message de test n’est envoyé aux comptes réels. Cette version n’envoie pas de notification push pour le chat et n’annonce pas de chiffrement de bout en bout.
+- Discussion texte privée dans `nd_messages`, réservée aux deux sessions personnelles. Messages de 2 000 caractères maximum, historique paginé, modification/suppression par l’auteur uniquement, contrôles de version contre les écrasements concurrents. Actualisation toutes les trois secondes lorsque l’écran de discussion est visible. Aucun message de test n’est envoyé aux comptes réels. Le chat envoie désormais des notifications push selon les préférences des appareils. Aucun chiffrement de bout en bout n’est implémenté. L’édition est limitée à 15 minutes côté serveur ; les suppressions pour soi et pour tous ont des effets distincts.
 - Appliquer `supabase/sql/shopping-chat.sql` puis déployer `house-api` avant le frontend. La migration ajoute la table de messages et affecte les courses existantes à la semaine en cours sans modifier les auteurs ni les coches. `nd_messages` est volontairement sans politique RLS : les rôles publics n’y accèdent pas, seul le service de la fonction authentifiée y accède.
 - Vérifications : `pnpm run check:web`, `node tests/supabase-model.test.mjs`, `node tests/calendar.test.mjs`, `node tests/chat-api.test.mjs`, `pnpm run build:web`.
 
