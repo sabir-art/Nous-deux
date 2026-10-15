@@ -9,13 +9,13 @@ Commencer par [CLAUDE.md](CLAUDE.md) pour Claude Code ou [AGENTS.md](AGENTS.md) 
 - [Installation, tests et publication](docs/DEVELOPMENT.md)
 - [Design system fourni](design-system/GUIDE-IA-nous-deux.md)
 
-**État au 15 octobre 2026 :** dépôt désormais privé, GitHub Pages désactivé lors du dernier contrôle. L’ancien lien est indisponible. Une migration d’hébergement a été discutée mais n’a pas été réalisée. Les instructions Pages ci-dessous décrivent le déploiement historique, pas une publication actuellement opérationnelle.
+**État au 15 octobre 2026, après rétablissement :** dépôt public, GitHub Pages réactivé par le propriétaire et déploiement relancé avec succès. Le lien de l’application répond de nouveau (HTTP 200). Aucune migration Cloudflare n’a été réalisée.
 
 Application privée de gestion du quotidien à deux : dépenses, remboursements, listes, calendrier et notifications.
 
 ## Hébergement indépendant
 
-La dernière version publiée utilisait **GitHub Pages** pour l'interface React et **Supabase** pour les données et l'API. Elle ne nécessite aucun compte ChatGPT ou GitHub pour ses utilisateurs.
+La version publiée utilise **GitHub Pages** pour l'interface React et **Supabase** pour les données et l'API. Elle ne nécessite aucun compte ChatGPT ou GitHub pour ses utilisateurs.
 
 - Interface : `https://sabir-art.github.io/Nous-deux/`
 - Projet Supabase : `jvjwyalusdygvkyzmiez`
