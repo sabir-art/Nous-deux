@@ -13,7 +13,8 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "build:web": "vite build --config vite.web.config.ts",
-    "check:web": "tsc -p tsconfig.web.json"
+    "check:web": "tsc -p tsconfig.web.json",
+    "build:essai": "vite build --config vite.essai.config.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

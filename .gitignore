@@ -48,6 +48,7 @@ next-env.d.ts
 *.tsbuildinfo
 
 /dist-web/
+/dist-essai/
 
 # Local Supabase CLI metadata
 /supabase/.temp/
