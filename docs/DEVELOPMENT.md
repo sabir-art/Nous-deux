@@ -20,6 +20,14 @@ pnpm exec vite --config vite.web.config.ts --host 127.0.0.1
 
 Le chemin actuellement configuré est `/Nous-deux/`. Attention : le client normal pointe vers Supabase de production, même servi localement. Pour les essais interactifs automatisés, utiliser les fixtures des tests navigateur qui remplacent l'API. Ne pas inventer un compte de test en production.
 
+## Mode essai : tester une branche en vrai sans toucher aux données
+
+`pnpm run build:essai` construit l'interface de la branche courante dans `dist-essai/`, avec `lib/essai-api-client.ts` à la place du client Supabase. Rien ne part vers Supabase : la maison d'essai vit dans le `localStorage` du navigateur, part de fausses données et applique les mêmes règles serveur que `house-api` (`model.ts`, repas, recettes, lieux). Une modification serveur de la branche est donc visible dans l'essai avant tout déploiement.
+
+Un bandeau indique le mode essai, permet de changer de personne (« Je suis Abdellah / Laura ») et de recommencer avec les données de départ. Le chat texte fonctionne localement ; appels, vocaux, fichiers, notifications et IA recettes affichent « Pas disponible en mode essai ». Pas de service worker ni de manifeste, chemins relatifs : le dossier peut être servi depuis n'importe quelle adresse (artifact Claude, aperçu statique…). Ne jamais publier `dist-essai/` à la place de `dist-web/` sur l'adresse réelle.
+
+Pour faire essayer une PR : construire le mode essai sur sa branche (ou sur une fusion locale avec la branche qui contient le mode essai, tant qu'il n'est pas dans `main`) et partager le lien de l'aperçu.
+
 ## Choisir les contrôles
 
 La liste complète et les versions des outils de test figurent dans `.github/workflows/pages.yml`. Ne pas ajouter de dépendance de test au manifeste sans nécessité.
