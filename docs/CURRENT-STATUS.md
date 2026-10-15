@@ -20,6 +20,8 @@ Ce document est un état daté, pas un contrôle permanent de production. Vérif
 - PR #6 : photo d'appel ronde, contour blanc, image en `object-fit: cover` remplissant le cercle. Ne pas rétablir le carré ni les bandes de `contain`.
 - Les tests automatisés Chromium et WebKit ont réussi pour ces livraisons. Cela ne remplace pas une vérification tactile sur appareils réels.
 
+- 15 octobre (branche `claude/depense-100-pourcent`) : choix « 50 / 50 » ou « 100 % [l'autre personne] » sur une dépense. Champ facultatif `split` (`'full'` seulement ; absent = 50/50, donc les anciennes dépenses ne changent pas) dans l'état JSON, sans migration SQL. Calcul du solde, formulaire, historique et export CSV mis à jour. **`house-api` doit être redéployée** après fusion pour que le serveur accepte et conserve ce choix ; tant que ce n'est pas fait, l'ancienne API ignore `split`.
+
 ## Données réelles : ne pas réinitialiser
 
 Le 10 octobre, à la demande explicite du propriétaire, les données de test des deux comptes ont été supprimées (courses, tâches, dépenses, événements personnels, plantes, idées, recettes personnelles, menus, favoris, messages et appels). Les deux mots de passe, photos de profil, sessions, appareils et secrets de configuration ont été conservés. Les recettes intégrées et repères calendaires n'ont pas été retirés.
