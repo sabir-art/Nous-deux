@@ -1,7 +1,7 @@
 import {foodEmoji} from '../design-system/runtime';
 import {compressPhoto} from '../lib/photos';
 import {useEffect,useId,useRef,useState,type FormEvent} from 'react';
-import {Camera,Check,ChevronDown,ImagePlus,LoaderCircle,Search,Trash2,X} from './icons';
+import {Camera,Check,ChevronDown,ImagePlus,LoaderCircle,Search,Trash2,X,Flag} from './icons';
 import {apiFetch} from '../lib/api-client';
 import {familyProductCategories,findProduct,productCategories,productIcon,products,searchProducts,type Product} from '../lib/products';
 import type {Item} from '../lib/domain';
