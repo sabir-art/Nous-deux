@@ -21,6 +21,7 @@ Ce document est un état daté, pas un contrôle permanent de production. Vérif
 - Les tests automatisés Chromium et WebKit ont réussi pour ces livraisons. Cela ne remplace pas une vérification tactile sur appareils réels.
 
 - 18 octobre (branche `claude/agenda-couleurs`) : repères des fêtes en pointillés, « Autres fêtes » en citron, sans lien vers la source. Anniversaires : champ facultatif `circle` (`close` famille proche, `family` famille, `friends` amis communs, `mine` amis de l'auteur), conservé seulement pour la catégorie anniversaire ; bouton « Anniversaires » dans l'agenda avec la liste des anniversaires des 12 prochains mois et un filtre par cercle (bouton dans les repères, comme les fêtes). Formulaire dédié `BirthdayForm` (prénom, jour, cercle, visibilité, note) ; le serveur force la répétition annuelle d'un anniversaire. Les anniversaires d'adultes ne sont plus dans les comptes à rebours de l'accueil. **`house-api` doit être redéployée** après fusion (validation du champ).
+  - Dates importantes du couple (même branche) : nouvelle catégorie d’agenda `couple` (rencontre, mise en couple, fiançailles, PACS, mariage ou autre). Le serveur la force partagée, pour nous deux, chaque année. Panneau « Nos dates importantes » dans Notre espace, bouton « Nos dates » dans l’agenda avec le nombre d’années, compte à rebours à l’accueil dans les 3 semaines qui précèdent.
 
 ## Données réelles : ne pas réinitialiser
 
