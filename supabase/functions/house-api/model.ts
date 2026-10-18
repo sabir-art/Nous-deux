@@ -4,16 +4,16 @@ import {validDate,categories} from './domain.ts';
 import {z} from 'npm:zod@3.25.76';
 import {mealVote,type MealState} from './meals.ts';
 import {parisDate,plantCare} from './life.ts';
-import {petMutation} from './pets.ts';
+import {childMutation,checkChild} from './children.ts';
 import {entryInput,itemInput,householdInput,deleteInput,appointmentInput,shoppingCheckInput,templateInput,templateApplyInput,ideaInput,ideaResponseInput,plantInput,plantCareInput} from './validation.ts';
 import {deviceInput,memberInput,preferenceInput,subscriptionInput,changeDescription} from './communication.ts';
 export class ApiError extends Error{constructor(public status:number,message:string){super(message);}}
-export type State=MealState&{favoritePlaces?:import('./places.ts').FavoritePlace[];shoppingBatches?:string[];profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];pets?:import('./pets.ts').Pet[];gifts?:import('./gifts.ts').Gift[];plantReminderDays?:Record<string,string>;shoppingNotices?:Record<string,number>};
+export type State=MealState&{favoritePlaces?:import('./places.ts').FavoritePlace[];shoppingBatches?:string[];profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];children?:import('./children.ts').Child[];plantReminderDays?:Record<string,string>};
 const conflict=()=>{throw new ApiError(409,'Cet élément a changé sur un autre appareil. Fermez puis rouvrez le formulaire.');};
 // Only expenses carry a split or a repetition; 50/50 and 'none' stay implicit so older entries keep their shape.
-function entryExtras(v:{kind:string;split?:string;owed?:number;recurrence?:string;intervalDays?:number;repeatUntil?:string}){
+function entryExtras(v:{kind:string;child?:string;split?:string;owed?:number;recurrence?:string;intervalDays?:number;repeatUntil?:string}){
  const expense=v.kind==='expense',repeat=expense&&v.recurrence&&v.recurrence!=='none'?v.recurrence:undefined;
- return {split:expense&&(v.split==='full'||v.split==='custom')?v.split:undefined,owed:expense&&v.split==='custom'?v.owed:undefined,recurrence:repeat,intervalDays:repeat==='custom'?v.intervalDays:undefined,repeatUntil:repeat&&v.repeatUntil?v.repeatUntil:undefined};
+ return {child:expense?v.child:undefined,split:expense&&(v.split==='full'||v.split==='custom')?v.split:undefined,owed:expense&&v.split==='custom'?v.owed:undefined,recurrence:repeat,intervalDays:repeat==='custom'?v.intervalDays:undefined,repeatUntil:repeat&&v.repeatUntil?v.repeatUntil:undefined};
 }
 // Shopping pushes come once per outing: when the whole week's list is ticked, or for the first other change
 // in 30 minutes. Single ticks and unticks stay silent so a trip to the shop no longer sends one alert per product.
@@ -33,8 +33,12 @@ function householdChange(s:State,p:any,actor:number){
  const {action,payload}=p;if(typeof action!=='string')throw new ApiError(400,'Action invalide.');const previous=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;const now=new Date().toISOString();
 
  if(['idea','idea-response','delete-idea','plant','plant-care','plant-care-all','delete-plant'].includes(action))return lifeMutation(s,action,payload,actor,now);
- if(action==='gift'||action==='delete-gift')return giftMutation(s,action,payload,actor,now);
- if(action==='pet'||action==='pet-care'||action==='delete-pet')return petMutation(s,action,payload,actor,now,parisDate());
+ if(action==='child'||action==='delete-child'){
+  const id=(payload as {id?:string})?.id;childMutation(s,action,payload,actor,now,parisDate());
+  // A deleted child's appointments and expenses stay, they just no longer name the child.
+  if(action==='delete-child')for(const x of [...s.appointments,...s.entries])if(x.child===id){delete x.child;x.version++;}
+  return null;
+ }
  if(action==='meal-vote'){mealVote(s,payload,actor);return null;}
  if(action==='profile-photo'){
   const id=payload?.photoId;if(id!==null&&(typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)))throw new ApiError(400,'Photo invalide.');
@@ -80,7 +84,7 @@ function householdChange(s:State,p:any,actor:number){
   if(!list)throw new ApiError(400,'Action inconnue.');
   const existing=s[list].find(x=>x.id===payload?.id);if(list==='appointments'&&existing?.sourceIdeaId)throw new ApiError(403,'Ce rendez-vous vient d’une invitation acceptée. Modifiez ou annulez l’invitation depuis Nos idées.');if(existing&&existing.owner!==actor)throw new ApiError(403,'Seul l’auteur peut modifier ou supprimer cet élément.');
   if(action.startsWith('delete-')){const v=deleteInput.parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0||s[list][i].version!==v.version)conflict();s[list].splice(i,1);}
-  else{const v=(list==='entries'?entryInput:list==='items'?itemInput:appointmentInput).parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0&&v.version!==0||i>=0&&s[list][i].version!==v.version)conflict();if(list==='items'&&existing&&existing.kind!==v.kind)throw new ApiError(400,'Le type de liste ne peut pas changer.');if(list==='items'&&v.kind==='shopping'&&((existing&&v.done!==existing.done)||(!existing&&v.done)))throw new ApiError(400,'Utilisez la case achat pour cocher un article.');const value={...v,...(list==='entries'?entryExtras(v as any):{}),...(list==='items'&&v.kind==='shopping'?{note:v.note??existing?.note??'',photoId:v.photoId===undefined?existing?.photoId??null:v.photoId,weekStart:weekMonday(v.weekStart||existing?.weekStart||parisToday()),purchasedBy:existing?.purchasedBy??null,purchasedAt:existing?.purchasedAt??null}:{}),owner:actor,version:v.version+1,createdAt:i<0?now:s[list][i].createdAt};if(i<0)s[list].push(value);else s[list][i]=value;}
+  else{const v=(list==='entries'?entryInput:list==='items'?itemInput:appointmentInput).parse(payload);if(list!=='items')checkChild(s,(v as {child?:string}).child);const i=s[list].findIndex(x=>x.id===v.id);if(i<0&&v.version!==0||i>=0&&s[list][i].version!==v.version)conflict();if(list==='items'&&existing&&existing.kind!==v.kind)throw new ApiError(400,'Le type de liste ne peut pas changer.');if(list==='items'&&v.kind==='shopping'&&((existing&&v.done!==existing.done)||(!existing&&v.done)))throw new ApiError(400,'Utilisez la case achat pour cocher un article.');const value={...v,...(list==='entries'?entryExtras(v as any):{}),...(list==='items'&&v.kind==='shopping'?{note:v.note??existing?.note??'',photoId:v.photoId===undefined?existing?.photoId??null:v.photoId,weekStart:weekMonday(v.weekStart||existing?.weekStart||parisToday()),purchasedBy:existing?.purchasedBy??null,purchasedAt:existing?.purchasedAt??null}:{}),owner:actor,version:v.version+1,createdAt:i<0?now:s[list][i].createdAt};if(i<0)s[list].push(value);else s[list][i]=value;}
  }
  // Private changes never enter the shared activity feed or trigger partner push.
  const current=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;
