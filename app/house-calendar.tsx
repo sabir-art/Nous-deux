@@ -83,3 +83,15 @@ export function AppointmentForm({active=0,appointment,initialDate,initialStatus,
   <div className="dialog-actions">{onDelete&&<button type="button" className="icon-button delete-button" disabled={busy} onClick={onDelete} aria-label="Supprimer ce rendez-vous"><Trash2 size={19}/></button>}<button type="submit" className="primary grow" disabled={busy}>{busy?<LoaderCircle size={18} className="spin"/>:<Check size={18}/>} {busy?'Enregistrement…':appointment?'Enregistrer le rendez-vous':status==='to_book'?'Ajouter le rendez-vous':'Ajouter la date'}</button></div>
  </form>;
 }
+
+// Every birthday to celebrate in the coming year, next one first, sorted into family and friends.
+function BirthdayList({appointments,names,circle,onCircle,onOpen,onAdd}:{appointments:Appointment[];names:string[];circle:string;onCircle:(c:string)=>void;onOpen:(a:Appointment)=>void;onAdd:()=>void}){
+ const date=today(),next=new Map<string,Appointment>();
+ for(const a of occurrences(appointments.filter(a=>a.status==='scheduled'),date,addDays(date,366)))if(a.date>=date&&!next.has(a.id))next.set(a.id,a);
+ const list=[...next.values()].sort((a,b)=>a.date.localeCompare(b.date));
+ const circles:[string,string][]=[['all','Tous'],['close',birthdayCircles.close],['family',birthdayCircles.family],['friends',birthdayCircles.friends],['mine:0',`Amis de ${names[0]}`],['mine:1',`Amis de ${names[1]}`]];
+ return <section className="panel birthday-list" aria-label="Les anniversaires à fêter"><div className="section-title"><h2>Les anniversaires à fêter</h2><button className="text-link" onClick={onAdd}><Plus size={15}/>Ajouter</button></div>
+  <div className="life-filters" aria-label="Filtrer les anniversaires">{circles.map(([id,label])=><button key={id} className={circle===id?'selected':''} aria-pressed={circle===id} onClick={()=>onCircle(id)}>{label}</button>)}</div>
+  {list.length?<ul>{list.map(a=>{const days=Math.round((Date.parse(a.date+'T12:00:00Z')-Date.parse(date+'T12:00:00Z'))/86400000);return <li key={a.id}><button onClick={()=>onOpen(a)}><span className="birthday-cake" aria-hidden="true">🎂</span><span><strong>{a.title}</strong><small>{new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'long',timeZone:'UTC'}).format(new Date(a.date+'T12:00:00Z'))}{a.circle?` · ${circleLabel(a,names)}`:''}</small></span><em>{days===0?'Aujourd’hui !':days===1?'Demain':`Dans ${days} j`}</em></button></li>;})}</ul>:<p className="helper-copy">Aucun anniversaire noté ici. Ajoutez ceux de la famille et des amis : ils reviendront chaque année.</p>}
+ </section>;
+}

@@ -1,5 +1,8 @@
 import type {Appointment,Entry} from './domain';
 export const appointmentCategories={medical:'Médical',personal:'Personnel',admin:'Administratif',work:'Travail',holiday:'Vacances',travel:'Voyage',birthday:'Anniversaire',party:'Soirée / sortie',absence:'Absence',family:'Famille',sport:'Sport / bien-être',study:'Études / formation',home:'Maison',other:'Autre',france:'Jours fériés · France',christian:'Fêtes chrétiennes',islam:'Repères musulmans',culture:'Fêtes et traditions'};
+// Whose birthday it is: close family, wider family, friends of both of us, or the author's own friends.
+export const birthdayCircles={close:'Famille proche',family:'Famille',friends:'Amis communs',mine:'Mes amis'} as const;
+export const circleLabel=(a:{circle?:keyof typeof birthdayCircles;owner?:number|null},names:string[])=>a.circle==='mine'?(a.owner!=null?`Amis de ${names[a.owner]}`:'Amis'):a.circle?birthdayCircles[a.circle]:'';
 export const editableCategories=Object.entries(appointmentCategories).filter(([id])=>!['france','christian','islam','culture'].includes(id));
 const isoDate=(d:Date)=>d.toISOString().slice(0,10);
 export function calendarDays(month:string):string[]{
