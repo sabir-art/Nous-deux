@@ -45,7 +45,7 @@ function householdChange(s:State,p:any,actor:number){
   if(action==='delete-child')for(const x of [...s.appointments,...s.entries,...s.items])if(x.child===id){delete x.child;x.version++;}
   return null;
  }
- if(action==='gift'||action==='delete-gift')return giftMutation(s,action,payload,actor,now);
+ if(action==='gifts-mode'||action==='gift'||action==='delete-gift')return giftMutation(s,action,payload,actor,now);
  if(['pets-mode','pet','pet-care','pet-care-all','delete-pet'].includes(action)){
   petMutation(s,action,payload,actor,now,parisDate());
   // A vet appointment stays in the agenda when its pet's card is deleted; it just no longer names the pet.

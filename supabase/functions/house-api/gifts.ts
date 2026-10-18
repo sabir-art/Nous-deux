@@ -8,7 +8,10 @@ const giftInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),t
 const deleteInput=z.object({id:z.string().uuid(),version:z.number().int().min(1)});
 export function visibleGifts(s:{gifts?:Gift[]},actor:number):Gift[]{return (s.gifts||[]).filter(g=>!g.secret||g.owner===actor);}
 // No push for gift ideas: it is a wish list, not news, and a push would hint at a secret.
-export function giftMutation(s:{gifts?:Gift[];children?:{id:string}[]},action:string,payload:unknown,actor:number,now:string):null{
+const modeInput=z.object({enabled:z.boolean()});
+export function giftMutation(s:{gifts?:Gift[];giftsMode?:boolean;children?:{id:string}[]},action:string,payload:unknown,actor:number,now:string):null{
+ // Idées cadeaux is optional: switched on in Notre espace; switching it off only hides the ideas.
+ if(action==='gifts-mode'){s.giftsMode=modeInput.parse(payload).enabled;return null;}
  s.gifts??=[];
  const existing=s.gifts.find(g=>g.id===(payload as {id?:string})?.id);
  // A partner's secret is reported as missing, so its existence is not revealed either.
@@ -19,6 +22,7 @@ export function giftMutation(s:{gifts?:Gift[];children?:{id:string}[]},action:st
  if(!existing&&v.version!==0||existing&&existing.version!==v.version)throw new GiftError(409,'Cette idée a changé. Fermez puis rouvrez-la.');
  if(v.other!==undefined&&(v.recipient!==-1||v.child!==undefined))throw new GiftError(400,'Choisissez une seule personne pour cette idée.');
  if(v.child!==undefined&&(v.recipient!==-1||!(s.children||[]).some(c=>c.id===v.child)))throw new GiftError(400,'Cet enfant n’existe plus dans votre espace.');
+ if(!existing&&!s.giftsMode)throw new GiftError(400,'Activez d’abord Idées cadeaux dans Notre espace.');
  if(!existing&&s.gifts.length>=500)throw new GiftError(400,'La liste est pleine. Supprimez des idées avant d’en ajouter.');
  const gift:Gift={...v,owner:actor,version:v.version+1,createdAt:existing?.createdAt||now};
  if(existing){delete existing.child;delete existing.other;Object.assign(existing,gift);}else s.gifts.push(gift);
