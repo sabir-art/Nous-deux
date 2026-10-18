@@ -3,7 +3,7 @@ export type Item={id:string;kind:'shopping'|'task';title:string;quantity:string;
 export type Household={first:string;second:string;name:string;budget:number;version:number};
 export type Appointment={id:string;title:string;category:'medical'|'personal'|'admin'|'other';person:number;status:'to_book'|'scheduled'|'done';date:string;time:string;bookBy:string;location:string;note:string;createdAt:string;version:number};
 export type Data={household:Household|null;entries:Entry[];items:Item[];appointments:Appointment[]};
-export const categories=['Courses','Maison','Factures','Sorties','Transport','Autre'];
+export const categories=['Courses','Maison','Factures','Sorties','Transport','Autre','Enfants'];
 export function centsFromInput(value:string):number{
  const s=value.trim().replace(',','.');
  if(!/^\d{1,7}(\.\d{1,2})?$/.test(s))throw new Error('Saisissez un montant avec au maximum 2 décimales.');

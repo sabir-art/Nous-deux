@@ -3,7 +3,7 @@ import {z} from 'npm:zod@3.25.76';
 import {validDate,categories} from './domain.ts';
 const label=z.string().trim().min(1).max(100);
 const date=z.string().refine(validDate,'Date invalide.');
-export const entryInput=z.object({id:z.string().uuid(),kind:z.enum(['expense','settlement']),title:label,cents:z.number().int().min(1).max(999999999),member:z.number().int().min(0).max(1),split:z.enum(['half','full','custom']).optional(),owed:z.number().int().min(0).max(999999999).optional(),recurrence:z.enum(['none','weekly','monthly','yearly','custom']).default('none'),intervalDays:z.number().int().min(1).max(3650).optional(),repeatUntil:z.union([z.literal(''),date]).default(''),category:z.string().refine(v=>categories.includes(v)),date,note:z.string().trim().max(300),version:z.number().int().min(0)}).superRefine((v,ctx)=>{
+export const entryInput=z.object({id:z.string().uuid(),kind:z.enum(['expense','settlement']),title:label,cents:z.number().int().min(1).max(999999999),member:z.number().int().min(0).max(1),child:z.string().uuid().optional(),split:z.enum(['half','full','custom']).optional(),owed:z.number().int().min(0).max(999999999).optional(),recurrence:z.enum(['none','weekly','monthly','yearly','custom']).default('none'),intervalDays:z.number().int().min(1).max(3650).optional(),repeatUntil:z.union([z.literal(''),date]).default(''),category:z.string().refine(v=>categories.includes(v)),date,note:z.string().trim().max(300),version:z.number().int().min(0)}).superRefine((v,ctx)=>{
  if(v.split==='custom'&&(v.owed===undefined||v.owed>v.cents))ctx.addIssue({code:z.ZodIssueCode.custom,path:['owed'],message:'La part à rembourser doit être comprise entre 0 et le montant.'});
  if(v.recurrence==='custom'&&!v.intervalDays)ctx.addIssue({code:z.ZodIssueCode.custom,path:['intervalDays'],message:'Choisissez le nombre de jours entre deux dépenses.'});
  if(v.repeatUntil&&v.repeatUntil<v.date)ctx.addIssue({code:z.ZodIssueCode.custom,path:['repeatUntil'],message:'La fin de répétition doit suivre la première dépense.'});
@@ -14,7 +14,7 @@ export const deleteInput=z.object({id:z.string().uuid(),version:z.number().int()
 export const appointmentInput=z.object({
  visibility:z.enum(['private','shared']).default('private'),recurrence:z.enum(['none','weekly','monthly','yearly','custom']).default('none'),intervalDays:z.number().int().min(1).max(3650).optional(),endDate:z.union([z.literal(''),date]).default(''),repeatUntil:z.union([z.literal(''),date]).default(''),
  id:z.string().uuid(),title:label,category:z.enum(['medical','personal','admin','work','holiday','travel','birthday','party','absence','family','sport','study','home','other','france','christian','islam','culture']),
- person:z.number().int().min(-1).max(1),status:z.enum(['to_book','scheduled','done']),
+ person:z.number().int().min(-1).max(1),child:z.string().uuid().optional(),status:z.enum(['to_book','scheduled','done']),
  date:z.union([z.literal(''),date]),time:z.string().regex(/^$|^([01]\d|2[0-3]):[0-5]\d$/),
  bookBy:z.union([z.literal(''),date]),location:z.string().trim().max(150),note:z.string().trim().max(500),
  version:z.number().int().min(0),
