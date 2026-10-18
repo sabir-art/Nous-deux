@@ -24,4 +24,10 @@ householdMutation(s,{action:'gift',payload:{...secret,version:1,bought:true}},1)
 assert.throws(()=>householdMutation(s,{action:'gift',payload:{...secret,version:1}},1),e=>e.status===409);
 assert.throws(()=>householdMutation(s,{action:'gift',payload:{...secret,id:crypto.randomUUID(),link:'javascript:alert(1)'}},1));
 householdMutation(s,{action:'delete-gift',payload:{id:secret.id,version:2}},1);assert.equal(s.gifts.length,1);
+// A gift can be for one of the household's children, never for an unknown one.
+const kid=crypto.randomUUID();const forKid={id:crypto.randomUUID(),version:0,title:'Draisienne',recipient:-1,child:kid,secret:false};
+assert.throws(()=>householdMutation(s,{action:'gift',payload:forKid},0),e=>e.status===400);
+s.children=[{id:kid,name:'Enfant'}];householdMutation(s,{action:'gift',payload:forKid},0);assert.equal(s.gifts.at(-1).child,kid);
+assert.throws(()=>householdMutation(s,{action:'gift',payload:{...forKid,id:crypto.randomUUID(),recipient:1}},0),e=>e.status===400);
+householdMutation(s,{action:'gift',payload:{...forKid,child:undefined,version:1}},0);assert.equal(s.gifts.at(-1).child,undefined);
 console.log('gifts ok');
