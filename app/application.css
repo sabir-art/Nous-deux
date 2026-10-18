@@ -246,3 +246,4 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}details[op
 .call-audio-control{position:relative;display:flex;flex-direction:column;align-items:center}.call-audio-control>.call-audio-options{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%);width:240px;max-width:70vw;box-shadow:var(--shadow-lift);z-index:3}.call-audio-control>.call-audio-help{position:absolute;bottom:calc(100% + 12px);width:220px;background:var(--surface);color:var(--ink);padding:12px;border-radius:16px}
 .chat-view .chat-header{padding-top:calc(12px + env(safe-area-inset-top,0px))}
 .split-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.split-options button{justify-content:center;text-align:center;white-space:nowrap;padding:var(--space-2) var(--space-3);line-height:18px}
+.budget-overview .nd-split-labels{margin-top:var(--space-3)}
