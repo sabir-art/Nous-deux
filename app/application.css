@@ -382,3 +382,7 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .event-open.day-tone-1 .nd-event-card{background:color-mix(in srgb,var(--rose) 35%,var(--surface))}
 .event-open.day-tone-2 .nd-event-card{background:color-mix(in srgb,var(--lilas) 45%,var(--surface))}
 .event-open.day-tone-3 .nd-event-card{background:color-mix(in srgb,var(--beurre) 45%,var(--surface))}
+.split-fieldset{display:grid;gap:var(--space-4)}.split-fieldset legend{margin-bottom:var(--space-3)}.split-fieldset>label{gap:var(--space-3)}.split-solo{margin:0}
+.gauge-wrap{display:contents}
+/* Nothing left this month: a very pale start of arc, so the gauge never looks broken. The figure still reads 0 %. */
+.gauge-empty .nd-gauge-fill{stroke:color-mix(in srgb,var(--rose) 40%,var(--surface))!important;stroke-dashoffset:130px!important}
