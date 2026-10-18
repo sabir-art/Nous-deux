@@ -5,7 +5,7 @@ export type Appointment={sourceIdeaId?:string;sourceIdeaVersion?:number;place?:i
 export type ShoppingTemplate={id:string;title:string;owner:number;items:{title:string;quantity:string}[]};
 export type MealMatch={recipeId:string;chef:0|1|2;createdAt:string};
 export type Meals={date:string;myVotes:Record<string,boolean>;matches:MealMatch[];draws?:Record<string,Record<string,0|1|2>>};
-export type Data={meals?:Meals;profiles?:Record<string,string|null>;ideas?:import('./life').Idea[];plants?:import('./life').Plant[];templates?:ShoppingTemplate[];member?:number;household:Household|null;entries:Entry[];items:Item[];appointments:Appointment[]};
+export type Data={meals?:Meals;profiles?:Record<string,string|null>;ideas?:import('./life').Idea[];plants?:import('./life').Plant[];pets?:import('./pets').Pet[];templates?:ShoppingTemplate[];member?:number;household:Household|null;entries:Entry[];items:Item[];appointments:Appointment[]};
 export const categories=['Courses','Maison','Factures','Sorties','Transport','Autre'];
 export function centsFromInput(value:string):number{
  const s=value.trim().replace(',','.');
