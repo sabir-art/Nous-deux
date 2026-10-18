@@ -30,4 +30,10 @@ assert.throws(()=>householdMutation(s,{action:'gift',payload:forKid},0),e=>e.sta
 s.children=[{id:kid,name:'Enfant'}];householdMutation(s,{action:'gift',payload:forKid},0);assert.equal(s.gifts.at(-1).child,kid);
 assert.throws(()=>householdMutation(s,{action:'gift',payload:{...forKid,id:crypto.randomUUID(),recipient:1}},0),e=>e.status===400);
 householdMutation(s,{action:'gift',payload:{...forKid,child:undefined,version:1}},0);assert.equal(s.gifts.at(-1).child,undefined);
+// Someone outside the household is a simple name, never mixed with a child or a partner.
+const friend={id:crypto.randomUUID(),version:0,title:'Un bon pour un massage',recipient:-1,other:'Sophie',secret:false};
+householdMutation(s,{action:'gift',payload:friend},1);assert.equal(s.gifts.at(-1).other,'Sophie');
+assert.throws(()=>householdMutation(s,{action:'gift',payload:{...friend,id:crypto.randomUUID(),recipient:0}},1),e=>e.status===400);
+assert.throws(()=>householdMutation(s,{action:'gift',payload:{...friend,id:crypto.randomUUID(),child:kid}},1),e=>e.status===400);
+assert.throws(()=>householdMutation(s,{action:'gift',payload:{...friend,id:crypto.randomUUID(),other:'  '}},1));
 console.log('gifts ok');
