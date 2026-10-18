@@ -11,7 +11,7 @@ export type Child={id:string;owner:number;name:string;birthDate:string;tone:Pers
 export function childAge(birthDate:string,today:string){if(!birthDate)return '';const [y,m,d]=birthDate.split('-').map(Number),[ty,tm,td]=today.split('-').map(Number);const months=(ty-y)*12+(tm-m)-(td<d?1:0);return months<1?'Nouveau-né':months<24?`${months} mois`:`${Math.floor(months/12)} ans`;}
 export type Gift={id:string;owner:number;recipient:-1|0|1;child?:string;title:string;note:string;link:string;price:number|null;secret:boolean;bought:boolean;version:number;createdAt:string};
 export type PersonTone='lavande'|'peche'|'ciel'|'corail'|'sable'|'perle'|'menthe'|'beurre'|'lilas'|'citron'|'rose';
-export type Data={familyMode?:boolean;colors?:Record<string,PersonTone>;meals?:Meals;profiles?:Record<string,string|null>;ideas?:import('./life').Idea[];plants?:import('./life').Plant[];pets?:import('./pets').Pet[];gifts?:Gift[];children?:Child[];templates?:ShoppingTemplate[];member?:number;household:Household|null;entries:Entry[];items:Item[];appointments:Appointment[]};
+export type Data={shoppingPending?:boolean;familyMode?:boolean;colors?:Record<string,PersonTone>;meals?:Meals;profiles?:Record<string,string|null>;ideas?:import('./life').Idea[];plants?:import('./life').Plant[];pets?:import('./pets').Pet[];gifts?:Gift[];children?:Child[];templates?:ShoppingTemplate[];member?:number;household:Household|null;entries:Entry[];items:Item[];appointments:Appointment[]};
 export const categories=['Courses','Maison','Factures','Sorties','Transport','Autre','Enfants'];
 export function centsFromInput(value:string):number{
  const s=value.trim().replace(',','.');

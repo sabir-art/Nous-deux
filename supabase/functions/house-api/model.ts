@@ -16,17 +16,23 @@ function entryExtras(v:{kind:string;child?:string;split?:string;owed?:number;rec
  const expense=v.kind==='expense',repeat=expense&&v.recurrence&&v.recurrence!=='none'?v.recurrence:undefined;
  return {child:expense?v.child:undefined,split:expense&&(v.split==='full'||v.split==='custom')?v.split:undefined,owed:expense&&v.split==='custom'?v.owed:undefined,recurrence:repeat,intervalDays:repeat==='custom'?v.intervalDays:undefined,repeatUntil:repeat&&v.repeatUntil?v.repeatUntil:undefined};
 }
-// Shopping pushes come once per outing: when the whole week's list is ticked, or for the first other change
-// in 30 minutes. Single ticks and unticks stay silent so a trip to the shop no longer sends one alert per product.
-const SHOPPING_QUIET=30*60000;
-function shoppingNotice(s:State,p:any,actor:number,now=Date.now()){
- if(p.action==='shopping-check'){
-  if(!p.payload?.done)return null;
-  const item=s.items.find(i=>i.id===p.payload.id),week=s.items.filter(i=>i.kind==='shopping'&&i.weekStart===item?.weekStart);
-  return week.length&&week.every(i=>i.done)?{category:'shopping' as const,message:'a coché toute la liste de courses.'}:null;
- }
- s.shoppingNotices??={};if(now-(s.shoppingNotices[actor]||0)<SHOPPING_QUIET)return null;
- s.shoppingNotices[actor]=now;return {category:'shopping' as const,message:'a mis à jour la liste de courses.'};
+// Shopping changes are held per member and pushed once per outing: when that member leaves the shopping page
+// or closes the app, the client sends 'shopping-done' and a single notice sums up what happened.
+type ShoppingPending={updated:boolean;checked:boolean;week:string};
+function holdShopping(s:State,p:any,actor:number){
+ const item=p.action==='shopping-check'?s.items.find(i=>i.id===p.payload?.id):undefined;const old=s.shoppingPending?.[actor];
+ s.shoppingPending={...s.shoppingPending,[actor]:{updated:!!old?.updated||!item,checked:!!old?.checked||!!item,week:item?.weekStart||old?.week||''}};
+ return null;
+}
+function flushShopping(s:State,actor:number){
+ const pending=s.shoppingPending?.[actor];if(!pending)return null;delete s.shoppingPending![actor];
+ const week=s.items.filter(i=>i.kind==='shopping'&&i.weekStart===pending.week);
+ const message=pending.checked&&week.length&&week.every(i=>i.done)?'a coché toute la liste de courses.':pending.updated?'a mis à jour la liste de courses.':'a coché des achats dans les courses.';
+ return {category:'shopping' as const,message};
+}
+export function householdMutation(s:State,p:any,actor:number){
+ if(p.action==='shopping-done')return flushShopping(s,actor);
+ const note=householdChange(s,p,actor);return note?.category==='shopping'?holdShopping(s,p,actor):note;
 }
 function householdChange(s:State,p:any,actor:number){
  if(actor!==0&&actor!==1)throw new ApiError(403,'Compte personnel requis.');
