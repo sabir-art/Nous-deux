@@ -36,7 +36,7 @@ function PetForm({pet,busy,error,onSave,onDelete}:{pet:Pet|null;busy:boolean;err
  const[id]=useState(()=>pet?.id||crypto.randomUUID()),[kind,setKind]=useState<'dog'|'cat'>(pet?.kind||'dog'),[tone,setTone]=useState<PetTone>(pet?.tone||'beurre'),[every,setEvery]=useState<Record<PetCare,number>>(pet?.every||petDefaults.dog);
  function pickKind(k:'dog'|'cat'){setKind(k);if(!pet)setEvery(petDefaults[k]);}
  async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();const f=new FormData(e.currentTarget);const start=String(f.get('start')||date);
-  await onSave({id,version:pet?.version||0,name:String(f.get('name')),kind,breed:String(f.get('breed')||''),tone,note:String(f.get('note')||''),every,last:pet?.last||Object.fromEntries(petCares.map(k=>[k,start]))});}
+  await onSave({id,version:pet?.version||0,name:String(f.get('name')),kind,breed:String(f.get('breed')||''),tone,note:String(f.get('note')||''),birthDate:String(f.get('birthDate')||''),every,last:pet?.last||Object.fromEntries(petCares.map(k=>[k,start]))});}
  return <form className="form" onSubmit={submit}>
   <fieldset><legend>C’est…</legend><div className="person-options">{(['dog','cat'] as const).map(k=><button type="button" key={k} className={kind===k?'selected':''} aria-pressed={kind===k} onClick={()=>pickKind(k)}>{k==='dog'?'Un chien':'Un chat'}{kind===k&&<Check size={15}/>}</button>)}</div></fieldset>
   <div className="pet-preview" aria-hidden="true"><PetBuddy kind={kind} tone={tone} size={84}/></div>
@@ -44,6 +44,7 @@ function PetForm({pet,busy,error,onSave,onDelete}:{pet:Pet|null;busy:boolean;err
   <fieldset><legend>Sa couleur</legend><div className="pet-tones">{tones.map(([t,label])=><button type="button" key={t} className={`pet-swatch pet-tone-${t}${tone===t?' selected':''}`} aria-pressed={tone===t} onClick={()=>setTone(t)}>{label}</button>)}</div></fieldset>
   <p className="helper-copy">Choisissez le rythme de chaque soin. 0 = pas suivi.</p>
   <div className="pet-intervals">{petCares.map(k=><label key={k}>{petCareLabels[k]} : tous les … jours<input type="number" min={0} max={365} required value={every[k]} onChange={e=>setEvery(v=>({...v,[k]:Math.max(0,Math.min(365,Number(e.target.value)||0))}))}/></label>)}</div>
+  <label>Son anniversaire <span className="optional">(facultatif)</span><DateField name="birthDate" type="date" max={date} defaultValue={pet?.birthDate||''}/><small>Il apparaîtra chaque année dans l’agenda, avec les anniversaires.</small></label>
   {!pet&&<label>Début du suivi<DateField name="start" type="date" required max={date} defaultValue={date}/></label>}
   <label>Ses petites habitudes<textarea name="note" rows={3} maxLength={700} defaultValue={pet?.note||''} placeholder="Croquettes matin et soir, allergique au poulet, vétérinaire…"/></label>
   {error&&<p className="form-error" role="alert">{error}</p>}

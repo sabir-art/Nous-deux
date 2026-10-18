@@ -3,7 +3,7 @@ import {addDays,dayDifference,parisDate} from './life';
 export const petCares=['food','walk','litter','groom','health'] as const;
 export type PetCare=typeof petCares[number];
 export type PetTone='beurre'|'peche'|'lavande'|'rose'|'menthe'|'lilas';
-export type Pet={id:string;owner:number;name:string;kind:'dog'|'cat';breed:string;tone:PetTone;note:string;every:Record<PetCare,number>;last:Record<PetCare,string>;version:number;createdAt:string;careLog:{kind:PetCare;actor:number;date:string;at:string}[]};
+export type Pet={birthDate?:string;id:string;owner:number;name:string;kind:'dog'|'cat';breed:string;tone:PetTone;note:string;every:Record<PetCare,number>;last:Record<PetCare,string>;version:number;createdAt:string;careLog:{kind:PetCare;actor:number;date:string;at:string}[]};
 export const petCareLabels:Record<PetCare,string>={food:'Repas',walk:'Promenade',litter:'Litière',groom:'Brossage',health:'Antipuces, vermifuge'};
 export const petCareDone:Record<PetCare,string>={food:'Nourri',walk:'Promené',litter:'Changée',groom:'Brossé',health:'Fait'};
 export const petDefaults:Record<'dog'|'cat',Record<PetCare,number>>={dog:{food:1,walk:1,litter:0,groom:7,health:90},cat:{food:1,walk:0,litter:3,groom:7,health:90}};

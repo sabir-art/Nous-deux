@@ -6,6 +6,8 @@ export const circleLabel=(a:{circle?:keyof typeof birthdayCircles;owner?:number|
 // The couple's own important dates, each one comes back every year.
 export const coupleMoments={meeting:'Notre rencontre',together:'Notre mise en couple',engagement:'Nos fiançailles',pacs:'Notre PACS',wedding:'Notre mariage'} as const;
 export const yearsSince=(start:string,on:string)=>Number(on.slice(0,4))-Number(start.slice(0,4));
+// An animal's appointments: the vet, grooming, a pet sitter… never work or studies.
+export const petCategories:[string,string][]=[['medical','Santé, vétérinaire'],['home','Soins, toilettage'],['travel','Garde, pension'],['other','Autre']];
 export const editableCategories=Object.entries(appointmentCategories).filter(([id])=>!['france','christian','islam','culture','couple'].includes(id));
 const isoDate=(d:Date)=>d.toISOString().slice(0,10);
 export function calendarDays(month:string):string[]{

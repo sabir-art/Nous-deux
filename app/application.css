@@ -347,3 +347,5 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .date-picker-grid button:disabled{opacity:.3;cursor:default}
 .date-picker-grid button:focus-visible,.date-picker-head select:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
 .date-picker-foot{display:flex;justify-content:space-between;gap:var(--space-2)}.date-picker-foot:empty{display:none}
+/* Pets keep their own colour on the home page: a neutral card, never the mint plant card (a mint pet vanished on it). */
+.home-pets .plant-parade>button{background:var(--surface);box-shadow:var(--shadow-card)}

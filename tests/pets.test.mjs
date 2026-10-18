@@ -29,4 +29,9 @@ petMutation(q,'pet',{id:pid,version:0,name:'Mia',kind:'cat',breed:'',tone:'lilas
 petMutation(q,'pet-care-all',{id:pid,version:1},1,now,today);const mia=q.pets[0];
 assert.equal(mia.version,2);assert.equal(mia.careLog.length,4);assert.ok(mia.careLog.every(l=>l.actor===1&&l.date===today));
 assert.throws(()=>petMutation(q,'pet-care-all',{id:pid,version:2},1,now,today),e=>e.status===409);}
+{// A birthday is optional, kept on the card and never in the future.
+const q={pets:[]};const id=crypto.randomUUID();const base={...pet,id,version:0};
+petMutation(q,'pet',{...base,birthDate:'2021-04-02'},0,now,today);assert.equal(q.pets[0].birthDate,'2021-04-02');
+assert.throws(()=>petMutation(q,'pet',{...base,id:crypto.randomUUID(),birthDate:'2999-01-01'},0,now,today),e=>e.status===400);
+petMutation(q,'pet',{...base,version:1},0,now,today);assert.equal(q.pets[0].birthDate,'');}
 console.log('pets ok');
