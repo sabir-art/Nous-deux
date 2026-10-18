@@ -8,7 +8,7 @@ import {petMutation} from './pets.ts';
 import {entryInput,itemInput,householdInput,deleteInput,appointmentInput,shoppingCheckInput,templateInput,templateApplyInput,ideaInput,ideaResponseInput,plantInput,plantCareInput} from './validation.ts';
 import {deviceInput,memberInput,preferenceInput,subscriptionInput,changeDescription} from './communication.ts';
 export class ApiError extends Error{constructor(public status:number,message:string){super(message);}}
-export type State=MealState&{favoritePlaces?:import('./places.ts').FavoritePlace[];shoppingBatches?:string[];profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];gifts?:import('./gifts.ts').Gift[];plantReminderDays?:Record<string,string>;shoppingNotices?:Record<string,number>};
+export type State=MealState&{favoritePlaces?:import('./places.ts').FavoritePlace[];shoppingBatches?:string[];profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];pets?:import('./pets.ts').Pet[];gifts?:import('./gifts.ts').Gift[];plantReminderDays?:Record<string,string>;shoppingNotices?:Record<string,number>};
 const conflict=()=>{throw new ApiError(409,'Cet élément a changé sur un autre appareil. Fermez puis rouvrez le formulaire.');};
 // Only expenses carry a split or a repetition; 50/50 and 'none' stay implicit so older entries keep their shape.
 function entryExtras(v:{kind:string;split?:string;owed?:number;recurrence?:string;intervalDays?:number;repeatUntil?:string}){
@@ -34,6 +34,7 @@ function householdChange(s:State,p:any,actor:number){
 
  if(['idea','idea-response','delete-idea','plant','plant-care','plant-care-all','delete-plant'].includes(action))return lifeMutation(s,action,payload,actor,now);
  if(action==='gift'||action==='delete-gift')return giftMutation(s,action,payload,actor,now);
+ if(action==='pet'||action==='pet-care'||action==='delete-pet')return petMutation(s,action,payload,actor,now,parisDate());
  if(action==='meal-vote'){mealVote(s,payload,actor);return null;}
  if(action==='profile-photo'){
   const id=payload?.photoId;if(id!==null&&(typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)))throw new ApiError(400,'Photo invalide.');

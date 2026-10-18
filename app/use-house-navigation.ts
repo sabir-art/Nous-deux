@@ -1,5 +1,5 @@
 import {useCallback,useEffect,useRef,useState,type RefObject} from 'react';
-export const housePages=['home','calendar','meals','expenses','chat','shopping','tasks','ideas','plants','gifts','calls','notifications','settings'] as const;
+export const housePages=['home','calendar','meals','expenses','chat','shopping','tasks','ideas','plants','pets','gifts','calls','notifications','settings'] as const;
 export type HousePage=typeof housePages[number];
 const tabs:HousePage[]=['home','calendar','meals','expenses','chat'];
 type Route={page:HousePage;depth:number;exit?:boolean};
