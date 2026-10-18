@@ -68,4 +68,13 @@ assert.equal(weekMonday('2027-01-01'),'2026-12-28');assert.equal(weekMonday('202
 assert.throws(()=>authorizeChat({member:0,version:2},1,2),e=>e.status===403);
 assert.throws(()=>authorizeChat({member:0,version:2},0,1),e=>e.status===409);
 assert.doesNotThrow(()=>authorizeChat({member:0,version:2},0,2));
-console.log('PASS: cross-member shopping checks, buyer integrity, status bypasses, weekly template copies, retries and author-only chat changes.');
+{// One push per shopping outing, not one per product.
+const q=structuredClone(s);q.items=q.items.filter(i=>i.kind!=='shopping');q.shoppingNotices={};const week='2026-10-12';
+const add=title=>householdMutation(q,{action:'item',payload:{id:crypto.randomUUID(),kind:'shopping',title,quantity:'',assignee:-1,due:'',priority:0,done:false,weekStart:week,version:0}},0);
+assert.equal(add('Pain')?.message,'a mis à jour la liste de courses.');assert.equal(add('Lait'),null);
+const [pain,lait]=q.items.filter(i=>i.kind==='shopping');
+assert.equal(householdMutation(q,{action:'shopping-check',payload:{id:pain.id,version:pain.version,done:true}},1),null);
+assert.equal(householdMutation(q,{action:'shopping-check',payload:{id:lait.id,version:lait.version,done:true}},1)?.message,'a coché toute la liste de courses.');
+assert.equal(householdMutation(q,{action:'shopping-check',payload:{id:lait.id,version:lait.version,done:false}},1),null);
+q.shoppingNotices[0]=Date.now()-31*60000;assert.equal(add('Œufs')?.message,'a mis à jour la liste de courses.');}
+console.log('PASS: cross-member shopping checks, one shopping push per outing, buyer integrity, status bypasses, weekly template copies, retries and author-only chat changes.');

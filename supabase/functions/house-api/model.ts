@@ -6,9 +6,22 @@ import {parisDate,plantCare} from './life.ts';
 import {entryInput,itemInput,householdInput,deleteInput,appointmentInput,shoppingCheckInput,templateInput,templateApplyInput,ideaInput,ideaResponseInput,plantInput,plantCareInput} from './validation.ts';
 import {deviceInput,memberInput,preferenceInput,subscriptionInput,changeDescription} from './communication.ts';
 export class ApiError extends Error{constructor(public status:number,message:string){super(message);}}
-export type State=MealState&{favoritePlaces?:import('./places.ts').FavoritePlace[];shoppingBatches?:string[];profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];plantReminderDays?:Record<string,string>};
+export type State=MealState&{favoritePlaces?:import('./places.ts').FavoritePlace[];shoppingBatches?:string[];profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];plantReminderDays?:Record<string,string>;shoppingNotices?:Record<string,number>};
 const conflict=()=>{throw new ApiError(409,'Cet élément a changé sur un autre appareil. Fermez puis rouvrez le formulaire.');};
-export function householdMutation(s:State,p:any,actor:number){
+// Shopping pushes come once per outing: when the whole week's list is ticked, or for the first other change
+// in 30 minutes. Single ticks and unticks stay silent so a trip to the shop no longer sends one alert per product.
+const SHOPPING_QUIET=30*60000;
+function shoppingNotice(s:State,p:any,actor:number,now=Date.now()){
+ if(p.action==='shopping-check'){
+  if(!p.payload?.done)return null;
+  const item=s.items.find(i=>i.id===p.payload.id),week=s.items.filter(i=>i.kind==='shopping'&&i.weekStart===item?.weekStart);
+  return week.length&&week.every(i=>i.done)?{category:'shopping' as const,message:'a coché toute la liste de courses.'}:null;
+ }
+ s.shoppingNotices??={};if(now-(s.shoppingNotices[actor]||0)<SHOPPING_QUIET)return null;
+ s.shoppingNotices[actor]=now;return {category:'shopping' as const,message:'a mis à jour la liste de courses.'};
+}
+export function householdMutation(s:State,p:any,actor:number){const note=householdChange(s,p,actor);return note?.category==='shopping'?shoppingNotice(s,p,actor):note;}
+function householdChange(s:State,p:any,actor:number){
  if(actor!==0&&actor!==1)throw new ApiError(403,'Compte personnel requis.');
  const {action,payload}=p;if(typeof action!=='string')throw new ApiError(400,'Action invalide.');const previous=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;const now=new Date().toISOString();
 

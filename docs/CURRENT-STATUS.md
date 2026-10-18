@@ -20,6 +20,8 @@ Ce document est un état daté, pas un contrôle permanent de production. Vérif
 - PR #6 : photo d'appel ronde, contour blanc, image en `object-fit: cover` remplissant le cercle. Ne pas rétablir le carré ni les bandes de `contain`.
 - Les tests automatisés Chromium et WebKit ont réussi pour ces livraisons. Cela ne remplace pas une vérification tactile sur appareils réels.
 
+- 18 octobre (branche `claude/notifications-courses`) : notifications des courses regroupées dans `householdMutation` (`shoppingNotice`). Cocher un article n'envoie plus rien, sauf quand toute la liste de la semaine est cochée (« a coché toute la liste de courses »). Ajouts et modifications : une notification « a mis à jour la liste de courses » au plus toutes les 30 minutes par personne (`shoppingNotices` dans l'état JSON). **`house-api` doit être redéployée** après fusion.
+
 ## Données réelles : ne pas réinitialiser
 
 Le 10 octobre, à la demande explicite du propriétaire, les données de test des deux comptes ont été supprimées (courses, tâches, dépenses, événements personnels, plantes, idées, recettes personnelles, menus, favoris, messages et appels). Les deux mots de passe, photos de profil, sessions, appareils et secrets de configuration ont été conservés. Les recettes intégrées et repères calendaires n'ont pas été retirés.
