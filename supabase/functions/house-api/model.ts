@@ -28,7 +28,6 @@ function shoppingNotice(s:State,p:any,actor:number,now=Date.now()){
  s.shoppingNotices??={};if(now-(s.shoppingNotices[actor]||0)<SHOPPING_QUIET)return null;
  s.shoppingNotices[actor]=now;return {category:'shopping' as const,message:'a mis à jour la liste de courses.'};
 }
-export function householdMutation(s:State,p:any,actor:number){const note=householdChange(s,p,actor);return note?.category==='shopping'?shoppingNotice(s,p,actor):note;}
 function householdChange(s:State,p:any,actor:number){
  if(actor!==0&&actor!==1)throw new ApiError(403,'Compte personnel requis.');
  const {action,payload}=p;if(typeof action!=='string')throw new ApiError(400,'Action invalide.');const previous=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;const now=new Date().toISOString();
