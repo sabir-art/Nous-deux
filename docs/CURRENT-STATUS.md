@@ -20,7 +20,7 @@ Ce document est un état daté, pas un contrôle permanent de production. Vérif
 - PR #6 : photo d'appel ronde, contour blanc, image en `object-fit: cover` remplissant le cercle. Ne pas rétablir le carré ni les bandes de `contain`.
 - Les tests automatisés Chromium et WebKit ont réussi pour ces livraisons. Cela ne remplace pas une vérification tactile sur appareils réels.
 
-- 15 octobre (branche `claude/depense-100-pourcent`) : choix « 50 / 50 » ou « 100 % [l'autre personne] » sur une dépense. Champ facultatif `split` (`'full'` seulement ; absent = 50/50, donc les anciennes dépenses ne changent pas) dans l'état JSON, sans migration SQL. Calcul du solde, formulaire, historique et export CSV mis à jour. **`house-api` doit être redéployée** après fusion pour que le serveur accepte et conserve ce choix ; tant que ce n'est pas fait, l'ancienne API ignore `split`.
+- 15–18 octobre (PR #9, branche `claude/depense-100-pourcent`) : dépenses enrichies, sans migration SQL (champs facultatifs dans l'état JSON, anciennes dépenses inchangées). Partage `split` : 50/50 par défaut, `'full'` (l'autre rembourse tout) ou `'custom'` avec `owed` (centimes dus par l'autre). Chacun peut enregistrer une dépense payée par l'autre ; seul l'auteur (`owner`) la modifie. Récurrence `recurrence`/`intervalDays`/`repeatUntil` comme l'agenda : les occurrences sont calculées côté interface jusqu'à aujourd'hui (`expandEntries`, `lib/calendar.ts`), la série reste une seule entrée. Graphique « Où part notre argent ? » (dépenses du mois par catégorie) à la place de « Notre marge au fil des mois ». **`house-api` doit être redéployée** après fusion ; sinon l'ancienne API refuse une dépense payée par l'autre et ignore les nouveaux champs.
 
 ## Données réelles : ne pas réinitialiser
 
