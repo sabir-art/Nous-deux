@@ -70,7 +70,7 @@ assert.throws(()=>authorizeChat({member:0,version:2},0,1),e=>e.status===409);
 assert.doesNotThrow(()=>authorizeChat({member:0,version:2},0,2));
 {// A birthday says whose it is (family, friends…); other events never carry that field.
 const q=structuredClone(s);const b={id:crypto.randomUUID(),title:'Anniversaire de Sophie',category:'birthday',circle:'friends',person:-1,status:'scheduled',date:'2026-11-03',time:'',bookBy:'',location:'',note:'',visibility:'shared',recurrence:'yearly',version:0};
-householdMutation(q,{action:'appointment',payload:b},0);assert.equal(q.appointments.find(a=>a.id===b.id).circle,'friends');
+householdMutation(q,{action:'appointment',payload:{...b,recurrence:'none'}},0);assert.equal(q.appointments.find(a=>a.id===b.id).circle,'friends');assert.equal(q.appointments.find(a=>a.id===b.id).recurrence,'yearly');
 householdMutation(q,{action:'appointment',payload:{...b,category:'party',version:1}},0);assert.equal(q.appointments.find(a=>a.id===b.id).circle,undefined);
 assert.throws(()=>householdMutation(q,{action:'appointment',payload:{...b,id:crypto.randomUUID(),circle:'collegues'}},0));}
 console.log('PASS: cross-member shopping checks, buyer integrity, status bypasses, weekly template copies, retries and author-only chat changes.');
