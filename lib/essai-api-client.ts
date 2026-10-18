@@ -12,7 +12,7 @@ import {parisDate} from '../supabase/functions/house-api/life.ts';
 import {visibleGifts} from '../supabase/functions/house-api/gifts.ts';
 
 export const APP_BASE=location.pathname.replace(/[^/]*$/,'');
-const STATE_KEY='nous-deux-essai-state-v7',MEMBER_KEY='nous-deux-essai-member',PHOTOS_KEY='nous-deux-essai-photos-v1',CHAT_KEY='nous-deux-essai-chat-v1';
+const STATE_KEY='nous-deux-essai-state-v8',MEMBER_KEY='nous-deux-essai-member',PHOTOS_KEY='nous-deux-essai-photos-v1',CHAT_KEY='nous-deux-essai-chat-v1';
 const unavailable='Pas disponible en mode essai.';
 
 const read=<T,>(key:string,fallback:()=>T):T=>{try{const raw=localStorage.getItem(key);if(raw)return JSON.parse(raw) as T;}catch{}return fallback();};
@@ -56,7 +56,7 @@ function route(path:string,method:string,url:URL,p:any){
  switch(path){
   case 'access':if(p.action==='logout'){reset();return {ok:true};}return {configured:true};
   case 'household':
-   if(method==='GET'){const s=load();return {member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[],gifts:visibleGifts(s,actor),pets:(s as {pets?:unknown[]}).pets||[],children:(s as {children?:unknown[]}).children||[],shoppingPending:!!s.shoppingPending?.[actor],familyMode:!!s.familyMode,colors:s.colors||{}};}
+   if(method==='GET'){const s=load();return {member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[],gifts:visibleGifts(s,actor),pets:(s as {pets?:unknown[]}).pets||[],children:(s as {children?:unknown[]}).children||[],shoppingPending:!!s.shoppingPending?.[actor],familyMode:!!s.familyMode,petsMode:!!(s as {petsMode?:boolean}).petsMode,giftsMode:!!(s as {giftsMode?:boolean}).giftsMode,colors:s.colors||{}};}
    mutate(s=>householdMutation(s,p,actor));return {ok:true};
   case 'meals':if(method==='POST')mutate(s=>p.action==='draw'?mealDraw(s,p,actor):mealVote(s,p,actor));return mealProjection(load(),actor);
   case 'recipes':{if(method==='POST'){if(p.action==='discover'||p.action==='toggle')throw new ApiError(400,'Les idées de recettes par IA : '+unavailable.toLowerCase());mutate(s=>recipeMutation(s,p,actor));}
