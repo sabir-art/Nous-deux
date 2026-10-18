@@ -23,4 +23,10 @@ petMutation(s,'pet',{...pet,version:2,name:'Biscuit II',last:{...last,walk:'2020
 assert.throws(()=>petMutation(s,'pet',{...pet,id:crypto.randomUUID(),last:{...last,food:'2099-01-01'}},1,now,today),e=>e.status===400);
 assert.throws(()=>petMutation(s,'pet',{...pet,id:crypto.randomUUID(),kind:'hamster'},1,now,today));
 petMutation(s,'delete-pet',{id:pet.id,version:3},1,now,today);assert.equal(s.pets.length,0);
+{// « Tout est fait » notes every due care at once, then refuses a second time the same day.
+const q={};const pid=crypto.randomUUID();
+petMutation(q,'pet',{id:pid,version:0,name:'Mia',kind:'cat',breed:'',tone:'lilas',note:'',every:{food:1,walk:0,litter:3,groom:7,health:90},last:{food:'2026-01-01',walk:'2026-01-01',litter:'2026-01-01',groom:'2026-01-01',health:'2026-01-01'}},0,now,today);
+petMutation(q,'pet-care-all',{id:pid,version:1},1,now,today);const mia=q.pets[0];
+assert.equal(mia.version,2);assert.equal(mia.careLog.length,4);assert.ok(mia.careLog.every(l=>l.actor===1&&l.date===today));
+assert.throws(()=>petMutation(q,'pet-care-all',{id:pid,version:2},1,now,today),e=>e.status===409);}
 console.log('pets ok');
