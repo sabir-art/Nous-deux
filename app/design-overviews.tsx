@@ -3,7 +3,7 @@ import {SlidersHorizontal} from './icons';
 import LifeDialog from './life-dialog';
 import {HeroCard,CategoryTile,PiggyBank,SplitBar,RankedBars,BillCard,Button,StatTile,BarChart,LineChart,CalendarHeatmap,GaugeTile} from '../design-system/runtime';
 import {categories,money,centsFromInput,today,type Entry,type Child} from '../lib/domain';
-export function HomeOverview({counts,onNavigate,children}:{counts:{shopping:number;tasks:number;matches:number;ideas:number;plants:number;pets:number;petsDue:number;gifts:number;kids:number};onNavigate:(tab:string)=>void;children:ReactNode}){
+export function HomeOverview({counts,onNavigate,children}:{counts:{shopping:number;tasks:number;matches:number;ideas:number;plants:number;pets:number;petsDue:number;gifts:number;kids:number;family?:boolean};onNavigate:(tab:string)=>void;children:ReactNode}){
  return <div className="overview"><HeroCard tone="citron" title={<>Notre quotidien,<br/><em>à deux.</em></>} text="Un peu d’organisation, beaucoup de nous." action="Voir notre journée" onAction={()=>onNavigate('calendar')} buddy={{shape:'flower',tone:'lavande',mood:'happy'}}/>
  <section aria-label="Les espaces de notre maison"><div className="section-title"><h2>On fait quoi ?</h2></div><div className="category-grid">
  <CategoryTile title="Les courses" count={`${counts.shopping} à acheter`} tone="menthe" onClick={()=>onNavigate('shopping')}/>
@@ -11,7 +11,7 @@ export function HomeOverview({counts,onNavigate,children}:{counts:{shopping:numb
  <CategoryTile title="Nos missions" count={`${counts.tasks} à faire`} tone="lavande" onClick={()=>onNavigate('tasks')}/>
  <CategoryTile title="Nos idées" count={counts.ideas?`${counts.ideas} invitation${counts.ideas>1?'s':''}`:'À imaginer'} tone="beurre" onClick={()=>onNavigate('ideas')}/>
  <CategoryTile title="Le jardin" count={`${counts.plants} plante${counts.plants>1?'s':''}`} tone="menthe" onClick={()=>onNavigate('plants')}/>
- {counts.kids>0&&<CategoryTile title="Nos enfants" count={`${counts.kids} profil${counts.kids>1?'s':''}`} tone="menthe" onClick={()=>onNavigate('family')}/>}
+ {counts.family&&<CategoryTile title="Nos enfants" count={counts.kids?`${counts.kids} profil${counts.kids>1?'s':''}`:'Ajouter un enfant'} tone="menthe" onClick={()=>onNavigate('family')}/>}
  <CategoryTile title="Idées cadeaux" count={counts.gifts?`${counts.gifts} idée${counts.gifts>1?'s':''}`:'À noter'} tone="lilas" onClick={()=>onNavigate('gifts')}/>
  <CategoryTile title="Nos compagnons" count={counts.petsDue?`${counts.petsDue} à chouchouter`:counts.pets?`${counts.pets} compagnon${counts.pets>1?'s':''}`:'Chien, chat…'} tone="beurre" onClick={()=>onNavigate('pets')}/>
  <CategoryTile title="Notre argent" count="Notre budget" tone="peche" onClick={()=>onNavigate('expenses')}/>
