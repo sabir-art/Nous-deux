@@ -26,7 +26,20 @@ console.log('PASS: expense validation, stale writes, appointment planning, call 
 // Access control: visibility is shared, writes belong to the authenticated author.
 assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,version:2,member:1,owner:1}},1),e=>e.status===403);
 assert.throws(()=>householdMutation(s,{action:'delete-entry',payload:{id,version:2}},1),e=>e.status===403);
-assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,id:crypto.randomUUID(),version:0,member:1}},0),e=>e.status===403);
+// Either person may record what the other paid; the author alone can then change it.
+const forPartner=crypto.randomUUID();householdMutation(s,{action:'entry',payload:{...entry,id:forPartner,version:0,member:1,owner:1}},0);
+assert.equal(s.entries.find(e=>e.id===forPartner).member,1);assert.equal(s.entries.find(e=>e.id===forPartner).owner,0);
+assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,id:forPartner,version:1,member:1}},1),e=>e.status===403);
+const customId=crypto.randomUUID();householdMutation(s,{action:'entry',payload:{...entry,id:customId,version:0,split:'custom',owed:3000}},0);assert.equal(s.entries.find(e=>e.id===customId).owed,3000);
+assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,id:crypto.randomUUID(),version:0,split:'custom',owed:99999}},0));
+assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,id:crypto.randomUUID(),version:0,split:'custom'}},0));
+householdMutation(s,{action:'entry',payload:{...entry,id:customId,version:1,split:'half',owed:3000}},0);assert.equal(s.entries.find(e=>e.id===customId).owed,undefined);
+const rentId=crypto.randomUUID();householdMutation(s,{action:'entry',payload:{...entry,id:rentId,version:0,title:'Loyer',category:'Maison',recurrence:'monthly',repeatUntil:'2027-06-30'}},0);
+assert.equal(s.entries.find(e=>e.id===rentId).recurrence,'monthly');assert.equal(s.entries.find(e=>e.id===rentId).repeatUntil,'2027-06-30');
+householdMutation(s,{action:'entry',payload:{...entry,id:rentId,version:1,recurrence:'none',repeatUntil:'2027-06-30'}},0);assert.equal(s.entries.find(e=>e.id===rentId).recurrence,undefined);assert.equal(s.entries.find(e=>e.id===rentId).repeatUntil,undefined);
+assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,id:crypto.randomUUID(),version:0,recurrence:'custom'}},0));
+assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,id:crypto.randomUUID(),version:0,recurrence:'monthly',repeatUntil:'2026-01-01'}},0));
+const settleRepeat=crypto.randomUUID();householdMutation(s,{action:'entry',payload:{...entry,id:settleRepeat,version:0,kind:'settlement',title:'Remboursement',recurrence:'monthly'}},0);assert.equal(s.entries.find(e=>e.id===settleRepeat).recurrence,undefined);
 const task={id:crypto.randomUUID(),kind:'task',title:'Test auteur',quantity:'',assignee:1,due:'',priority:0,done:false,version:0,owner:1};
 householdMutation(s,{action:'item',payload:task},0);assert.equal(s.items[0].owner,0);
 assert.throws(()=>householdMutation(s,{action:'item',payload:{...task,version:1,done:true}},1),e=>e.status===403);

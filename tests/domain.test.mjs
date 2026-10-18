@@ -14,4 +14,7 @@ assert.equal(balance([{kind:'expense',member:0,cents:10001,split:'full'}]),10001
 assert.equal(balance([{kind:'expense',member:1,cents:4000,split:'full'}]),-4000);
 assert.equal(balance([{kind:'expense',member:0,cents:10000},{kind:'expense',member:1,cents:3000,split:'full'},{kind:'settlement',member:1,cents:2000}]),0);
 assert.equal(balance([{kind:'expense',member:0,cents:10001,split:'half'}]),5000);
-console.log('PASS: decimal input, dates, equal split, full repayment split, odd cents, repayments and overpayments.');
+assert.equal(balance([{kind:'expense',member:0,cents:10000,split:'custom',owed:2500}]),2500);
+assert.equal(balance([{kind:'expense',member:1,cents:10000,split:'custom',owed:0}]),0);
+assert.equal(balance([{kind:'expense',member:1,cents:10000,split:'custom',owed:20000}]),-10000);
+console.log('PASS: decimal input, dates, equal split, full and custom repayment splits, odd cents, repayments and overpayments.');
