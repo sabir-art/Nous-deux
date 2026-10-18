@@ -245,3 +245,13 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}details[op
 .call-audio-options{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:8px;border-radius:20px;background:var(--surface);color:var(--ink)}.call-audio-options button{min-height:44px;border-radius:16px;padding:10px 14px}.call-audio-options button[aria-pressed=true]{background:var(--lavande)}.call-audio-help{font-size:13px;line-height:18px;text-align:center;margin:0}
 .call-audio-control{position:relative;display:flex;flex-direction:column;align-items:center}.call-audio-control>.call-audio-options{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%);width:240px;max-width:70vw;box-shadow:var(--shadow-lift);z-index:3}.call-audio-control>.call-audio-help{position:absolute;bottom:calc(100% + 12px);width:220px;background:var(--surface);color:var(--ink);padding:12px;border-radius:16px}
 .chat-view .chat-header{padding-top:calc(12px + env(safe-area-inset-top,0px))}
+.gifts-space{display:grid;gap:var(--space-4);min-width:0}.gifts-space .life-filters{margin:0}
+.gift-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-3);grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))}
+.gift-card{min-width:0;display:flex;flex-direction:column;gap:var(--space-3);border-radius:var(--radius-lg);padding:var(--space-4);background:var(--lilas)}
+.gift-card.secret{background:var(--surface);box-shadow:inset 0 0 0 2px var(--lilas)}.gift-card.bought{opacity:.72}.gift-card.bought strong{text-decoration:line-through}
+.gift-open{display:flex;flex-direction:column;align-items:flex-start;gap:var(--space-2);text-align:left;background:none;border:0;padding:0;color:var(--ink);min-height:44px;min-width:0;font:inherit;cursor:pointer}.gift-open:disabled{cursor:default;opacity:1}
+.gift-open strong{font:600 18px/24px var(--font-sans);overflow-wrap:anywhere}.gift-note{overflow-wrap:anywhere;color:var(--ink)}.gift-open small{color:var(--ink-muted)}
+.gift-tags{display:flex;flex-wrap:wrap;gap:var(--space-1)}.gift-tags>span{display:inline-flex;align-items:center;gap:4px;border-radius:var(--radius-pill);padding:2px var(--space-3);font:600 13px/20px var(--font-sans);background:var(--surface);color:var(--ink)}
+.gift-card.secret .gift-tags>span{background:var(--surface-sunken)}
+.gift-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-2)}.gift-actions>button{margin-left:auto}
+.gift-recipients button{justify-content:center}
