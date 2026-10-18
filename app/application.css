@@ -247,3 +247,7 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}details[op
 .chat-view .chat-header{padding-top:calc(12px + env(safe-area-inset-top,0px))}
 .split-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.split-options button{justify-content:center;text-align:center;white-space:nowrap;padding:var(--space-2) var(--space-3);line-height:18px}
 .budget-overview .nd-split-labels{margin-top:var(--space-5);padding-inline:var(--space-2)}
+.split-fieldset{display:grid;gap:var(--space-4)}.split-fieldset legend{margin-bottom:var(--space-3)}.split-fieldset>label{gap:var(--space-3)}.split-solo{margin:0}
+.gauge-wrap{display:contents}
+/* Nothing left this month: a very pale start of arc, so the gauge never looks broken. The figure still reads 0 %. */
+.gauge-empty .nd-gauge-fill{stroke:color-mix(in srgb,var(--rose) 40%,var(--surface))!important;stroke-dashoffset:130px!important}
