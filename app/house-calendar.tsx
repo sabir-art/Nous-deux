@@ -11,14 +11,14 @@ const longDate=(date:string)=>new Intl.DateTimeFormat('fr-FR',{weekday:'long',da
 const shortDate=(date:string)=>new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z'));
 const monthName=(month:string)=>new Intl.DateTimeFormat('fr-FR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(month+'-01T12:00:00Z'));
 export type OpenAppointment={appointment?:Appointment;initialDate?:string;initialStatus?:'to_book'|'scheduled';initialChild?:string;initialRecurrence?:Appointment['recurrence']};
-type CalendarProps={active?:number;initialDate?:string;appointments:Appointment[];names:string[];kids?:Child[];onOpen:(options:OpenAppointment)=>void};
+type CalendarProps={active?:number;initialDate?:string;initialPerson?:string;appointments:Appointment[];names:string[];kids?:Child[];onOpen:(options:OpenAppointment)=>void};
 // A child's event takes the child's colour; the couple's events keep the partner colours.
 const kidOf=(a:Appointment,kids:Child[]=[])=>a.child?kids.find(k=>k.id===a.child):undefined;
 const chipClass=(a:Appointment,kids?:Child[])=>{const kid=kidOf(a,kids);return a.source?'reference-'+a.category:kid?'child-tone-'+kid.tone:'person-'+(a.person===0?'a':a.person===1?'b':'nous');};
 function AppointmentRow({appointment:a,names,kids,onClick,showDate=false}:{appointment:Appointment;names:string[];kids?:Child[];onClick:()=>void;showDate?:boolean}){
  const who=a.person===0?'a':a.person===1?'b':'nous',kid=kidOf(a,kids);
  const date=a.date?new Date(a.date+'T12:00:00Z'):null;
- return <button className={`event-open reference-${a.source?a.category:'none'} ${a.status==='done'?'appointment-done':''}`} onClick={onClick} aria-label={`${a.title}, ${a.status==='to_book'?'rendez-vous à prendre':a.time||'toute la journée'}`}><EventCard title={a.title} who={a.source||kid?undefined:who} tone={a.source?referenceTone(a.category):kid?kid.tone:undefined} names={[names[0],names[1]]} dow={showDate&&date?new Intl.DateTimeFormat('fr-FR',{weekday:'short'}).format(date):undefined} day={date?.getUTCDate()} today={a.date===today()} meta={<><span>{a.status==='to_book'?'À prendre':a.status==='done'?'Terminé':a.time||'Toute la journée'} · {a.source?'Calendrier des fêtes':kid?`Pour ${kid.name}`:a.person===-1?'Nous deux':names[a.person]}</span><span>{appointmentCategories[a.category]}{a.location?` · ${a.location}`:''}</span><span>{a.source?'Repère du calendrier':a.visibility==='private'?'Privé · moi uniquement':'Partagé à deux'}{a.recurrence&&a.recurrence!=='none'?(a.recurrence==='custom'?` · Tous les ${a.intervalDays} jours`:' · Récurrent'):''}{a.sourceIdeaId?' · Invitation acceptée':''}{a.provisional?' · À confirmer':''}</span>{a.status==='to_book'&&a.bookBy&&<span>À prendre avant le {shortDate(a.bookBy)}</span>}{a.endDate&&a.endDate!==a.date&&<span>Jusqu’au {shortDate(a.endDate)}</span>}</>}/></button>;
+ return <button className={`event-open reference-${a.source?a.category:'none'}${!a.source&&!kid&&who!=='nous'?' who-'+who:''} ${a.status==='done'?'appointment-done':''}`} onClick={onClick} aria-label={`${a.title}, ${a.status==='to_book'?'rendez-vous à prendre':a.time||'toute la journée'}`}><EventCard title={a.title} who={a.source||kid?undefined:who} tone={a.source?referenceTone(a.category):kid?kid.tone as 'menthe':undefined} names={[names[0],names[1]]} dow={showDate&&date?new Intl.DateTimeFormat('fr-FR',{weekday:'short'}).format(date):undefined} day={date?.getUTCDate()} today={a.date===today()} meta={<><span>{a.status==='to_book'?'À prendre':a.status==='done'?'Terminé':a.time||'Toute la journée'} · {a.source?'Calendrier des fêtes':kid?`Pour ${kid.name}`:a.person===-1?'Nous deux':names[a.person]}</span><span>{appointmentCategories[a.category]}{a.location?` · ${a.location}`:''}</span><span>{a.source?'Repère du calendrier':a.visibility==='private'?'Privé · moi uniquement':'Partagé à deux'}{a.recurrence&&a.recurrence!=='none'?(a.recurrence==='custom'?` · Tous les ${a.intervalDays} jours`:' · Récurrent'):''}{a.sourceIdeaId?' · Invitation acceptée':''}{a.provisional?' · À confirmer':''}</span>{a.status==='to_book'&&a.bookBy&&<span>À prendre avant le {shortDate(a.bookBy)}</span>}{a.endDate&&a.endDate!==a.date&&<span>Jusqu’au {shortDate(a.endDate)}</span>}</>}/></button>;
 
 }
 export function CalendarSummary({appointments,names,kids,onOpen,onCalendar}:CalendarProps&{onCalendar:()=>void}){
@@ -29,15 +29,15 @@ export function CalendarSummary({appointments,names,kids,onOpen,onCalendar}:Cale
   {pending.length>0&&<button className="booking-summary" onClick={onCalendar}><span className="booking-summary-icon"><CalendarClock size={24}/></span><span><strong>{pending.length} rendez-vous à organiser</strong><small>La date reste à fixer. On y pense ensemble ?</small></span><ArrowUpRight size={20}/></button>}
  </section>;
 }
-export default function HouseCalendar({appointments,names,kids=[],onOpen,active=0,initialDate}:CalendarProps){
+export default function HouseCalendar({appointments,names,kids=[],onOpen,active=0,initialDate,initialPerson='all'}:CalendarProps){
  const[month,setMonth]=useState((initialDate||today()).slice(0,7));
- const[selected,setSelected]=useState(initialDate||today());const[person,setPerson]=useState('all');
+ const[selected,setSelected]=useState(initialDate||today());const[person,setPerson]=useState(initialPerson);
  const[category,setCategory]=useState('all');const[scope,setScope]=useState('all');const[references,setReferences]=useState(true);const[holidayTypes,setHolidayTypes]=useState(['france','christian','islam','culture']);
  const[view,setView]=useState<'week'|'month'>('week');
  const monday=addDays(selected,-((new Date(selected+'T12:00:00Z').getUTCDay()+6)%7));
  const weekDates=Array.from({length:7},(_,i)=>addDays(monday,i));
  const grid=calendarDays(month);
- const filtered=[...appointments.filter(a=>(person==='all'||(person.startsWith('child:')?a.child===person.slice(6):a.person===Number(person)&&!a.child))&&(scope==='all'||(scope==='mine'?a.owner===active:scope==='private'?a.visibility==='private':a.visibility!=='private'))),...(references&&scope==='all'?holidays.filter(a=>holidayTypes.some(t=>a.category===t||a.holidayGroups?.includes(t))):[])].filter(a=>category==='all'||a.category===category||a.holidayGroups?.includes(category));
+ const filtered=[...appointments.filter(a=>(person==='all'||(person.startsWith('child:')?a.child===person.slice(6):a.person===Number(person)&&!a.child))&&(scope==='all'||(scope==='mine'?a.owner===active:scope==='private'?a.visibility==='private':a.visibility!=='private'))),...(references&&scope==='all'&&!person.startsWith('child:')?holidays.filter(a=>holidayTypes.some(t=>a.category===t||a.holidayGroups?.includes(t))):[])].filter(a=>category==='all'||a.category===category||a.holidayGroups?.includes(category));
  const booked=occurrences(filtered,grid[0],grid[grid.length-1]);
  const toBook=filtered.filter(a=>a.status==='to_book').sort((a,b)=>(a.bookBy||'9999').localeCompare(b.bookBy||'9999')||a.createdAt.localeCompare(b.createdAt));
  const byDay=new Map<string,Appointment[]>();grid.forEach(date=>byDay.set(date,booked.filter(a=>onDay(a,date))));

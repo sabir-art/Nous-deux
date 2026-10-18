@@ -7,7 +7,7 @@ export const entryInput=z.object({id:z.string().uuid(),kind:z.enum(['expense','s
  if(v.recurrence==='custom'&&!v.intervalDays)ctx.addIssue({code:z.ZodIssueCode.custom,path:['intervalDays'],message:'Choisissez le nombre de jours entre deux dépenses.'});
  if(v.repeatUntil&&v.repeatUntil<v.date)ctx.addIssue({code:z.ZodIssueCode.custom,path:['repeatUntil'],message:'La fin de répétition doit suivre la première dépense.'});
 });
-export const itemInput=z.object({id:z.string().uuid(),kind:z.enum(['shopping','task']),title:label,quantity:z.string().trim().max(50),assignee:z.number().int().min(-1).max(1),due:z.union([z.literal(''),date]),priority:z.number().int().min(0).max(1),done:z.boolean(),version:z.number().int().min(0)});
+export const itemInput=z.object({id:z.string().uuid(),kind:z.enum(['shopping','task']),child:z.string().uuid().optional(),title:label,quantity:z.string().trim().max(50),assignee:z.number().int().min(-1).max(1),due:z.union([z.literal(''),date]),priority:z.number().int().min(0).max(1),done:z.boolean(),version:z.number().int().min(0)});
 export const householdInput=z.object({first:z.string().trim().min(1).max(24),second:z.string().trim().min(1).max(24),name:z.string().trim().min(1).max(50),budget:z.number().int().min(0).max(999999999),version:z.number().int().min(0)}).refine(x=>x.first.toLocaleLowerCase()!==x.second.toLocaleLowerCase(),{message:'Choisissez deux prénoms distincts.'});
 export const deleteInput=z.object({id:z.string().uuid(),version:z.number().int().min(1)});
 export const appointmentInput=z.object({
