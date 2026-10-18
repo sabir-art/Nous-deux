@@ -9,7 +9,9 @@ export type Meals={date:string;myVotes:Record<string,boolean>;matches:MealMatch[
 export type Renewal={id:string;title:string;size:string;status:'ok'|'soon'|'now'};
 export type Child={id:string;owner:number;name:string;birthDate:string;tone:'menthe'|'beurre'|'rose'|'lilas'|'peche'|'lavande';school:string;health:string;contacts:string;notes:string;needs:string;renewals:Renewal[];version:number;createdAt:string};
 export function childAge(birthDate:string,today:string){if(!birthDate)return '';const [y,m,d]=birthDate.split('-').map(Number),[ty,tm,td]=today.split('-').map(Number);const months=(ty-y)*12+(tm-m)-(td<d?1:0);return months<1?'Nouveau-né':months<24?`${months} mois`:`${Math.floor(months/12)} ans`;}
-export type Data={meals?:Meals;profiles?:Record<string,string|null>;ideas?:import('./life').Idea[];plants?:import('./life').Plant[];children?:Child[];templates?:ShoppingTemplate[];member?:number;household:Household|null;entries:Entry[];items:Item[];appointments:Appointment[]};
+// Gift ideas: recipient -1 = for both of us. A secret idea only ever comes back from the API to its author.
+export type Gift={id:string;owner:number;recipient:-1|0|1;title:string;note:string;link:string;price:number|null;secret:boolean;bought:boolean;version:number;createdAt:string};
+export type Data={meals?:Meals;profiles?:Record<string,string|null>;ideas?:import('./life').Idea[];plants?:import('./life').Plant[];pets?:import('./pets').Pet[];gifts?:Gift[];children?:Child[];templates?:ShoppingTemplate[];member?:number;household:Household|null;entries:Entry[];items:Item[];appointments:Appointment[]};
 export const categories=['Courses','Maison','Factures','Sorties','Transport','Autre','Enfants'];
 export function centsFromInput(value:string):number{
  const s=value.trim().replace(',','.');
