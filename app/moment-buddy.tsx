@@ -8,6 +8,7 @@ export function momentKind(event:Appointment,ideas:Idea[]=[]):MomentKind{
  if(event.category==='home')return 'home';
  if(event.category==='party')return 'outing';
  if(event.category==='birthday')return 'birthday';
+ if(event.category==='couple')return 'surprise';
  if(event.category==='family')return 'family';
  return 'event';
 }

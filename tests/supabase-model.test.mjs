@@ -112,4 +112,8 @@ const vet={id:crypto.randomUUID(),title:'Vétérinaire · Biscuit',category:'med
 householdMutation(q,{action:'appointment',payload:vet},1);assert.equal(q.appointments.find(a=>a.id===vet.id).pet,pid);
 assert.throws(()=>householdMutation(q,{action:'appointment',payload:{...vet,id:crypto.randomUUID(),pet:crypto.randomUUID()}},1),e=>e.status===400);
 householdMutation(q,{action:'delete-pet',payload:{id:pid,version:1}},0);const kept=q.appointments.find(a=>a.id===vet.id);assert.equal(kept.pet,undefined);assert.equal(kept.version,2);}
+{// A couple date is always ours: shared, for both of us, back every year.
+const q=structuredClone(s);const c={id:crypto.randomUUID(),title:'Notre mariage',category:'couple',person:1,status:'scheduled',date:'2021-06-12',time:'',bookBy:'',location:'',note:'',visibility:'private',recurrence:'none',circle:'friends',version:0};
+householdMutation(q,{action:'appointment',payload:c},0);const saved=q.appointments.find(a=>a.id===c.id);
+assert.equal(saved.person,-1);assert.equal(saved.visibility,'shared');assert.equal(saved.recurrence,'yearly');assert.equal(saved.circle,undefined);}
 console.log('PASS: cross-member shopping checks, buyer integrity, status bypasses, weekly template copies, retries and author-only chat changes.');
