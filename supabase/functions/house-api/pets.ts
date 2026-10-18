@@ -22,6 +22,13 @@ export function petMutation(s:{pets?:Pet[]},action:string,payload:unknown,actor:
   if(old.careLog.some(c=>c.kind===v.kind&&c.date===date))throw new PetError(409,'Ce soin a déjà été noté aujourd’hui.');
   old.last[v.kind]=date;old.careLog=[{kind:v.kind,actor,date,at:now},...old.careLog].slice(0,100);old.version++;return null;
  }
+ // « Tout est fait »: every care due today (or late) is noted at once, skipping those already noted today.
+ if(action==='pet-care-all'){
+  const v=deleteInput.parse(payload);if(!old||old.version!==v.version)throw conflict();
+  const due=petCare(old,date).filter(c=>c.overdue>=0&&!old.careLog.some(l=>l.kind===c.kind&&l.date===date));
+  if(!due.length)throw new PetError(409,'Tous les soins du jour sont déjà faits.');
+  for(const c of due){old.last[c.kind]=date;old.careLog=[{kind:c.kind,actor,date,at:now},...old.careLog].slice(0,100);}old.version++;return null;
+ }
  if(old&&old.owner!==actor)throw new PetError(403,'Seule la personne qui a créé cette fiche peut la modifier.');
  if(action==='delete-pet'){const v=deleteInput.parse(payload);if(!old||old.version!==v.version)throw conflict();list.splice(list.indexOf(old),1);return null;}
  const v=petInput.parse(payload);if((old?.version||0)!==v.version)throw conflict();

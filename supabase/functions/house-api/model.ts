@@ -46,7 +46,7 @@ function householdChange(s:State,p:any,actor:number){
   return null;
  }
  if(action==='gift'||action==='delete-gift')return giftMutation(s,action,payload,actor,now);
- if(action==='pet'||action==='pet-care'||action==='delete-pet')return petMutation(s,action,payload,actor,now,parisDate());
+ if(['pet','pet-care','pet-care-all','delete-pet'].includes(action))return petMutation(s,action,payload,actor,now,parisDate());
  if(action==='meal-vote'){mealVote(s,payload,actor);return null;}
  if(action==='profile-photo'){
   const id=payload?.photoId;if(id!==null&&(typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)))throw new ApiError(400,'Photo invalide.');
