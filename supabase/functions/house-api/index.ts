@@ -11,6 +11,7 @@ import {mealProjection,mealVote,mealDraw,MealError} from './meals.ts';
 import {parisDate} from './life.ts';
 import {chatInput,chatCursorInput,photoInput} from './validation.ts';
 import {buildPushPayload} from 'npm:@block65/webcrypto-web-push@2.0.0';
+import {visibleGifts,GiftError} from './gifts.ts';
 import {claimPlantReminders,visibleAppointments,ApiError,householdMutation,callMutation,deviceMutation,type State} from './model.ts';
 import {defaultPreferences,deviceInput,allowedPushEndpoint} from './communication.ts';
 const ORIGIN='https://sabir-art.github.io',BASE='/Nous-deux/';
@@ -119,7 +120,7 @@ export async function handler(req:Request):Promise<Response>{
   const {data}=await mutate(s=>p.action==='draw'?mealDraw(s,p,actor):mealVote(s,p,actor));return json(mealProjection(data,actor));
  }
  if(route==='household'){
-  if(req.method==='GET'){const {data:s}=await state();return json({member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[]});}
+  if(req.method==='GET'){const {data:s}=await state();return json({member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[],gifts:visibleGifts(s,actor)});}
   if(['item','profile-photo'].includes(p.action)&&p.payload?.photoId){const photoId=deviceInput.parse(p.payload.photoId);const photos=await db('nd_photos?id=eq.'+photoId+'&select=owner');if(!photos.length||photos[0].owner!==actor)throw new ApiError(403,'Vous ne pouvez joindre que votre propre photo.');}
   const {result,data}=await mutate(s=>householdMutation(s,p,actor));if(result)try{await notify(data,actor,result.category,'Votre moitié '+result.message,req.headers.get('x-adeux-device')||'');}catch{}return json({ok:true});
  }
@@ -189,6 +190,6 @@ export async function handler(req:Request):Promise<Response>{
   await mutate(s=>{const d=s.devices.find(d=>d.deviceId===p.deviceId);if(d&&d.member!==actor)throw new ApiError(403,'Cet appareil appartient à un autre compte.');deviceMutation(s,{...p,member:actor});});return json({ok:true});
  }
  return json({error:'Route inconnue.'},404);
- }catch(e){if(e instanceof DailyError||e instanceof AttachmentError||e instanceof PlaceError||e instanceof VoiceError||e instanceof ApiError||e instanceof MealError||e instanceof RecipeError||e instanceof AISettingsError)return json({error:e.message},e.status);if(e instanceof SyntaxError||e&&typeof e==='object'&&'issues'in e)return json({error:'Vérifiez les champs du formulaire.'},400);return json({error:'Service temporairement indisponible. Réessayez.'},503);}
+ }catch(e){if(e instanceof DailyError||e instanceof AttachmentError||e instanceof PlaceError||e instanceof VoiceError||e instanceof ApiError||e instanceof MealError||e instanceof RecipeError||e instanceof AISettingsError||e instanceof GiftError)return json({error:e.message},e.status);if(e instanceof SyntaxError||e&&typeof e==='object'&&'issues'in e)return json({error:'Vérifiez les champs du formulaire.'},400);return json({error:'Service temporairement indisponible. Réessayez.'},503);}
 }
 Deno.serve(handler);
