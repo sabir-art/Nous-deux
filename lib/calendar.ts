@@ -1,4 +1,4 @@
-import type {Appointment} from './domain';
+import type {Appointment,Entry} from './domain';
 export const appointmentCategories={medical:'Médical',personal:'Personnel',admin:'Administratif',work:'Travail',holiday:'Vacances',travel:'Voyage',birthday:'Anniversaire',party:'Soirée / sortie',absence:'Absence',family:'Famille',sport:'Sport / bien-être',study:'Études / formation',home:'Maison',other:'Autre',france:'Jours fériés · France',christian:'Fêtes chrétiennes',islam:'Repères musulmans',culture:'Fêtes et traditions'};
 export const editableCategories=Object.entries(appointmentCategories).filter(([id])=>!['france','christian','islam','culture'].includes(id));
 const isoDate=(d:Date)=>d.toISOString().slice(0,10);
@@ -47,3 +47,14 @@ export function occurrences(events:Appointment[],from:string,to:string):Appointm
  return result.sort(sortAppointments);
 }
 export function onDay(a:Appointment,date:string){return a.date<=date&&(a.endDate||a.date)>=date;}
+// A recurring expense counts once per date up to `to` (today); each copy points back to its series in `original`.
+export function expandEntries(entries:Entry[],to:string):Entry[]{
+ const result:Entry[]=[];
+ for(const e of entries){
+  if(e.kind!=='expense'||!e.recurrence||e.recurrence==='none'){result.push(e);continue;}
+  const dates=occurrences([{...e,status:'scheduled',endDate:''} as unknown as Appointment],e.date,to).map(a=>a.date);
+  if(!dates.length)result.push(e);
+  for(const date of dates)result.push({...e,id:date===e.date?e.id:e.id+'#'+date,date,original:e});
+ }
+ return result;
+}

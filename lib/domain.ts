@@ -1,4 +1,4 @@
-export type Entry={owner?:number|null;id:string;kind:'expense'|'settlement';title:string;cents:number;member:number;category:string;date:string;note:string;version:number;createdAt:string};
+export type Entry={split?:'half'|'full'|'custom';owed?:number;recurrence?:'none'|'weekly'|'monthly'|'yearly'|'custom';intervalDays?:number;repeatUntil?:string;original?:Entry;owner?:number|null;id:string;kind:'expense'|'settlement';title:string;cents:number;member:number;category:string;date:string;note:string;version:number;createdAt:string};
 export type Item={note?:string;photoId?:string|null;weekStart?:string;purchasedBy?:number|null;purchasedAt?:string|null;owner?:number|null;id:string;kind:'shopping'|'task';title:string;quantity:string;assignee:number;due:string;priority:number;done:boolean;version:number;createdAt:string};
 export type Household={categoryBudgets?:Record<string,number>;first:string;second:string;name:string;budget:number;version:number};
 export type Appointment={sourceIdeaId?:string;sourceIdeaVersion?:number;place?:import('./life').Place|null;intervalDays?:number;holidayGroups?:string[];visibility?:'private'|'shared';recurrence?:'none'|'weekly'|'monthly'|'yearly'|'custom';endDate?:string;repeatUntil?:string;source?:string;provisional?:boolean;original?:Appointment;owner?:number|null;id:string;title:string;category:'medical'|'personal'|'admin'|'work'|'holiday'|'travel'|'birthday'|'party'|'absence'|'family'|'sport'|'study'|'home'|'other'|'france'|'christian'|'islam'|'culture';person:number;status:'to_book'|'scheduled'|'done';date:string;time:string;bookBy:string;location:string;note:string;createdAt:string;version:number};
@@ -12,9 +12,13 @@ export function centsFromInput(value:string):number{
  if(!/^\d{1,7}(\.\d{1,2})?$/.test(s))throw new Error('Saisissez un montant avec au maximum 2 décimales.');
  const [euros,dec='']=s.split('.');return Number(euros)*100+Number(dec.padEnd(2,'0'));
 }
-// For odd cents, the first person's share is rounded up.
-export function balance(entries:Pick<Entry,'kind'|'member'|'cents'>[]):number{
- return entries.reduce((sum,e)=>sum+(e.kind==='settlement'?(e.member===0?e.cents:-e.cents):(e.member===0?Math.floor(e.cents/2):-Math.ceil(e.cents/2))),0);
+// What the other person owes for an expense: half (the first person's share is rounded up for odd cents),
+// everything when split is 'full', or the amount chosen when split is 'custom'.
+export function owedShare(e:Pick<Entry,'member'|'cents'|'split'|'owed'>):number{
+ return e.split==='full'?e.cents:e.split==='custom'&&Number.isInteger(e.owed)?Math.min(Math.max(e.owed!,0),e.cents):e.member===0?Math.floor(e.cents/2):Math.ceil(e.cents/2);
+}
+export function balance(entries:Pick<Entry,'kind'|'member'|'cents'|'split'|'owed'>[]):number{
+ return entries.reduce((sum,e)=>sum+(e.kind==='settlement'?(e.member===0?e.cents:-e.cents):(e.member===0?owedShare(e):-owedShare(e))),0);
 }
 export function validDate(value:string):boolean{
  if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;
