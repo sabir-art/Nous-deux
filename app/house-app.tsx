@@ -23,7 +23,7 @@ import ShoppingArticleForm from './shopping-article-form';
 import {apiFetch,APP_BASE} from '../lib/api-client';
 import {createPortal} from 'react-dom';
 import {useState,useEffect,useCallback,useRef,type FormEvent,type ReactNode,type ComponentType} from 'react';
-import {Home,Wallet,ShoppingBasket,CheckCheck,Settings,Plus,ArrowUpRight,ArrowRight,ArrowLeftRight,ChevronLeft,ChevronRight,X,Check,Trash2,Pencil,RefreshCw,CloudCheck,CloudOff,Heart,Download,Smartphone,CalendarDays,Search,Receipt,Leaf,Lightbulb,Car,Coffee,Shapes,LockKeyhole,LogOut,LoaderCircle,ChevronDown,Flag,Phone,Bell,MessageCircle,BookOpen} from './icons';
+import {Gift,Home,Wallet,ShoppingBasket,CheckCheck,Settings,Plus,ArrowUpRight,ArrowRight,ArrowLeftRight,ChevronLeft,ChevronRight,X,Check,Trash2,Pencil,RefreshCw,CloudCheck,CloudOff,Heart,Download,Smartphone,CalendarDays,Search,Receipt,Leaf,Lightbulb,Car,Coffee,Shapes,LockKeyhole,LogOut,LoaderCircle,ChevronDown,Flag,Phone,Bell,MessageCircle,BookOpen} from './icons';
 import {balance,owedShare,centsFromInput,money,today,categories,type Data,type Entry,type Item,type Household,type Appointment} from '../lib/domain';
 import HouseCalls from './house-calls';
 import HouseNotifications from './house-notifications';
@@ -90,7 +90,7 @@ export default function HouseApp(){
   finally{mutating.current=false;submitting.current=false;setBusy(false);}
  }
  const home=data?.household;const names=[home?.first||'Vous',home?.second||'Votre moitié'];const all=expandEntries(data?.entries||[],today());const lists=data?.items||[];
- const appointments=data?.appointments||[];const ideas=data?.ideas||[];const plants=data?.plants||[];const waitingIdeas=ideas.filter(i=>i.owner!==active&&i.status==='pending');const thirstyPlants=plants.filter(p=>plantCare(p).some(c=>c.overdue>=0));
+ const appointments=data?.appointments||[];const ideas=data?.ideas||[];const plants=data?.plants||[];const gifts=data?.gifts||[];const waitingIdeas=ideas.filter(i=>i.owner!==active&&i.status==='pending');const thirstyPlants=plants.filter(p=>plantCare(p).some(c=>c.overdue>=0));
  const openAppointment=(options:OpenAppointment)=>open({kind:'appointment',...options,appointment:options.appointment?.original||options.appointment});
  const credit=balance(all);
  const monthly=all.filter(e=>e.kind==='expense'&&e.date.startsWith(month));const total=monthly.reduce((s,e)=>s+e.cents,0);
