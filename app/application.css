@@ -385,4 +385,4 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .split-fieldset{display:grid;gap:var(--space-4)}.split-fieldset legend{margin-bottom:var(--space-3)}.split-fieldset>label{gap:var(--space-3)}.split-solo{margin:0}
 .gauge-wrap{display:contents}
 /* Nothing left this month: a very pale start of arc, so the gauge never looks broken. The figure still reads 0 %. */
-.gauge-empty .nd-gauge-fill{stroke:color-mix(in srgb,var(--rose) 40%,var(--surface))!important;stroke-dashoffset:130px!important}
+.gauge-empty .nd-gauge-track{stroke:color-mix(in srgb,var(--rose) 22%,var(--surface))}.gauge-empty .nd-gauge-fill{stroke:color-mix(in srgb,var(--rose) 50%,var(--surface))!important;stroke-dashoffset:130px!important}
