@@ -13,6 +13,7 @@ export const householdInput=z.object({first:z.string().trim().min(1).max(24),sec
 export const deleteInput=z.object({id:z.string().uuid(),version:z.number().int().min(1)});
 export const appointmentInput=z.object({
  circle:z.enum(['close','family','friends','mine']).optional(),
+ pet:z.string().uuid().optional(),
  visibility:z.enum(['private','shared']).default('private'),recurrence:z.enum(['none','weekly','monthly','yearly','custom']).default('none'),intervalDays:z.number().int().min(1).max(3650).optional(),endDate:z.union([z.literal(''),date]).default(''),repeatUntil:z.union([z.literal(''),date]).default(''),
  id:z.string().uuid(),title:label,category:z.enum(['medical','personal','admin','work','holiday','travel','birthday','party','absence','family','sport','study','home','other','france','christian','islam','culture']),
  person:z.number().int().min(-1).max(1),child:z.string().uuid().optional(),status:z.enum(['to_book','scheduled','done']),

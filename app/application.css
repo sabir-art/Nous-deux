@@ -328,3 +328,4 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .birthday-circles{flex-wrap:wrap}.birthday-circles button{flex:1 1 auto;justify-content:center;white-space:nowrap}
 .agenda-of{margin:0 0 calc(var(--space-2) * -1);font:600 14px/18px var(--font-sans);color:var(--ink-muted)}
 .due-presets{margin-top:calc(var(--space-2) * -1)}
+.pet-appointments{display:grid;gap:var(--space-2)}.pet-appointments .text-link{justify-self:start;display:inline-flex;align-items:center;gap:var(--space-2)}.pet-appointment{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:44px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:var(--surface-sunken);color:var(--ink);text-align:left}.pet-appointment span{display:grid;min-width:0}.pet-appointment small{color:var(--ink-muted)}
