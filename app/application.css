@@ -274,3 +274,7 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .agenda-of{margin:0 0 calc(var(--space-2) * -1);font:600 14px/18px var(--font-sans);color:var(--ink-muted)}
 .due-presets{margin-top:calc(var(--space-2) * -1)}
 .budget-overview .nd-split-labels{margin-top:var(--space-5);padding-inline:var(--space-2)}
+.split-fieldset{display:grid;gap:var(--space-4)}.split-fieldset legend{margin-bottom:var(--space-3)}.split-fieldset>label{gap:var(--space-3)}.split-solo{margin:0}
+.gauge-wrap{display:contents}
+/* Nothing left this month: a very pale start of arc, so the gauge never looks broken. The figure still reads 0 %. */
+.gauge-empty .nd-gauge-fill{stroke:color-mix(in srgb,var(--rose) 40%,var(--surface))!important;stroke-dashoffset:130px!important}
