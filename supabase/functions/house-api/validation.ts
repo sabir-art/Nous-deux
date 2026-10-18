@@ -12,10 +12,10 @@ export const itemInput=z.object({id:z.string().uuid(),kind:z.enum(['shopping','t
 export const householdInput=z.object({first:z.string().trim().min(1).max(24),second:z.string().trim().min(1).max(24),name:z.string().trim().min(1).max(50),budget:z.number().int().min(0).max(999999999),version:z.number().int().min(0)}).refine(x=>x.first.toLocaleLowerCase()!==x.second.toLocaleLowerCase(),{message:'Choisissez deux prénoms distincts.'});
 export const deleteInput=z.object({id:z.string().uuid(),version:z.number().int().min(1)});
 export const appointmentInput=z.object({
- circle:z.enum(['close','family','friends','mine']).optional(),
+ circle:z.enum(['close','family','friends','mine']).optional(),countdown:z.boolean().optional(),
  pet:z.string().uuid().optional(),
  visibility:z.enum(['private','shared']).default('private'),recurrence:z.enum(['none','weekly','monthly','yearly','custom']).default('none'),intervalDays:z.number().int().min(1).max(3650).optional(),endDate:z.union([z.literal(''),date]).default(''),repeatUntil:z.union([z.literal(''),date]).default(''),
- id:z.string().uuid(),title:label,category:z.enum(['medical','personal','admin','work','holiday','travel','birthday','couple','party','absence','family','sport','study','home','other','france','christian','islam','culture']),
+ id:z.string().uuid(),title:label,category:z.enum(['medical','personal','admin','work','holiday','travel','birthday','couple','party','absence','family','sport','study','home','other','france','christian','islam','culture','jewish','world','abroad']),
  person:z.number().int().min(-1).max(1),child:z.string().uuid().optional(),status:z.enum(['to_book','scheduled','done']),
  date:z.union([z.literal(''),date]),time:z.string().regex(/^$|^([01]\d|2[0-3]):[0-5]\d$/),
  bookBy:z.union([z.literal(''),date]),location:z.string().trim().max(150),note:z.string().trim().max(500),
