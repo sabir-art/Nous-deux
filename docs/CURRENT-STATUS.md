@@ -20,6 +20,8 @@ Ce document est un état daté, pas un contrôle permanent de production. Vérif
 - PR #6 : photo d'appel ronde, contour blanc, image en `object-fit: cover` remplissant le cercle. Ne pas rétablir le carré ni les bandes de `contain`.
 - Les tests automatisés Chromium et WebKit ont réussi pour ces livraisons. Cela ne remplace pas une vérification tactile sur appareils réels.
 
+- 18 octobre (branche `claude/champ-date`) : sur iPhone, choisir une date ne fonctionnait pas dans les fenêtres (confier une mission, anniversaire…). `DateField` en `type="date"` affiche désormais un calendrier intégré à la page (mois/année en listes, jours, « Aujourd’hui », « Effacer » si facultatif), avec un champ caché pour les formulaires ; `min`/`max` respectés. Heures et mois gardent le sélecteur natif. Interface seulement.
+
 ## Données réelles : ne pas réinitialiser
 
 Le 10 octobre, à la demande explicite du propriétaire, les données de test des deux comptes ont été supprimées (courses, tâches, dépenses, événements personnels, plantes, idées, recettes personnelles, menus, favoris, messages et appels). Les deux mots de passe, photos de profil, sessions, appareils et secrets de configuration ont été conservés. Les recettes intégrées et repères calendaires n'ont pas été retirés.
