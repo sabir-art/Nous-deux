@@ -106,7 +106,7 @@ householdMutation(q,{action:'appointment',payload:{...b,category:'party',version
 assert.throws(()=>householdMutation(q,{action:'appointment',payload:{...b,id:crypto.randomUUID(),circle:'collegues'}},0));}
 console.log('PASS: cross-member shopping checks, one shopping push per outing, buyer integrity, status bypasses, weekly template copies, retries and author-only chat changes.');
 {// A vet appointment names an existing pet; deleting the pet keeps the appointment without the link.
-const q=structuredClone(s);const pid=crypto.randomUUID();
+const q=structuredClone(s);q.petsMode=true;const pid=crypto.randomUUID();
 householdMutation(q,{action:'pet',payload:{id:pid,version:0,name:'Biscuit',kind:'dog',breed:'',tone:'beurre',note:'',every:{food:1,walk:1,litter:0,groom:7,health:90},last:{food:'2026-10-01',walk:'2026-10-01',litter:'2026-10-01',groom:'2026-10-01',health:'2026-10-01'}}},0);
 const vet={id:crypto.randomUUID(),title:'Vétérinaire · Biscuit',category:'medical',pet:pid,person:-1,status:'scheduled',date:'2026-10-24',time:'10:00',bookBy:'',location:'',note:'',visibility:'shared',version:0};
 householdMutation(q,{action:'appointment',payload:vet},1);assert.equal(q.appointments.find(a=>a.id===vet.id).pet,pid);
