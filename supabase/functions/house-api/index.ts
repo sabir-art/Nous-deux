@@ -12,7 +12,7 @@ import {parisDate} from './life.ts';
 import {chatInput,chatCursorInput,photoInput} from './validation.ts';
 import {buildPushPayload} from 'npm:@block65/webcrypto-web-push@2.0.0';
 import {ChildError} from './children.ts';
-import {visibleGifts,GiftError} from './gifts.ts';
+import {visibleGifts,giftsOn,GiftError} from './gifts.ts';
 import {PetError} from './pets.ts';
 import {claimPlantReminders,visibleAppointments,ApiError,householdMutation,callMutation,deviceMutation,type State} from './model.ts';
 import {defaultPreferences,deviceInput,allowedPushEndpoint} from './communication.ts';
@@ -122,7 +122,7 @@ export async function handler(req:Request):Promise<Response>{
   const {data}=await mutate(s=>p.action==='draw'?mealDraw(s,p,actor):mealVote(s,p,actor));return json(mealProjection(data,actor));
  }
  if(route==='household'){
-  if(req.method==='GET'){const {data:s}=await state();return json({member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[],pets:s.pets||[],petsMode:!!s.petsMode,gifts:visibleGifts(s,actor),giftsMode:!!s.giftsMode,children:s.children||[],shoppingPending:!!s.shoppingPending?.[actor],familyMode:!!s.familyMode,colors:s.colors||{}});}
+  if(req.method==='GET'){const {data:s}=await state();return json({member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[],pets:s.pets||[],petsMode:!!s.petsMode,gifts:visibleGifts(s,actor),giftsMode:giftsOn(s,actor),children:s.children||[],shoppingPending:!!s.shoppingPending?.[actor],familyMode:!!s.familyMode,colors:s.colors||{}});}
   if(['item','profile-photo'].includes(p.action)&&p.payload?.photoId){const photoId=deviceInput.parse(p.payload.photoId);const photos=await db('nd_photos?id=eq.'+photoId+'&select=owner');if(!photos.length||photos[0].owner!==actor)throw new ApiError(403,'Vous ne pouvez joindre que votre propre photo.');}
   const {result,data}=await mutate(s=>householdMutation(s,p,actor));if(result)try{await notify(data,actor,result.category,'Votre moitié '+result.message,req.headers.get('x-adeux-device')||'');}catch{}return json({ok:true});
  }
