@@ -2,7 +2,9 @@ import DateField from './date-field';
 import PetBuddy from './pet-buddy';
 import {HeroCard,Sticker} from '../design-system/runtime';
 import {useEffect,useState,type FormEvent} from 'react';
-import {Check,Settings2,Trash2} from './icons';
+import {CalendarDays,Check,Settings2,Trash2} from './icons';
+import {addDays,occurrences} from '../lib/calendar';
+import type {Appointment} from '../lib/domain';
 import {parisDate} from '../lib/life';
 import {petCare,petCareDone,petCareLabels,petCares,petDefaults,petMood,petQuips,type Pet,type PetCare,type PetTone} from '../lib/pets';
 import LifeDialog from './life-dialog';
@@ -10,7 +12,7 @@ type Save=(a:string,p:unknown,m?:string)=>Promise<boolean>;
 const careEmoji:Record<PetCare,string>={food:'🍖',walk:'🦮',litter:'🧺',groom:'🪮',health:'💊'};
 const tones:[PetTone,string][]=[['beurre','Miel'],['peche','Roux'],['lavande','Gris'],['rose','Rose'],['menthe','Menthe'],['lilas','Lilas']];
 const when=(overdue:number)=>overdue>0?`En retard de ${overdue} jour${overdue>1?'s':''}`:overdue===0?'Aujourd’hui':`Dans ${-overdue} jour${overdue<-1?'s':''}`;
-export default function HousePets({create=false,onCreated,pets,active,names,busy,error,save}:{create?:boolean;onCreated?:()=>void;pets:Pet[];active:number;names:string[];busy:boolean;error:string;save:Save}){
+export default function HousePets({create=false,onCreated,pets,appointments=[],onAppointment=()=>{},active,names,busy,error,save}:{create?:boolean;onCreated?:()=>void;pets:Pet[];appointments?:Appointment[];onAppointment?:(o:{appointment?:Appointment;pet?:Pet})=>void;active:number;names:string[];busy:boolean;error:string;save:Save}){
  const[editing,setEditing]=useState<Pet|null|undefined>(undefined),[celebrate,setCelebrate]=useState(''),[history,setHistory]=useState('');
  useEffect(()=>{if(create){setEditing(null);onCreated?.();}},[create,onCreated]);
  const date=parisDate();const waiting=pets.filter(p=>petCare(p,date).some(c=>c.overdue>=0)).length;
@@ -22,6 +24,7 @@ export default function HousePets({create=false,onCreated,pets,active,names,busy
   <div className="plant-care-list">{cares.map(c=>{const doneToday=p.careLog.some(l=>l.kind===c.kind&&l.date===date);return <div className={`plant-care-row ${c.overdue>=0?'due':''}`} key={c.kind}><span className="care-icon" aria-hidden="true">{careEmoji[c.kind]}</span><div><strong>{petCareLabels[c.kind]}</strong><small>{when(c.overdue)} · {c.interval===1?'tous les jours':`tous les ${c.interval} j`}</small></div><button className={c.overdue>=0&&!doneToday?'primary':'secondary'} disabled={busy||doneToday} onClick={()=>care(p,c.kind)}>{doneToday&&<Check size={16}/>}{doneToday?'Noté':petCareDone[c.kind]}</button></div>;})}</div>
   <button className="secondary plant-all-done" disabled={busy||!cares.some(c=>c.overdue>=0&&!p.careLog.some(l=>l.kind===c.kind&&l.date===date))} onClick={async()=>{if(await save('pet-care-all',{id:p.id,version:p.version},`Tous les soins de ${p.name} sont notés. Merci !`)){setCelebrate(p.id);setTimeout(()=>setCelebrate(''),2500);}}}><Check size={18}/>Tout est fait</button>
   {p.note&&<p className="plant-note">{p.note}</p>}
+  {(()=>{const mine=appointments.filter(a=>a.pet===p.id);const next=occurrences(mine.filter(a=>a.status==='scheduled'),date,addDays(date,366)).filter(a=>a.date>=date).slice(0,2);const toBook=mine.filter(a=>a.status==='to_book');return <div className="pet-appointments">{[...next,...toBook].map(a=><button key={a.id+a.date} className="pet-appointment" onClick={()=>onAppointment({appointment:a})}><CalendarDays size={16} aria-hidden="true"/><span><strong>{a.title}</strong><small>{a.status==='to_book'?'À prendre':new Intl.DateTimeFormat('fr-FR',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(a.date+'T12:00:00Z'))+(a.time?` · ${a.time}`:'')}</small></span></button>)}<button className="text-link" onClick={()=>onAppointment({pet:p})}><CalendarDays size={16} aria-hidden="true"/>Ajouter un rendez-vous à l’agenda</button></div>;})()}
   <footer><span>Fiche de {names[p.owner]}</span><button className="text-link" onClick={()=>setHistory(history===p.id?'':p.id)} aria-expanded={history===p.id}>Historique</button></footer>
   {history===p.id&&<div className="plant-history">{p.careLog.length?p.careLog.slice(0,12).map((c,i)=><p key={i}><strong>{petCareLabels[c.kind]}</strong> · {names[c.actor]} · {new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'short'}).format(new Date(c.date+'T12:00:00'))}</p>):<p>Les prochains soins seront notés ici avec la personne qui s’en est occupée.</p>}</div>}
  </section>;})}</div>:<div className="panel empty pet-empty"><div className="pet-duo"><PetBuddy kind="dog" tone="beurre" size={96}/><PetBuddy kind="cat" tone="lavande" size={96}/></div><h3>Un chien, un chat ?</h3><p>Ajoutez votre compagnon, choisissez ses soins (repas, promenade, litière…) et cochez-les à deux.</p><button className="primary" onClick={()=>setEditing(null)}>Ajouter un animal</button></div>}

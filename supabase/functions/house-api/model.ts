@@ -14,7 +14,12 @@ export function householdMutation(s:State,p:any,actor:number){
  const {action,payload}=p;if(typeof action!=='string')throw new ApiError(400,'Action invalide.');const previous=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;const now=new Date().toISOString();
 
  if(['idea','idea-response','delete-idea','plant','plant-care','plant-care-all','delete-plant'].includes(action))return lifeMutation(s,action,payload,actor,now);
- if(['pet','pet-care','pet-care-all','delete-pet'].includes(action))return petMutation(s,action,payload,actor,now,parisDate());
+ if(['pet','pet-care','pet-care-all','delete-pet'].includes(action)){
+  petMutation(s,action,payload,actor,now,parisDate());
+  // A vet appointment stays in the agenda when its pet's card is deleted; it just no longer names the pet.
+  if(action==='delete-pet')for(const a of s.appointments)if(a.pet===(payload as {id?:string})?.id){delete a.pet;a.version++;}
+  return null;
+ }
  if(action==='meal-vote'){mealVote(s,payload,actor);return null;}
  if(action==='profile-photo'){
   const id=payload?.photoId;if(id!==null&&(typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)))throw new ApiError(400,'Photo invalide.');
@@ -61,7 +66,7 @@ export function householdMutation(s:State,p:any,actor:number){
   const existing=s[list].find(x=>x.id===payload?.id);if(list==='appointments'&&existing?.sourceIdeaId)throw new ApiError(403,'Ce rendez-vous vient d’une invitation acceptée. Modifiez ou annulez l’invitation depuis Nos idées.');if(existing&&existing.owner!==actor)throw new ApiError(403,'Seul l’auteur peut modifier ou supprimer cet élément.');
   if(list==='entries'&&!action.startsWith('delete-')&&payload?.member!==actor)throw new ApiError(403,'Enregistrez uniquement vos propres paiements.');
   if(action.startsWith('delete-')){const v=deleteInput.parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0||s[list][i].version!==v.version)conflict();s[list].splice(i,1);}
-  else{const v=(list==='entries'?entryInput:list==='items'?itemInput:appointmentInput).parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0&&v.version!==0||i>=0&&s[list][i].version!==v.version)conflict();if(list==='items'&&existing&&existing.kind!==v.kind)throw new ApiError(400,'Le type de liste ne peut pas changer.');if(list==='items'&&v.kind==='shopping'&&((existing&&v.done!==existing.done)||(!existing&&v.done)))throw new ApiError(400,'Utilisez la case achat pour cocher un article.');const value={...v,...(list==='items'&&v.kind==='shopping'?{note:v.note??existing?.note??'',photoId:v.photoId===undefined?existing?.photoId??null:v.photoId,weekStart:weekMonday(v.weekStart||existing?.weekStart||parisToday()),purchasedBy:existing?.purchasedBy??null,purchasedAt:existing?.purchasedAt??null}:{}),owner:actor,version:v.version+1,createdAt:i<0?now:s[list][i].createdAt};if(i<0)s[list].push(value);else s[list][i]=value;}
+  else{const v=(list==='entries'?entryInput:list==='items'?itemInput:appointmentInput).parse(payload);if((v as {pet?:string}).pet!==undefined&&!(s.pets||[]).some(p=>p.id===(v as {pet?:string}).pet))throw new ApiError(400,'Ce compagnon n’existe plus dans votre espace.');const i=s[list].findIndex(x=>x.id===v.id);if(i<0&&v.version!==0||i>=0&&s[list][i].version!==v.version)conflict();if(list==='items'&&existing&&existing.kind!==v.kind)throw new ApiError(400,'Le type de liste ne peut pas changer.');if(list==='items'&&v.kind==='shopping'&&((existing&&v.done!==existing.done)||(!existing&&v.done)))throw new ApiError(400,'Utilisez la case achat pour cocher un article.');const value={...v,...(list==='items'&&v.kind==='shopping'?{note:v.note??existing?.note??'',photoId:v.photoId===undefined?existing?.photoId??null:v.photoId,weekStart:weekMonday(v.weekStart||existing?.weekStart||parisToday()),purchasedBy:existing?.purchasedBy??null,purchasedAt:existing?.purchasedAt??null}:{}),owner:actor,version:v.version+1,createdAt:i<0?now:s[list][i].createdAt};if(i<0)s[list].push(value);else s[list][i]=value;}
  }
  // Private changes never enter the shared activity feed or trigger partner push.
  const current=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;
