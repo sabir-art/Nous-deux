@@ -260,8 +260,8 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}details[op
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--fete-juive:#1d3a4d;--fete-monde:#4a3720;--fete-pays:#3a3833}}
 [data-theme=dark]{--fete-juive:#1d3a4d;--fete-monde:#4a3720;--fete-pays:#3a3833}
 .reference-jewish{--reference-tone:var(--fete-juive);background:var(--fete-juive)}.reference-world{--reference-tone:var(--fete-monde);background:var(--fete-monde)}.reference-abroad{--reference-tone:var(--fete-pays);background:var(--fete-pays)}
-.holiday-more{min-height:44px;align-self:center;padding-inline:var(--space-2)}
-.holiday-country{display:grid;gap:var(--space-2);margin-top:var(--space-3);font:600 14px/18px var(--font-sans)}.holiday-country select{min-height:44px}.holiday-country small{font-weight:400;color:var(--ink-muted)}
+
+
 /* Birthdays and « Notre histoire »: coloured panels and little calendar leaves, readable at a glance. */
 .date-panel{display:flex;flex-direction:column;gap:var(--space-3)}.birthday-panel{background:var(--heart-soft)}.couple-panel{background:var(--lilas)}
 .date-panel .life-filters button{background:var(--surface)}
@@ -275,3 +275,4 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}details[op
 .date-card em{flex:none;font:600 14px/18px var(--font-sans);font-style:normal;padding:4px var(--space-3);border-radius:var(--radius-pill);background:var(--surface-sunken);white-space:nowrap}
 /* Countdown cards rotate through four pastels so two moments side by side never look alike. */
 .countdown-card:nth-child(4n+1){background:var(--beurre)}.countdown-card:nth-child(4n+2){background:var(--menthe)}.countdown-card:nth-child(4n+3){background:var(--lilas)}.countdown-card:nth-child(4n+4){background:var(--rose)}
+.holiday-add select{width:auto;min-height:44px;padding:var(--space-3) var(--space-8) var(--space-3) var(--space-4);border-radius:var(--radius-pill);border:2px dashed var(--line);background-color:var(--surface);font:600 14px/18px var(--font-sans);color:var(--ink)}
