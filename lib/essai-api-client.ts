@@ -9,9 +9,10 @@ import {discoveryProjection} from '../supabase/functions/house-api/recipe-discov
 import {placeMutation} from '../supabase/functions/house-api/places.ts';
 import {defaultPreferences} from '../supabase/functions/house-api/communication.ts';
 import {parisDate} from '../supabase/functions/house-api/life.ts';
+import {visibleGifts} from '../supabase/functions/house-api/gifts.ts';
 
 export const APP_BASE=location.pathname.replace(/[^/]*$/,'');
-const STATE_KEY='nous-deux-essai-state-v1',MEMBER_KEY='nous-deux-essai-member',PHOTOS_KEY='nous-deux-essai-photos-v1',CHAT_KEY='nous-deux-essai-chat-v1';
+const STATE_KEY='nous-deux-essai-state-v2',MEMBER_KEY='nous-deux-essai-member',PHOTOS_KEY='nous-deux-essai-photos-v1',CHAT_KEY='nous-deux-essai-chat-v1';
 const unavailable='Pas disponible en mode essai.';
 
 const read=<T,>(key:string,fallback:()=>T):T=>{try{const raw=localStorage.getItem(key);if(raw)return JSON.parse(raw) as T;}catch{}return fallback();};
@@ -25,10 +26,12 @@ function seed():State{
  const entry=(title:string,cents:number,who:number,category:string,offset:number,extra={})=>({id:id(),kind:'expense',title,cents,member:who,owner:who,category,date:day(offset),note:'',version:1,createdAt:now,...extra});
  const item=(title:string,quantity:string,who:number)=>({id:id(),kind:'shopping',title,quantity,assignee:-1,due:'',priority:0,done:false,note:'',photoId:null,weekStart:monday,purchasedBy:null,purchasedAt:null,owner:who,version:1,createdAt:now});
  return {household:{first:'Abdellah',second:'Laura',name:'Nous deux',budget:80000,version:1},profiles:{},
-  entries:[entry('Courses de la semaine',6420,0,'Courses',-3),entry('Facture d’électricité',8900,1,'Factures',-6),entry('Billet de train',4250,1,'Transport',-1,{split:'full'})],
+  entries:[entry('Courses de la semaine',6420,0,'Courses',-3),entry('Facture d’électricité',8900,1,'Factures',-6),entry('Billet de train',4250,1,'Transport',-1,{split:'full'}),entry('Loyer',85000,0,'Maison',-40,{recurrence:'monthly'})],
   items:[item('Pain','1',0),item('Tomates','1 kg',1),item('Lait','2 bouteilles',0)],
   appointments:[{id:id(),title:'Dîner chez nos amis',category:'party',person:-1,status:'scheduled',date:day(4),time:'20:00',bookBy:'',location:'',note:'',visibility:'shared',recurrence:'none',endDate:'',repeatUntil:'',owner:1,version:1,createdAt:now}],
-  activity:[],devices:[],call:null,sequence:0,templates:[],ideas:[],plants:[]} as unknown as State;
+  activity:[],devices:[],call:null,sequence:0,templates:[],ideas:[],plants:[],
+  gifts:[{id:id(),owner:0,recipient:1,title:'Un collier avec nos initiales',note:'Idée secrète d’Abdellah : passez sur son compte pour la voir.',link:'',price:6500,secret:true,bought:false,version:1,createdAt:now},{id:id(),owner:1,recipient:-1,title:'Un week-end à la mer',note:'',link:'',price:null,secret:false,bought:false,version:1,createdAt:now}],
+  pets:[{id:id(),owner:0,name:'Biscuit',kind:'dog',breed:'Croisé',tone:'beurre',note:'Croquettes matin et soir.',every:{food:1,walk:1,litter:0,groom:7,health:90},last:{food:day(-1),walk:day(-2),litter:day(-1),groom:day(-3),health:day(-30)},careLog:[],version:1,createdAt:now}]} as unknown as State;
 }
 const load=():State=>memory??=read<State>(STATE_KEY,seed);
 function mutate<T>(fn:(s:State)=>T):T{const s=structuredClone(load());const result=fn(s);memory=s;write(STATE_KEY,s);return result;}
@@ -52,7 +55,7 @@ function route(path:string,method:string,url:URL,p:any){
  switch(path){
   case 'access':if(p.action==='logout'){reset();return {ok:true};}return {configured:true};
   case 'household':
-   if(method==='GET'){const s=load();return {member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[]};}
+   if(method==='GET'){const s=load();return {member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[],gifts:visibleGifts(s,actor),pets:(s as {pets?:unknown[]}).pets||[]};}
    mutate(s=>householdMutation(s,p,actor));return {ok:true};
   case 'meals':if(method==='POST')mutate(s=>p.action==='draw'?mealDraw(s,p,actor):mealVote(s,p,actor));return mealProjection(load(),actor);
   case 'recipes':{if(method==='POST'){if(p.action==='discover'||p.action==='toggle')throw new ApiError(400,'Les idées de recettes par IA : '+unavailable.toLowerCase());mutate(s=>recipeMutation(s,p,actor));}

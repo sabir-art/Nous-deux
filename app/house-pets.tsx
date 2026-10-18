@@ -14,7 +14,7 @@ export default function HousePets({create=false,onCreated,pets,active,names,busy
  const[editing,setEditing]=useState<Pet|null|undefined>(undefined),[celebrate,setCelebrate]=useState(''),[history,setHistory]=useState('');
  useEffect(()=>{if(create){setEditing(null);onCreated?.();}},[create,onCreated]);
  const date=parisDate();const waiting=pets.filter(p=>petCare(p,date).some(c=>c.overdue>=0)).length;
- async function care(p:Pet,kind:PetCare){if(await save('pet-care',{id:p.id,version:p.version,kind},`${petCareLabels[kind]} noté pour ${p.name}.`)){setCelebrate(p.id);setTimeout(()=>setCelebrate(''),2500);}}
+ async function care(p:Pet,kind:PetCare){if(await save('pet-care',{id:p.id,version:p.version,kind},`C’est noté pour ${p.name} : ${petCareLabels[kind].toLowerCase()}.`)){setCelebrate(p.id);setTimeout(()=>setCelebrate(''),2500);}}
  return <div className="pets-space"><HeroCard tone="peche" title={<>Nos boules<br/>de <em>poils.</em></>} text={waiting?`${waiting} compagnon${waiting>1?'s attendent':' attend'} un petit soin.`:'Câlins, gamelles et balades : on s’organise à deux.'} action="Ajouter un animal" onAction={()=>setEditing(null)} buddy={{shape:'blob',tone:'beurre',mood:'love'}}/>
  {pets.length?<div className="pets-grid">{pets.map(p=>{const mood=celebrate===p.id?'love':petMood(p,date);const cares=petCare(p,date);return <section className={`pet-card pet-tone-${p.tone}`} key={p.id}>
   <header><div><span>{p.breed||(p.kind==='cat'?'Notre chat':'Notre chien')}</span><h2>{p.name}</h2></div>{p.owner===active&&<button className="icon-button" aria-label={`Modifier ${p.name}`} onClick={()=>setEditing(p)}><Settings2 size={18}/></button>}</header>

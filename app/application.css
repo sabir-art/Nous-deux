@@ -285,7 +285,7 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}details[op
 .pet-card{min-width:0;display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-5);border-radius:var(--radius-lg);background:var(--surface);box-shadow:var(--shadow-card)}
 .pet-card>header{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-2)}.pet-card>header span{color:var(--ink-muted);font:600 14px/20px var(--font-sans)}.pet-card>header h2{margin:0;overflow-wrap:anywhere}
 .pet-visual{position:relative;display:flex;flex-direction:column;align-items:center;gap:var(--space-2);padding:var(--space-3);border-radius:var(--radius-lg)}
-.pet-tone-beurre .pet-visual{background:var(--beurre)}.pet-tone-peche .pet-visual{background:var(--peche)}.pet-tone-lavande .pet-visual{background:var(--lavande)}.pet-tone-rose .pet-visual{background:var(--rose)}.pet-tone-menthe .pet-visual{background:var(--menthe)}.pet-tone-lilas .pet-visual{background:var(--lilas)}
+.pet-visual{background:var(--surface-sunken)}
 .pet-tag{position:absolute;right:var(--space-3);bottom:var(--space-3)}
 .pet-card>footer{display:flex;justify-content:space-between;align-items:center;gap:var(--space-2);color:var(--ink-muted);font-size:14px}
 .pet-card .plant-care-row .care-icon{font-size:20px}
