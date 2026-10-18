@@ -326,3 +326,5 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .pet-swatch[aria-pressed=true]{border-color:var(--pupil)}
 .pet-intervals{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,180px),1fr));gap:var(--space-3)}
 .birthday-circles{flex-wrap:wrap}.birthday-circles button{flex:1 1 auto;justify-content:center;white-space:nowrap}
+.agenda-of{margin:0 0 calc(var(--space-2) * -1);font:600 14px/18px var(--font-sans);color:var(--ink-muted)}
+.due-presets{margin-top:calc(var(--space-2) * -1)}
