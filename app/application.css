@@ -368,4 +368,4 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 /* Countdown cards rotate through four pastels so two moments side by side never look alike. */
 .countdown-card:nth-child(4n+1){background:var(--beurre)}.countdown-card:nth-child(4n+2){background:var(--menthe)}.countdown-card:nth-child(4n+3){background:var(--lilas)}.countdown-card:nth-child(4n+4){background:var(--rose)}
 .holiday-add select{width:auto;min-height:44px;padding:var(--space-3) var(--space-8) var(--space-3) var(--space-4);border-radius:var(--radius-pill);border:2px dashed var(--line);background-color:var(--surface);font:600 14px/18px var(--font-sans);color:var(--ink)}
-.budget-overview .nd-split-labels{margin-top:var(--space-3)}
+.budget-overview .nd-split-labels{margin-top:var(--space-5);padding-inline:var(--space-2)}
