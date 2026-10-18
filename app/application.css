@@ -273,3 +273,47 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .event-open.who-a .nd-event-card{background:var(--partner-a)}.event-open.who-b .nd-event-card{background:var(--partner-b)}
 .item-child{display:inline-flex;align-items:center;gap:var(--space-1)}.item-child i{width:8px;height:8px;border-radius:var(--radius-pill);background:var(--child)}
 .child-agenda-link{align-self:flex-start}.agenda-colour{margin-top:var(--space-4)}.child-tasks li{display:flex;align-items:center;gap:var(--space-2)}.child-tasks li>button:last-child{flex:1}
+.gifts-space{display:grid;gap:var(--space-4);min-width:0}.gifts-space .life-filters{margin:0}
+.gift-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-3);grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))}
+.gift-card{min-width:0;display:flex;flex-direction:column;gap:var(--space-3);border-radius:var(--radius-lg);padding:var(--space-4);background:var(--lilas)}
+.gift-card.secret{background:var(--surface);box-shadow:inset 0 0 0 2px var(--lilas)}.gift-card.bought{opacity:.72}.gift-card.bought strong{text-decoration:line-through}
+.gift-open{display:flex;flex-direction:column;align-items:flex-start;gap:var(--space-2);text-align:left;background:none;border:0;padding:0;color:var(--ink);min-height:44px;min-width:0;font:inherit;cursor:pointer}.gift-open:disabled{cursor:default;opacity:1}
+.gift-open strong{font:600 18px/24px var(--font-sans);overflow-wrap:anywhere}.gift-note{overflow-wrap:anywhere;color:var(--ink)}.gift-open small{color:var(--ink-muted)}
+.gift-tags{display:flex;flex-wrap:wrap;gap:var(--space-1)}.gift-tags>span{display:inline-flex;align-items:center;gap:4px;border-radius:var(--radius-pill);padding:2px var(--space-3);font:600 13px/20px var(--font-sans);background:var(--surface);color:var(--ink)}
+.gift-card.secret .gift-tags>span{background:var(--surface-sunken)}
+.gift-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-2)}.gift-actions>button{margin-left:auto}
+.gift-recipients button{justify-content:center}
+/* Pet mascots (app/pet-buddy.tsx), same palette and motion rules as the plant mascots */
+.pet-hit{display:inline-flex;justify-content:center}.pet-buddy{display:block;overflow:visible;touch-action:pan-y}
+.pet-buddy .f-beurre{--pet:var(--buddy-beurre)}.pet-buddy .f-peche{--pet:var(--buddy-peche)}.pet-buddy .f-lavande{--pet:var(--buddy-lavande)}.pet-buddy .f-rose{--pet:var(--buddy-rose)}.pet-buddy .f-menthe{--pet:var(--buddy-menthe)}.pet-buddy .f-lilas{--pet:var(--buddy-lilas)}
+.pet-buddy [class*=f-]{fill:var(--pet)}.pet-buddy .pet-tail{fill:none;stroke:var(--pet);stroke-width:11;stroke-linecap:round}
+.pet-buddy .pet-ear{stroke:var(--pet);stroke-width:6;stroke-linejoin:round}.pet-buddy .pet-inner-ear{fill:var(--buddy-rose)}
+.pet-buddy .pet-paw,.pet-buddy .pet-snout{fill:var(--eye)}.pet-buddy .pet-paw{opacity:.9}
+.pet-buddy .pet-shade,.pet-buddy .pet-patch{fill:var(--pupil);opacity:.13}.pet-buddy .pet-shadow{fill:var(--pupil);opacity:.12}
+.pet-buddy .pet-stripe{fill:none;stroke:var(--pupil);stroke-width:3;stroke-linecap:round;opacity:.18}
+.pet-buddy .pet-whisker{fill:none;stroke:var(--pupil);stroke-width:2;stroke-linecap:round;opacity:.45}
+.pet-buddy .pet-line{fill:none;stroke:var(--pupil);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.pet-buddy .pet-nose{fill:var(--pupil)}.pet-buddy .pet-tongue{fill:var(--heart);opacity:.75}
+.pet-buddy .eye,.pet-buddy .glint{fill:var(--eye)}.pet-buddy .pupil{fill:var(--pupil)}.pet-buddy .heart-eye,.pet-buddy .pl-hearts path{fill:var(--heart)}.pet-buddy .cheek{fill:var(--heart);opacity:.3}.pet-buddy .pet-tear{fill:var(--water);animation:pl-tear 1.6s ease-in 2 both}
+.pet-buddy .pet-pupil{transition:transform 120ms ease-out}.pet-buddy .pet-look{animation:pet-look 2.2s ease-in-out .3s 2}
+.pet-buddy .pl-hearts path{transform-box:fill-box;animation:pl-float 1.4s ease-out 1 both}
+.pet-buddy .pet-tail{transform-box:view-box;transform-origin:88px 106px;animation:pet-wag .4s ease-in-out 6 alternate}.pet-cat .pet-tail{transform-origin:86px 112px;animation:pet-swish 1.2s ease-in-out 3 alternate}
+.pet-buddy.mood-sad .pet-tail,.pet-buddy.mood-want .pet-tail{animation:none}.pet-buddy .pet-ears.droop{transform:translateY(4px)}
+.pet-buddy .pet-body{transform-box:view-box;transform-origin:60px 126px}.pet-buddy.poked .pet-body,.pet-buddy.mood-love .pet-body{animation:pl-bounce .7s cubic-bezier(.3,1.6,.5,1) 1}
+@keyframes pet-look{0%,100%{transform:translate(0,0)}20%,35%{transform:translate(-3.5px,0)}55%,70%{transform:translate(3.5px,-1px)}85%{transform:translate(0,2px)}}
+@keyframes pet-wag{from{transform:rotate(-10deg)}to{transform:rotate(12deg)}}
+@keyframes pet-swish{from{transform:rotate(-6deg)}to{transform:rotate(8deg)}}
+@media (prefers-reduced-motion:reduce){.pet-buddy *{animation:none!important;transition:none!important}}
+.pets-space{display:grid;gap:var(--space-4);min-width:0}.pets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:var(--space-3)}
+.pet-card{min-width:0;display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-5);border-radius:var(--radius-lg);background:var(--surface);box-shadow:var(--shadow-card)}
+.pet-card>header{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-2)}.pet-card>header span{color:var(--ink-muted);font:600 14px/20px var(--font-sans)}.pet-card>header h2{margin:0;overflow-wrap:anywhere}
+.pet-visual{position:relative;display:flex;flex-direction:column;align-items:center;gap:var(--space-2);padding:var(--space-3);border-radius:var(--radius-lg)}
+.pet-visual{background:var(--surface-sunken)}
+.pet-tag{position:absolute;right:var(--space-3);bottom:var(--space-3)}
+.pet-card>footer{display:flex;justify-content:space-between;align-items:center;gap:var(--space-2);color:var(--ink-muted);font-size:14px}
+.pet-card .plant-care-row .care-icon{font-size:20px}
+.pet-duo{display:flex;justify-content:center;gap:var(--space-3)}.pet-preview{display:flex;justify-content:center}
+.pet-tones{display:flex;flex-wrap:wrap;gap:var(--space-2)}.pet-swatch{min-height:44px;padding:0 var(--space-4);border-radius:var(--radius-pill);color:var(--pupil);font:600 15px/20px var(--font-sans);border:2px solid transparent}
+.pet-swatch.pet-tone-beurre{background:var(--buddy-beurre)}.pet-swatch.pet-tone-peche{background:var(--buddy-peche)}.pet-swatch.pet-tone-lavande{background:var(--buddy-lavande)}.pet-swatch.pet-tone-rose{background:var(--buddy-rose)}.pet-swatch.pet-tone-menthe{background:var(--buddy-menthe)}.pet-swatch.pet-tone-lilas{background:var(--buddy-lilas)}
+.pet-swatch[aria-pressed=true]{border-color:var(--pupil)}
+.pet-intervals{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,180px),1fr));gap:var(--space-3)}
