@@ -36,7 +36,7 @@ function ChildSpace({child,appointments,tasks,entries,active,names,busy,save,onE
  const setRenewals=(renewals:Renewal[],message:string)=>save('child',{...child,renewals},message);
  async function addRenewal(e:FormEvent){e.preventDefault();if(!title.trim())return;if(await setRenewals([...child.renewals,{id:crypto.randomUUID(),title:title.trim(),size:size.trim(),status:'ok'}],'Ajouté à la liste.')){setTitle('');setSize('');}}
  async function toShopping(r:Renewal){await save('item',{id:crypto.randomUUID(),version:0,kind:'shopping',title:r.title,quantity:r.size,note:`Pour ${child.name}`,photoId:null,assignee:-1,due:'',priority:0,done:false,weekStart:weekStart()},`${r.title} est dans la liste de courses.`);}
- const info:[string,string][]=[['École, crèche ou garde',child.school],['Santé, allergies',child.health],['Contacts utiles',child.contacts],['À savoir',child.notes]];
+ const info:[string,string][]=[['École, crèche ou garde',child.school],['Tailles',child.sizes||''],['Santé, allergies',child.health],['Contacts utiles',child.contacts],['À savoir',child.notes]];
  return <div className="child-space">
   <section className={`child-card child-tone-${child.tone}`}><div><h2>{child.name}</h2><p>{[childAge(child.birthDate,date),child.birthDate&&`né·e le ${new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(child.birthDate+'T12:00:00Z'))}`].filter(Boolean).join(' · ')||'Profil partagé par vous deux'}</p></div><button className="icon-button" aria-label={`Modifier le profil de ${child.name}`} onClick={onEdit}><Settings2 size={18}/></button></section>
   <button className="secondary child-agenda-link" onClick={onAgenda}><CalendarDays size={18}/>Voir l’agenda de {child.name}</button>
@@ -59,13 +59,14 @@ function ChildSpace({child,appointments,tasks,entries,active,names,busy,save,onE
  </div>;
 }
 function ChildForm({child,tones,busy,error,onSave,onDelete}:{child:Child|null;tones:PersonTone[];busy:boolean;error:string;onSave:(c:unknown)=>Promise<void>;onDelete?:()=>void}){
- const[id]=useState(()=>child?.id||crypto.randomUUID()),[tone,setTone]=useState<PersonTone>(child?.tone||tones[0]||'ciel');
+ const[id]=useState(()=>child?.id||crypto.randomUUID()),[tone,setTone]=useState<PersonTone>(child?.tone||tones[0]||'ciel'),[birth,setBirth]=useState(child?.birthDate||'');
  async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();const f=new FormData(e.currentTarget);const v=(k:string)=>String(f.get(k)||'').trim();
-  await onSave({id,version:child?.version||0,name:v('name'),birthDate:v('birthDate'),tone,school:v('school'),health:v('health'),contacts:v('contacts'),notes:v('notes'),needs:v('needs'),renewals:child?.renewals||[]});}
+  await onSave({id,version:child?.version||0,name:v('name'),birthDate:v('birthDate'),tone,school:v('school'),sizes:v('sizes'),health:v('health'),contacts:v('contacts'),notes:v('notes'),needs:v('needs'),renewals:child?.renewals||[]});}
  return <form className="form" onSubmit={submit}>
-  <div className="form-grid"><label>Prénom<input name="name" required autoFocus maxLength={60} defaultValue={child?.name||''}/></label><label>Date de naissance <span className="optional">(facultatif)</span><DateField name="birthDate" type="date" max={today()} defaultValue={child?.birthDate||''}/></label></div>
+  <div className="form-grid"><label>Prénom<input name="name" required autoFocus maxLength={60} defaultValue={child?.name||''}/></label><label>Date de naissance <span className="optional">(facultatif)</span><DateField name="birthDate" type="date" max={today()} value={birth} onChange={e=>setBirth(e.target.value)}/><small>{birth?`${childAge(birth,today())} · son anniversaire s’ajoute à l’agenda chaque année.`:'Son âge se calcule tout seul.'}</small></label></div>
   <fieldset><legend>Sa couleur dans l’agenda</legend><div className="tone-swatches">{tones.map(t=><button type="button" key={t} className={`tone-swatch child-tone-${t}`} aria-pressed={tone===t} onClick={()=>setTone(t)}>{toneLabels[t]}</button>)}</div><p className="helper-copy">Les couleurs déjà prises par vous deux, par « nous deux », par les fêtes ou par un autre enfant ne sont pas proposées.</p></fieldset>
   <label>École, crèche ou garde<input name="school" maxLength={150} defaultValue={child?.school||''} placeholder="Crèche des Lilas, nounou, CP de Mme Martin…"/></label>
+  <label>Tailles <span className="optional">(facultatif)</span><input name="sizes" maxLength={150} defaultValue={child?.sizes||''} placeholder="Vêtements 24 mois, pointure 22…"/></label>
   <label>Santé, allergies<textarea name="health" rows={2} maxLength={500} defaultValue={child?.health||''} placeholder="Allergies, traitement, groupe sanguin…"/></label>
   <label>Contacts utiles<textarea name="contacts" rows={2} maxLength={500} defaultValue={child?.contacts||''} placeholder="Pédiatre, nounou, école…"/></label>
   <label>Ses besoins du moment<textarea name="needs" rows={2} maxLength={700} defaultValue={child?.needs||''} placeholder="Sieste à 13 h, apprend à lire, mange sans gluten…"/></label>

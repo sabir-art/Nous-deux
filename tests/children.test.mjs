@@ -14,7 +14,7 @@ assert.equal(householdMutation(s,{action:'family-mode',payload:{enabled:true}},1
 // A profile is optional, shared by both parents and silent (no push, no activity line).
 assert.equal(householdMutation(s,{action:'child',payload:kid},1),null);assert.equal(s.children[0].owner,1);assert.equal(s.activity.length,activity);
 const renewal={id:crypto.randomUUID(),title:'Chaussures',size:'Pointure 24',status:'now'};
-householdMutation(s,{action:'child',payload:{...kid,version:1,renewals:[renewal]}},0);assert.equal(s.children[0].version,2);assert.equal(s.children[0].owner,1);assert.equal(s.children[0].renewals[0].status,'now');
+householdMutation(s,{action:'child',payload:{...kid,version:1,sizes:'24 mois, pointure 22',renewals:[renewal]}},0);assert.equal(s.children[0].sizes,'24 mois, pointure 22');assert.equal(s.children[0].version,2);assert.equal(s.children[0].owner,1);assert.equal(s.children[0].renewals[0].status,'now');
 assert.throws(()=>householdMutation(s,{action:'child',payload:{...kid,version:1}},0),e=>e.status===409);
 assert.throws(()=>householdMutation(s,{action:'child',payload:{...kid,id:crypto.randomUUID(),birthDate:'2999-01-01'}},0),e=>e.status===400);
 assert.throws(()=>householdMutation(s,{action:'child',payload:{...kid,id:crypto.randomUUID(),renewals:[renewal,renewal]}},0),e=>e.status===400);

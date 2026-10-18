@@ -7,7 +7,7 @@ export type MealMatch={recipeId:string;chef:0|1|2;createdAt:string};
 export type Meals={date:string;myVotes:Record<string,boolean>;matches:MealMatch[];draws?:Record<string,Record<string,0|1|2>>};
 // Optional child profiles, shared by both parents. tone colours the child's events and chips.
 export type Renewal={id:string;title:string;size:string;status:'ok'|'soon'|'now'};
-export type Child={id:string;owner:number;name:string;birthDate:string;tone:PersonTone;school:string;health:string;contacts:string;notes:string;needs:string;renewals:Renewal[];version:number;createdAt:string};
+export type Child={id:string;owner:number;name:string;birthDate:string;tone:PersonTone;school:string;sizes?:string;health:string;contacts:string;notes:string;needs:string;renewals:Renewal[];version:number;createdAt:string};
 export function childAge(birthDate:string,today:string){if(!birthDate)return '';const [y,m,d]=birthDate.split('-').map(Number),[ty,tm,td]=today.split('-').map(Number);const months=(ty-y)*12+(tm-m)-(td<d?1:0);return months<1?'Nouveau-né':months<24?`${months} mois`:`${Math.floor(months/12)} ans`;}
 export type PersonTone='lavande'|'peche'|'ciel'|'corail'|'sable'|'perle'|'menthe'|'beurre'|'lilas'|'citron'|'rose';
 export type Data={familyMode?:boolean;colors?:Record<string,PersonTone>;meals?:Meals;profiles?:Record<string,string|null>;ideas?:import('./life').Idea[];plants?:import('./life').Plant[];children?:Child[];templates?:ShoppingTemplate[];member?:number;household:Household|null;entries:Entry[];items:Item[];appointments:Appointment[]};
