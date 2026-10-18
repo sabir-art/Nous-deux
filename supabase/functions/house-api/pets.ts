@@ -3,11 +3,11 @@ import {z} from 'npm:zod@3.25.76';
 // No push and no activity line for pets: a walk or a meal is daily routine, not news.
 export const petCares=['food','walk','litter','groom','health'] as const;
 export type PetCare=typeof petCares[number];
-export type Pet={id:string;owner:number;name:string;kind:'dog'|'cat';breed:string;tone:string;note:string;every:Record<PetCare,number>;last:Record<PetCare,string>;version:number;createdAt:string;careLog:{kind:PetCare;actor:number;date:string;at:string}[]};
+export type Pet={birthDate?:string;id:string;owner:number;name:string;kind:'dog'|'cat';breed:string;tone:string;note:string;every:Record<PetCare,number>;last:Record<PetCare,string>;version:number;createdAt:string;careLog:{kind:PetCare;actor:number;date:string;at:string}[]};
 export class PetError extends Error{constructor(public status:number,message:string){super(message);}}
 const day=z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const cares=<T extends z.ZodTypeAny>(t:T)=>z.object({food:t,walk:t,litter:t,groom:t,health:t});
-const petInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),name:z.string().trim().min(1).max(60),kind:z.enum(['dog','cat']),breed:z.string().trim().max(80).default(''),tone:z.enum(['beurre','peche','lavande','rose','menthe','lilas']).default('beurre'),note:z.string().trim().max(700).default(''),every:cares(z.number().int().min(0).max(365)),last:cares(day)});
+const petInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),name:z.string().trim().min(1).max(60),kind:z.enum(['dog','cat']),breed:z.string().trim().max(80).default(''),tone:z.enum(['beurre','peche','lavande','rose','menthe','lilas']).default('beurre'),note:z.string().trim().max(700).default(''),birthDate:z.union([z.literal(''),day]).default(''),every:cares(z.number().int().min(0).max(365)),last:cares(day)});
 const careInput=z.object({id:z.string().uuid(),version:z.number().int().min(1),kind:z.enum(petCares)});
 const deleteInput=z.object({id:z.string().uuid(),version:z.number().int().min(1)});
 const conflict=()=>new PetError(409,'Cette fiche a changé sur un autre appareil. Fermez puis rouvrez-la.');
@@ -33,6 +33,7 @@ export function petMutation(s:{pets?:Pet[]},action:string,payload:unknown,actor:
  if(action==='delete-pet'){const v=deleteInput.parse(payload);if(!old||old.version!==v.version)throw conflict();list.splice(list.indexOf(old),1);return null;}
  const v=petInput.parse(payload);if((old?.version||0)!==v.version)throw conflict();
  if(!old&&list.length>=30)throw new PetError(400,'La limite de fiches est atteinte.');
+ if(v.birthDate&&v.birthDate>date)throw new PetError(400,'La date de naissance ne peut pas être dans le futur.');
  if(!old&&petCares.some(k=>v.last[k]>date))throw new PetError(400,'Un soin déjà effectué ne peut pas être dans le futur.');
  // Past care dates come from the care log once the card exists, never from an edit.
  const value:Pet={...v,owner:actor,version:v.version+1,createdAt:old?.createdAt||now,last:old?{...old.last}:v.last,careLog:old?.careLog||[]};
