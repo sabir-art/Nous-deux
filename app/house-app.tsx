@@ -72,6 +72,11 @@ export default function HouseApp(){
  const mealVotes=useMealVotes(active,data?.meals);
  const contentRef=useRef<HTMLElement>(null);
  usePageSwipe(contentRef,tab,setTab);
+ // Shopping pushes wait until this member leaves the shopping page (or closes the app), then go out as one notice.
+ const shoppingPending=useRef(false);shoppingPending.current=!!data?.shoppingPending;const shoppingAway=tab!=='shopping'&&!quickShopping;
+ const flushShopping=useCallback(()=>{if(!shoppingPending.current)return;shoppingPending.current=false;void apiFetch('/api/household',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','x-adeux-device':deviceId()},body:JSON.stringify({action:'shopping-done',payload:{}})}).catch(()=>{});},[]);
+ useEffect(()=>{if(shoppingAway&&data?.shoppingPending)flushShopping();},[shoppingAway,data?.shoppingPending,flushShopping]);
+ useEffect(()=>{const leave=()=>{if(document.visibilityState==='hidden')flushShopping();};document.addEventListener('visibilitychange',leave);addEventListener('pagehide',flushShopping);return()=>{document.removeEventListener('visibilitychange',leave);removeEventListener('pagehide',flushShopping);};},[flushShopping]);
  useEffect(()=>{const node=contentRef.current;node?.closest('.workspace')?.scrollTo({top:0,behavior:'instant'});if(node&&!matchMedia('(prefers-reduced-motion: reduce)').matches)node.animate([{opacity:.6,transform:`translateX(${direction.current*24}px)`},{opacity:1,transform:'translateX(0)'}],{duration:170,easing:'ease-out'});document.title=(nav.find(n=>n.id===tab)?.label||'Notre maison')+' · Nous deux';},[tab]);
  const canEdit=(record?:{owner?:number|null})=>!record||record.owner===active;
  const record=modal?.entry||modal?.item||modal?.appointment;const readOnly=!!record&&(!canEdit(record)||!!modal?.appointment?.sourceIdeaId);

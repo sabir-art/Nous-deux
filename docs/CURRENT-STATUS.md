@@ -20,7 +20,7 @@ Ce document est un état daté, pas un contrôle permanent de production. Vérif
 - PR #6 : photo d'appel ronde, contour blanc, image en `object-fit: cover` remplissant le cercle. Ne pas rétablir le carré ni les bandes de `contain`.
 - Les tests automatisés Chromium et WebKit ont réussi pour ces livraisons. Cela ne remplace pas une vérification tactile sur appareils réels.
 
-- 18 octobre (branche `claude/notifications-courses`) : notifications des courses regroupées dans `householdMutation` (`shoppingNotice`). Cocher un article n'envoie plus rien, sauf quand toute la liste de la semaine est cochée (« a coché toute la liste de courses »). Ajouts et modifications : une notification « a mis à jour la liste de courses » au plus toutes les 30 minutes par personne (`shoppingNotices` dans l'état JSON). **`house-api` doit être redéployée** après fusion.
+- 18 octobre (branche `claude/notifications-courses`) : une seule notification des courses par passage. Les changements de courses sont mis en attente par personne (`shoppingPending` dans l'état JSON, `holdShopping` dans `model.ts`) ; l'interface envoie l'action `shopping-done` quand on quitte l'onglet Courses (ou ferme l'ajout rapide), quand l'application passe en arrière-plan ou se ferme (`fetch` avec `keepalive`). Le message résume : « a coché toute la liste de courses », « a mis à jour la liste de courses » ou « a coché des achats dans les courses ». **`house-api` doit être redéployée** après fusion.
 
 ## Données réelles : ne pas réinitialiser
 
