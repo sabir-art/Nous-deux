@@ -6,7 +6,8 @@ import {CalendarDays,ChevronLeft,ChevronRight,Plus,Clock3,MapPin,Stethoscope,Cal
 import {today,type Appointment,type Child} from '../lib/domain';
 import {calendarDays,shiftMonth,sortAppointments,appointmentCategories,editableCategories,occurrences,onDay,addDays} from '../lib/calendar';
 import {holidays} from '../lib/holidays';
-const referenceTone=(category:string)=>category==='islam'?'menthe':category==='christian'?'beurre':category==='france'?'lilas':'peche';
+// Citron stays free of the partners' and together colours so holidays never look like someone's event.
+const referenceTone=(category:string)=>(category==='islam'?'menthe':category==='christian'?'beurre':category==='france'?'lilas':'citron') as 'menthe'|'beurre'|'lilas';
 const longDate=(date:string)=>new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z'));
 const shortDate=(date:string)=>new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z'));
 const monthName=(month:string)=>new Intl.DateTimeFormat('fr-FR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(month+'-01T12:00:00Z'));
