@@ -10,7 +10,10 @@ const secret={id:crypto.randomUUID(),version:0,title:'Montre',recipient:0,note:'
 const shared={id:crypto.randomUUID(),version:0,title:'Week-end à la mer',recipient:-1,secret:false};
 // Idées cadeaux is off by default: nothing can be noted until it is switched on.
 assert.throws(()=>householdMutation(s,{action:'gift',payload:secret},1),e=>e.status===400);
-assert.equal(householdMutation(s,{action:'gifts-mode',payload:{enabled:true}},0),null);assert.equal(s.giftsMode,true);
+// It is personal: Abdellah (0) switching it on does not switch it on for Laura (1).
+assert.equal(householdMutation(s,{action:'gifts-mode',payload:{enabled:true}},0),null);assert.deepEqual(s.giftsMode,{0:true});
+assert.throws(()=>householdMutation(s,{action:'gift',payload:secret},1),e=>e.status===400);
+assert.equal(householdMutation(s,{action:'gifts-mode',payload:{enabled:true}},1),null);assert.deepEqual(s.giftsMode,{0:true,1:true});
 // Laura (1) notes a secret idea for Abdellah (0) and a shared one; no push, no activity.
 assert.equal(householdMutation(s,{action:'gift',payload:secret},1),null);
 assert.equal(householdMutation(s,{action:'gift',payload:shared},1),null);
