@@ -367,5 +367,18 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .date-card em{flex:none;font:600 14px/18px var(--font-sans);font-style:normal;padding:4px var(--space-3);border-radius:var(--radius-pill);background:var(--surface-sunken);white-space:nowrap}
 /* Countdown cards rotate through four pastels so two moments side by side never look alike. */
 .countdown-card:nth-child(4n+1){background:var(--beurre)}.countdown-card:nth-child(4n+2){background:var(--menthe)}.countdown-card:nth-child(4n+3){background:var(--lilas)}.countdown-card:nth-child(4n+4){background:var(--rose)}
-.holiday-add select{width:auto;min-height:44px;padding:var(--space-3) var(--space-8) var(--space-3) var(--space-4);border-radius:var(--radius-pill);border:2px dashed var(--line);background-color:var(--surface);font:600 14px/18px var(--font-sans);color:var(--ink)}
 .budget-overview .nd-split-labels{margin-top:var(--space-5);padding-inline:var(--space-2)}
+.holiday-picker{position:relative}
+.holiday-filter.holiday-add{background:var(--surface);border:2px dashed var(--line);gap:var(--space-1)}
+.holiday-filter.holiday-add[aria-expanded=true]{border-style:solid;border-color:var(--ink)}
+.holiday-add-chevron{transition:transform 160ms ease}.holiday-add[aria-expanded=true] .holiday-add-chevron{transform:rotate(180deg)}
+.holiday-panel{position:absolute;z-index:20;top:calc(100% + var(--space-2));right:0;width:min(320px,calc(100vw - 2 * var(--space-6)));background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-lift);padding:var(--space-4);display:grid;gap:var(--space-2)}
+.holiday-panel p{font:600 13px/18px var(--font-sans);color:var(--ink-muted);margin:var(--space-1) 0 0}
+.holiday-panel>div{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.holiday-panel small{font:400 12px/16px var(--font-sans);color:var(--ink-muted);margin-top:var(--space-1)}
+.holiday-option{min-height:44px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-pill);font:600 14px/18px var(--font-sans);color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.holiday-add-chevron{transition:none}}
+.event-open.day-tone-0 .nd-event-card{background:color-mix(in srgb,var(--rose) 70%,var(--surface))}
+.event-open.day-tone-1 .nd-event-card{background:color-mix(in srgb,var(--rose) 35%,var(--surface))}
+.event-open.day-tone-2 .nd-event-card{background:color-mix(in srgb,var(--lilas) 45%,var(--surface))}
+.event-open.day-tone-3 .nd-event-card{background:color-mix(in srgb,var(--beurre) 45%,var(--surface))}
