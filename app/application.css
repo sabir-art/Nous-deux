@@ -75,7 +75,7 @@ input::-webkit-date-and-time-value{text-align:left;min-width:0}
 @keyframes invitation-open{from{transform:translateY(12px) rotate(-2deg);opacity:0}to{transform:translateY(0);opacity:1}}
 .calendar-page>.nd-hero{max-width:none}.calendar-panel{background:var(--canvas)}.calendar-day-panel{border-top:6px solid var(--rose)}.booking-panel{border-top:6px solid var(--beurre)}.calendar-options{background:var(--surface-sunken)}
 .holiday-filters>div{display:flex;flex-wrap:wrap;gap:var(--space-2)}.holiday-filter{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-4);min-height:44px;border-radius:var(--radius-pill);font:600 14px/18px var(--font-sans);border:2px solid transparent;color:var(--ink)}.holiday-filter[aria-pressed=false]{background:var(--surface);border-color:var(--line)}.holiday-filter[aria-pressed=true]{border-color:var(--ink)}
-.reference-islam{--reference-tone:var(--menthe);background:var(--menthe)}.reference-christian{--reference-tone:var(--beurre);background:var(--beurre)}.reference-france{--reference-tone:var(--lilas);background:var(--lilas)}.reference-culture{--reference-tone:var(--peche);background:var(--peche)}
+.reference-islam{--reference-tone:var(--menthe);background:var(--menthe)}.reference-christian{--reference-tone:var(--beurre);background:var(--beurre)}.reference-france{--reference-tone:var(--lilas);background:var(--lilas)}.reference-culture{--reference-tone:var(--citron);background:var(--citron)}
 .event-open[class*=reference-]:not(.reference-none){background:transparent}
 @media(prefers-reduced-motion:reduce){.invitation-ticket{animation:none}}
 /* Real recipes and reusable weekly menus. */
