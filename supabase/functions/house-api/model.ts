@@ -14,7 +14,7 @@ export function householdMutation(s:State,p:any,actor:number){
  const {action,payload}=p;if(typeof action!=='string')throw new ApiError(400,'Action invalide.');const previous=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;const now=new Date().toISOString();
 
  if(['idea','idea-response','delete-idea','plant','plant-care','plant-care-all','delete-plant'].includes(action))return lifeMutation(s,action,payload,actor,now);
- if(action==='gift'||action==='delete-gift')return giftMutation(s,action,payload,actor,now);
+ if(action==='gifts-mode'||action==='gift'||action==='delete-gift')return giftMutation(s,action,payload,actor,now);
  if(action==='meal-vote'){mealVote(s,payload,actor);return null;}
  if(action==='profile-photo'){
   const id=payload?.photoId;if(id!==null&&(typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)))throw new ApiError(400,'Photo invalide.');

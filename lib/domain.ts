@@ -7,7 +7,7 @@ export type MealMatch={recipeId:string;chef:0|1|2;createdAt:string};
 export type Meals={date:string;myVotes:Record<string,boolean>;matches:MealMatch[];draws?:Record<string,Record<string,0|1|2>>};
 // Gift ideas: recipient -1 = for both of us. A secret idea only ever comes back from the API to its author.
 export type Gift={id:string;owner:number;recipient:-1|0|1;child?:string;other?:string;title:string;note:string;link:string;price:number|null;secret:boolean;bought:boolean;version:number;createdAt:string};
-export type Data={meals?:Meals;profiles?:Record<string,string|null>;ideas?:import('./life').Idea[];plants?:import('./life').Plant[];gifts?:Gift[];templates?:ShoppingTemplate[];member?:number;household:Household|null;entries:Entry[];items:Item[];appointments:Appointment[]};
+export type Data={giftsMode?:boolean;meals?:Meals;profiles?:Record<string,string|null>;ideas?:import('./life').Idea[];plants?:import('./life').Plant[];gifts?:Gift[];templates?:ShoppingTemplate[];member?:number;household:Household|null;entries:Entry[];items:Item[];appointments:Appointment[]};
 export const categories=['Courses','Maison','Factures','Sorties','Transport','Autre'];
 export function centsFromInput(value:string):number{
  const s=value.trim().replace(',','.');
