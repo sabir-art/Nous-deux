@@ -12,7 +12,7 @@ import {parisDate} from '../supabase/functions/house-api/life.ts';
 import {visibleGifts} from '../supabase/functions/house-api/gifts.ts';
 
 export const APP_BASE=location.pathname.replace(/[^/]*$/,'');
-const STATE_KEY='nous-deux-essai-state-v6',MEMBER_KEY='nous-deux-essai-member',PHOTOS_KEY='nous-deux-essai-photos-v1',CHAT_KEY='nous-deux-essai-chat-v1';
+const STATE_KEY='nous-deux-essai-state-v7',MEMBER_KEY='nous-deux-essai-member',PHOTOS_KEY='nous-deux-essai-photos-v1',CHAT_KEY='nous-deux-essai-chat-v1';
 const unavailable='Pas disponible en mode essai.';
 
 const read=<T,>(key:string,fallback:()=>T):T=>{try{const raw=localStorage.getItem(key);if(raw)return JSON.parse(raw) as T;}catch{}return fallback();};
@@ -32,7 +32,7 @@ function seed():State{
   activity:[],devices:[],call:null,sequence:0,templates:[],ideas:[],plants:[],
   gifts:[{id:id(),owner:0,recipient:1,title:'Un collier avec nos initiales',note:'Idée secrète d’Abdellah : passez sur son compte pour la voir.',link:'',price:6500,secret:true,bought:false,version:1,createdAt:now},{id:id(),owner:1,recipient:-1,other:'Sophie',title:'Un bon pour un massage',note:'Pour ses 30 ans.',link:'',price:4500,secret:false,bought:false,version:1,createdAt:now},{id:id(),owner:1,recipient:-1,title:'Un week-end à la mer',note:'',link:'',price:null,secret:false,bought:false,version:1,createdAt:now}],
   children:[],
-  pets:[{id:id(),owner:0,name:'Biscuit',kind:'dog',breed:'Croisé',tone:'beurre',note:'Croquettes matin et soir.',every:{food:1,walk:1,litter:0,groom:7,health:90},last:{food:day(-1),walk:day(-2),litter:day(-1),groom:day(-3),health:day(-30)},careLog:[],version:1,createdAt:now}]} as unknown as State;
+  pets:[{id:id(),owner:0,name:'Biscuit',kind:'dog',breed:'Croisé',tone:'beurre',birthDate:day(-1450),note:'Croquettes matin et soir.',every:{food:1,walk:1,litter:0,groom:7,health:90},last:{food:day(-1),walk:day(-2),litter:day(-1),groom:day(-3),health:day(-30)},careLog:[],version:1,createdAt:now}]} as unknown as State;
 }
 const load=():State=>memory??=read<State>(STATE_KEY,seed);
 function mutate<T>(fn:(s:State)=>T):T{const s=structuredClone(load());const result=fn(s);memory=s;write(STATE_KEY,s);return result;}
