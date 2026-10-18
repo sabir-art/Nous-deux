@@ -14,7 +14,7 @@ export function householdMutation(s:State,p:any,actor:number){
  const {action,payload}=p;if(typeof action!=='string')throw new ApiError(400,'Action invalide.');const previous=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;const now=new Date().toISOString();
 
  if(['idea','idea-response','delete-idea','plant','plant-care','plant-care-all','delete-plant'].includes(action))return lifeMutation(s,action,payload,actor,now);
- if(['pet','pet-care','pet-care-all','delete-pet'].includes(action)){
+ if(['pets-mode','pet','pet-care','pet-care-all','delete-pet'].includes(action)){
   petMutation(s,action,payload,actor,now,parisDate());
   // A vet appointment stays in the agenda when its pet's card is deleted; it just no longer names the pet.
   if(action==='delete-pet')for(const a of s.appointments)if(a.pet===(payload as {id?:string})?.id){delete a.pet;a.version++;}

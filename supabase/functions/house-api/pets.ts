@@ -14,7 +14,10 @@ const conflict=()=>new PetError(409,'Cette fiche a changé sur un autre appareil
 function addDays(date:string,days:number){const d=new Date(date+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+days);return d.toISOString().slice(0,10);}
 const between=(a:string,b:string)=>Math.round((Date.parse(a+'T12:00:00Z')-Date.parse(b+'T12:00:00Z'))/86400000);
 export function petCare(p:Pet,date:string){return petCares.filter(k=>p.every[k]>0).map(kind=>{const due=addDays(p.last[kind],p.every[kind]);return {kind,interval:p.every[kind],last:p.last[kind],due,overdue:between(date,due)};});}
-export function petMutation(s:{pets?:Pet[]},action:string,payload:unknown,actor:number,now:string,date:string):null{
+const modeInput=z.object({enabled:z.boolean()});
+export function petMutation(s:{pets?:Pet[];petsMode?:boolean},action:string,payload:unknown,actor:number,now:string,date:string):null{
+ // Nos compagnons is optional: switched on in Notre espace; switching it off only hides the cards.
+ if(action==='pets-mode'){s.petsMode=modeInput.parse(payload).enabled;return null;}
  s.pets??=[];const list=s.pets;const old=list.find(p=>p.id===(payload as {id?:string})?.id);
  if(action==='pet-care'){
   const v=careInput.parse(payload);if(!old||old.version!==v.version)throw conflict();
@@ -32,6 +35,7 @@ export function petMutation(s:{pets?:Pet[]},action:string,payload:unknown,actor:
  if(old&&old.owner!==actor)throw new PetError(403,'Seule la personne qui a créé cette fiche peut la modifier.');
  if(action==='delete-pet'){const v=deleteInput.parse(payload);if(!old||old.version!==v.version)throw conflict();list.splice(list.indexOf(old),1);return null;}
  const v=petInput.parse(payload);if((old?.version||0)!==v.version)throw conflict();
+ if(!old&&!s.petsMode)throw new PetError(400,'Activez d’abord Nos compagnons dans Notre espace.');
  if(!old&&list.length>=30)throw new PetError(400,'La limite de fiches est atteinte.');
  if(v.birthDate&&v.birthDate>date)throw new PetError(400,'La date de naissance ne peut pas être dans le futur.');
  if(!old&&petCares.some(k=>v.last[k]>date))throw new PetError(400,'Un soin déjà effectué ne peut pas être dans le futur.');
