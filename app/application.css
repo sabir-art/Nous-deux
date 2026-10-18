@@ -255,3 +255,4 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}details[op
 .gift-card.secret .gift-tags>span{background:var(--surface-sunken)}
 .gift-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-2)}.gift-actions>button{margin-left:auto}
 .gift-recipients button{justify-content:center}
+.gift-recipients{flex-wrap:wrap}.gift-recipients button{flex:1 1 auto;justify-content:center;white-space:nowrap}
