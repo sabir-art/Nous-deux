@@ -49,6 +49,8 @@ Ce document est un état daté, pas un contrôle permanent de production. Vérif
 - 19 octobre (PR #14, cohérence du mode) : audit « activé partout / masqué partout » — page, tuile d’accueil et entrée « Un cadeau » du menu + suivent déjà le choix personnel `giftsMode` ; aucun autre écran (agenda, anniversaires, chat) ne renvoie aux idées cadeaux sur cette branche. Ajout d’un contrôle dans `tests/gifts.test.mjs`, aucun changement de code applicatif ni de Supabase.
   - 19 octobre, 2e série : cœur simple sans contour ; « Autre » toujours proposé dans À table (plats ni végétariens, ni poulet, ni bœuf, ni poisson) ; rangées de filtres sans barre de défilement ; missions de la roue écrites par le couple (`perso:<texte>`, 40 caractères, caractères simples vérifiés par le serveur) ; menu de la semaine : titre du jour dans la carte, plus de débordement, une couleur pâle par jour.
 
+  - 19 octobre, 2e série : plus de bouton « Importer une recette » à part (l’import reste dans « Ajouter ma recette ») ; « Une photo » remplace « Prendre en photo » et « Une capture d’écran » (le téléphone propose appareil photo ou photothèque) ; boutons d’import sur deux colonnes, textes dans les boutons.
+
 ## Données réelles : ne pas réinitialiser
 
 Le 10 octobre, à la demande explicite du propriétaire, les données de test des deux comptes ont été supprimées (courses, tâches, dépenses, événements personnels, plantes, idées, recettes personnelles, menus, favoris, messages et appels). Les deux mots de passe, photos de profil, sessions, appareils et secrets de configuration ont été conservés. Les recettes intégrées et repères calendaires n'ont pas été retirés.

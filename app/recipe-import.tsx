@@ -1,7 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {apiFetch} from '../lib/api-client';
 import {compressPhoto} from '../lib/photos';
-import {Camera,ImagePlus,Link2,Sparkles} from './icons';
+import {Camera,Link2,Sparkles} from './icons';
 export type ImportedRecipe={title:string;group:string;difficulty:string;minutes:number;servings:number;ingredients:string[];steps:string[];sourceUrl:string;sourceTitle:string};
 /** Reads a photo, a screenshot or a link on the server; the result only pre-fills the editor. */
 export default function RecipeImport({initialUrl='',onBusy,onImported}:{initialUrl?:string;onBusy:(busy:boolean)=>void;onImported:(draft:ImportedRecipe,photo:File|null)=>void}){
@@ -27,10 +27,9 @@ export default function RecipeImport({initialUrl='',onBusy,onImported}:{initialU
  useEffect(()=>{if(initialUrl&&!started.current){started.current=true;void run({kind:'url',url:initialUrl},null);}},[initialUrl]); // eslint-disable-line react-hooks/exhaustive-deps
  return <section className="recipe-import" aria-labelledby="recipe-import-title" aria-busy={busy}>
   <h3 id="recipe-import-title"><Sparkles size={20} aria-hidden="true"/>Importer une recette</h3>
-  <p>Une page de livre, une capture ou un lien : on remplit la fiche, vous relisez avant d’enregistrer.</p>
+  <p>La photo d’une page de livre, une capture d’écran ou un lien : on remplit la fiche, vous relisez avant d’enregistrer.</p>
   <div className="recipe-import-actions">
-   <label className={`secondary photo-upload${busy?' is-disabled':''}`}><Camera size={20} aria-hidden="true"/>Prendre en photo<input type="file" accept="image/*" capture="environment" disabled={busy} onChange={e=>void fromImage(e.currentTarget)}/></label>
-   <label className={`secondary photo-upload${busy?' is-disabled':''}`}><ImagePlus size={20} aria-hidden="true"/>Une capture d’écran<input type="file" accept="image/*" disabled={busy} onChange={e=>void fromImage(e.currentTarget)}/></label>
+   <label className={`secondary photo-upload${busy?' is-disabled':''}`}><Camera size={20} aria-hidden="true"/>Une photo<input type="file" accept="image/*" disabled={busy} onChange={e=>void fromImage(e.currentTarget)}/></label>
    <button type="button" className="secondary" aria-expanded={linkOpen} aria-controls={linkOpen?'recipe-import-link':undefined} disabled={busy} onClick={()=>setLinkOpen(v=>!v)}><Link2 size={20} aria-hidden="true"/>Un lien</button>
   </div>
   {linkOpen&&<form id="recipe-import-link" className="recipe-import-link" onSubmit={e=>{e.preventDefault();fromLink();}}><label>Adresse de la page de recette<input type="url" inputMode="url" autoComplete="off" required maxLength={2000} value={url} disabled={busy} onChange={e=>setUrl(e.target.value)} placeholder="https://…"/></label><button className="secondary" type="submit" disabled={busy||!url.trim()}>{busy?'Lecture…':'Lire la recette'}</button></form>}
