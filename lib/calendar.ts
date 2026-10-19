@@ -1,5 +1,7 @@
 import type {Appointment} from './domain';
 export const appointmentCategories={medical:'Médical',personal:'Personnel',admin:'Administratif',work:'Travail',holiday:'Vacances',travel:'Voyage',birthday:'Anniversaire',party:'Soirée / sortie',absence:'Absence',family:'Famille',sport:'Sport / bien-être',study:'Études / formation',home:'Maison',other:'Autre',france:'Jours fériés · France',christian:'Fêtes chrétiennes',islam:'Repères musulmans',culture:'Fêtes et traditions'};
+// An animal's appointments: the vet, grooming, a pet sitter… never work or studies.
+export const petCategories:[string,string][]=[['medical','Santé, vétérinaire'],['home','Soins, toilettage'],['travel','Garde, pension'],['other','Autre']];
 export const editableCategories=Object.entries(appointmentCategories).filter(([id])=>!['france','christian','islam','culture'].includes(id));
 const isoDate=(d:Date)=>d.toISOString().slice(0,10);
 export function calendarDays(month:string):string[]{

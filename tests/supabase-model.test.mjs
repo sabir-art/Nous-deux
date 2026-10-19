@@ -68,4 +68,11 @@ assert.equal(weekMonday('2027-01-01'),'2026-12-28');assert.equal(weekMonday('202
 assert.throws(()=>authorizeChat({member:0,version:2},1,2),e=>e.status===403);
 assert.throws(()=>authorizeChat({member:0,version:2},0,1),e=>e.status===409);
 assert.doesNotThrow(()=>authorizeChat({member:0,version:2},0,2));
+{// A vet appointment names an existing pet; deleting the pet keeps the appointment without the link.
+const q=structuredClone(s);q.petsMode=true;const pid=crypto.randomUUID();
+householdMutation(q,{action:'pet',payload:{id:pid,version:0,name:'Biscuit',kind:'dog',breed:'',tone:'beurre',note:'',every:{food:1,walk:1,litter:0,groom:7,health:90},last:{food:'2026-10-01',walk:'2026-10-01',litter:'2026-10-01',groom:'2026-10-01',health:'2026-10-01'}}},0);
+const vet={id:crypto.randomUUID(),title:'Vétérinaire · Biscuit',category:'medical',pet:pid,person:-1,status:'scheduled',date:'2026-10-24',time:'10:00',bookBy:'',location:'',note:'',visibility:'shared',version:0};
+householdMutation(q,{action:'appointment',payload:vet},1);assert.equal(q.appointments.find(a=>a.id===vet.id).pet,pid);
+assert.throws(()=>householdMutation(q,{action:'appointment',payload:{...vet,id:crypto.randomUUID(),pet:crypto.randomUUID()}},1),e=>e.status===400);
+householdMutation(q,{action:'delete-pet',payload:{id:pid,version:1}},0);const kept=q.appointments.find(a=>a.id===vet.id);assert.equal(kept.pet,undefined);assert.equal(kept.version,2);}
 console.log('PASS: cross-member shopping checks, buyer integrity, status bypasses, weekly template copies, retries and author-only chat changes.');
