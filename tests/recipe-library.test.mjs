@@ -28,4 +28,8 @@ assert.throws(()=>mutate(s,{action:'menu-delete',payload:{id:menuId}},1),e=>e.st
 mutate(s,{action:'recipe-archive',payload:{id,version:1}},0);assert(!knownRecipe(s,id,true));assert(knownRecipe(s,id));assert.equal(s.mealPlans[2].slots[0].recipeId,id,'Historical menus keep archived recipes');
 mutate(s,{action:'menu-delete',payload:{id:menuId}},0);assert.equal(s.mealPlanTemplates.length,0);assert.equal(s.mealPlans.length,3,'Deleting a favorite preserves all copied weeks');
 assert.throws(()=>mutate(s,{action:'plan-save',payload:plan},2),e=>e.status===403);
+// Imported recipes keep their credit; only https links are stored.
+const imported={...recipe,id:crypto.randomUUID(),sourceTitle:'Cuisine & Co',sourceUrl:'https://www.cuisine.fr/curry'};const sourced={};mutate(sourced,{action:'recipe-save',payload:imported},1);assert.equal(sourced.personalRecipes[0].sourceUrl,'https://www.cuisine.fr/curry');assert.equal(sourced.personalRecipes[0].sourceTitle,'Cuisine & Co');
+for(const sourceUrl of ['http://www.cuisine.fr/x','javascript:alert(1)','https://user:pw@cuisine.fr/','https://'+'x'.repeat(500)+'.fr'])assert.throws(()=>mutate({},{action:'recipe-save',payload:{...imported,sourceUrl}},1));
+const legacy={};mutate(legacy,{action:'recipe-save',payload:recipe},0);assert.equal(legacy.personalRecipes[0].sourceUrl,'','Older clients without source fields still save');
 console.log('PASS: personal recipes, nutrition validation, author-only editing, version conflicts, independent weeks, immutable menu templates, idempotent copies, no overwrite and retained historical recipes.');

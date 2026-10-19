@@ -39,6 +39,7 @@ jobs:
       - run: node tests/photos.test.mjs
       - run: node tests/interaction.test.mjs
       - run: node tests/recipe-discovery.test.mjs
+      - run: node tests/recipe-import.test.mjs
       - run: node tests/recipe-library.test.mjs
       - run: node tests/recipe-experience.test.mjs
       - run: node tests/ai-settings.test.mjs

@@ -25,7 +25,7 @@ export function finishDiscovery(s:DiscoveryState,id:string,recipes:DiscoveredRec
 }
 const text=(value:unknown,max:number)=>typeof value==='string'&&value.trim().length>0&&value.length<=max&&!/[<>\x00-\x08]/.test(value)?value.trim():null;
 export function safeSource(value:unknown){try{const u=new URL(String(value));return u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&recipeDomains.some(d=>u.hostname===d||u.hostname==='www.'+d)?u.href:null;}catch{return null;}}
-const noPork=/\b(porc|pork|bacon|lard(?:on)?s?|jambon|ham|prosciutto|pancetta|guanciale|chorizo|saindoux|g[eé]latine|sauciss(?:e|on)s?|andouill(?:e|ette)s?|boudin|mortadelle|salami|pepperoni)\b/i;
+export const noPork=/\b(porc|pork|bacon|lard(?:on)?s?|jambon|ham|prosciutto|pancetta|guanciale|chorizo|saindoux|g[eé]latine|sauciss(?:e|on)s?|andouill(?:e|ette)s?|boudin|mortadelle|salami|pepperoni)\b/i;
 export function validateRecipes(raw:any,sources:Set<string>,now=new Date()):DiscoveredRecipe[]{
  if(!Array.isArray(raw?.recipes)||raw.recipes.length>4)throw new DiscoveryError('format');
  const result:DiscoveredRecipe[]=[];
