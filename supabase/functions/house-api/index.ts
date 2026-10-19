@@ -7,6 +7,7 @@ import {validAIKey,verifyAIKey,AISettingsError} from './ai-settings.ts';
 import {recipeMutation,RecipeError} from './recipe-library.ts';
 import {recipeTitles} from './recipe-ids.ts';
 import {claimDiscovery,finishDiscovery,discoveryProjection,discoverRecipes,DiscoveryError} from './recipe-discovery.ts';
+import {importFromImage,importFromUrl,checkImportUrl,validImportImage,ImportError,importMessages} from './recipe-import.ts';
 import {mealProjection,mealVote,mealDraw,MealError} from './meals.ts';
 import {parisDate} from './life.ts';
 import {chatInput,chatCursorInput,photoInput} from './validation.ts';
@@ -49,7 +50,7 @@ export async function handler(req:Request):Promise<Response>{
  if(!['GET','POST'].includes(req.method))return json({error:'Méthode non autorisée.'},405);
  try{
  const url=new URL(req.url),route=url.searchParams.get('route')||'',token=req.headers.get('x-house-session')||'';
- let p:any={};if(req.method==='POST'&&!['voice-upload','attachment-upload'].includes(route)){if(!req.headers.get('content-type')?.includes('application/json'))return json({error:'Format invalide.'},415);const raw=await req.text();if(raw.length>(route==='photos'?361000:36000))return json({error:'Contenu trop long.'},413);p=JSON.parse(raw);}
+ let p:any={};if(req.method==='POST'&&!['voice-upload','attachment-upload'].includes(route)){if(!req.headers.get('content-type')?.includes('application/json'))return json({error:'Format invalide.'},415);const raw=await req.text();if(raw.length>(route==='photos'?361000:route==='recipe-import'?1450000:36000))return json({error:'Contenu trop long.'},413);p=JSON.parse(raw);}
  if(route==='notification-photo'){if(req.method!=='GET')return json({error:'Méthode non autorisée.'},405);return await serveNotificationPhoto(url,secret(),db,async()=>(await state()).data,cors);}
  if(route==='plant-reminders'){
   if(req.method!=='POST')return json({error:'Méthode non autorisée.'},405);
@@ -115,6 +116,19 @@ export async function handler(req:Request):Promise<Response>{
    if(['toggle','discover'].includes(p.action))backgroundDiscovery();
   }
   const {data}=await state(),configured=!!await aiKey(),discovery=discoveryProjection(data,configured);if(req.method==='GET'&&configured&&discovery.enabled&&Date.now()>=discovery.nextAttemptAt)backgroundDiscovery();return json({recipes:[...(data.generatedRecipes||[]),...(data.personalRecipes||[])],favorites:data.recipeFavorites?.[actor]||[],plans:data.mealPlans||[],menus:data.mealPlanTemplates||[],member:actor,discovery});
+ }
+ if(route==='recipe-import'){
+  // Returns a draft only; saving goes through recipe-save and its ownership checks.
+  if(req.method!=='POST')return json({error:'Méthode non autorisée.'},405);
+  try{
+   if(p.kind==='url')checkImportUrl(p.url);else if(p.kind==='image'){if(!validImportImage(p.data))throw new ImportError('image');}else throw new ApiError(400,'Choisissez une photo ou un lien.');
+   const key=await aiKey();if(p.kind==='image'&&!key)throw new ImportError('unconfigured');
+   const hour=await db('rpc/nd_rate_hit','POST',{rate_key:'recipe-import:'+actor+':'+Math.floor(Date.now()/3600000),expiry:Date.now()+7200000});
+   const day=await db('rpc/nd_rate_hit','POST',{rate_key:'recipe-import-day:'+actor+':'+Math.floor(Date.now()/86400000),expiry:Date.now()+172800000});
+   if(hour>10||day>30)throw new ImportError('rate');
+   const result=p.kind==='image'?{recipe:await importFromImage(p.data,key,aiModel()),method:'ai'}:await importFromUrl(p.url,{key,model:aiModel()});
+   return json({draft:result.recipe,method:result.method});
+  }catch(e){if(e instanceof ImportError){const [status,error]=importMessages[e.code];return json({error,code:e.code},status);}throw e;}
  }
  if(route==='meals'){
 
