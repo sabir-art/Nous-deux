@@ -1,3 +1,4 @@
+import {giftMutation} from './gifts.ts';
 import {synchronizeInvitation} from './invitation-agenda.ts';
 import {validDate,categories} from './domain.ts';
 import {z} from 'npm:zod@3.25.76';
@@ -6,13 +7,14 @@ import {parisDate,plantCare} from './life.ts';
 import {entryInput,itemInput,householdInput,deleteInput,appointmentInput,shoppingCheckInput,templateInput,templateApplyInput,ideaInput,ideaResponseInput,plantInput,plantCareInput} from './validation.ts';
 import {deviceInput,memberInput,preferenceInput,subscriptionInput,changeDescription} from './communication.ts';
 export class ApiError extends Error{constructor(public status:number,message:string){super(message);}}
-export type State=MealState&{favoritePlaces?:import('./places.ts').FavoritePlace[];shoppingBatches?:string[];profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];plantReminderDays?:Record<string,string>};
+export type State=MealState&{favoritePlaces?:import('./places.ts').FavoritePlace[];shoppingBatches?:string[];profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];plantReminderDays?:Record<string,string>;gifts?:import('./gifts.ts').Gift[]};
 const conflict=()=>{throw new ApiError(409,'Cet élément a changé sur un autre appareil. Fermez puis rouvrez le formulaire.');};
 export function householdMutation(s:State,p:any,actor:number){
  if(actor!==0&&actor!==1)throw new ApiError(403,'Compte personnel requis.');
  const {action,payload}=p;if(typeof action!=='string')throw new ApiError(400,'Action invalide.');const previous=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;const now=new Date().toISOString();
 
  if(['idea','idea-response','delete-idea','plant','plant-care','plant-care-all','delete-plant'].includes(action))return lifeMutation(s,action,payload,actor,now);
+ if(action==='gifts-mode'||action==='gift'||action==='delete-gift')return giftMutation(s,action,payload,actor,now);
  if(action==='meal-vote'){mealVote(s,payload,actor);return null;}
  if(action==='profile-photo'){
   const id=payload?.photoId;if(id!==null&&(typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)))throw new ApiError(400,'Photo invalide.');
