@@ -55,6 +55,8 @@ householdMutation(s,{action:'item',payload:{...shop,version:2,done:true,purchase
 purchased=s.items.find(i=>i.id===shop.id);assert.equal(purchased.purchasedBy,1);
 householdMutation(s,{action:'shopping-check',payload:{id:shop.id,version:3,done:false}},1);assert.equal(purchased.purchasedBy,null);assert.equal(purchased.done,false);
 const templateId=crypto.randomUUID();householdMutation(s,{action:'template-create',payload:{id:templateId,title:'Les essentiels',weekStart:'2026-10-05'}},0);
+// A list type can also be written directly, without adding anything to the week.
+{const before=s.items.length,id=crypto.randomUUID();householdMutation(s,{action:'template-create',payload:{id,title:'Dimanche',items:[{title:'Pain'},{title:'Lait',quantity:'2 L'}]}},1);assert.equal(s.items.length,before);assert.deepEqual(s.templates.find(t=>t.id===id).items,[{title:'Pain',quantity:''},{title:'Lait',quantity:'2 L'}]);assert.throws(()=>householdMutation(s,{action:'template-create',payload:{id:crypto.randomUUID(),title:'Vide',items:[]}},1));assert.throws(()=>householdMutation(s,{action:'template-create',payload:{id:crypto.randomUUID(),title:'Les deux',weekStart:'2026-10-05',items:[{title:'Pain'}]}},1));s.templates=s.templates.filter(t=>t.id!==id);}
 assert.equal(s.templates[0].items[0].title,'Bananes');assert.equal(s.templates[0].owner,0);
 const operationId=crypto.randomUUID(),beforeApply=s.items.length;
 householdMutation(s,{action:'template-apply',payload:{id:templateId,operationId,weekStart:'2026-10-12',owner:0}},1);
