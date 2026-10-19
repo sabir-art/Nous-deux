@@ -5,6 +5,7 @@
 import {ApiError,weekMonday,visibleAppointments,type State} from './model.ts';
 import {plantCare,plantMood,parisDate,type Plant} from './life.ts';
 import {recipeIds,recipeTitles} from './recipe-ids.ts';
+import {sweetNoteText} from './sweet-notes.ts';
 
 export {chatStickerIds,chatCardKinds,chatCardInput,chatStickerInput,MAX_CARD_NOTE,type ChatCardKind,type ChatCardRef} from './chat-card-input.ts';
 import type {ChatCardKind,ChatCardRef} from './chat-card-input.ts';
@@ -50,6 +51,11 @@ export function buildChatCard(s:State&ChatCardState,ref:ChatCardRef,actor:number
    const r:any=personal||generated||(built>=0?{title:recipeTitles[built]}:null)||missing();
    return {ref:ref.id,data:{title:short(r.title),...(Number.isInteger(r.minutes)?{minutes:r.minutes}:{}),...(Number.isInteger(r.servings)?{servings:r.servings}:{}),...(typeof r.group==='string'?{group:short(r.group,40)}:{})},summary:`🍽️ Recette : ${short(r.title)}`,push:'🍽️ Une recette dans votre discussion'};
   }
+  case 'mot':{
+   // A ready-made sweet note: only ids of the fixed list are accepted, the text is a snapshot.
+   const text=sweetNoteText(ref.id)||missing();
+   return {ref:ref.id,data:{text},summary:'💌 '+text,push:'💌 Un petit mot doux pour vous'};
+  }
   case 'menu':{
    const plan=s.mealPlans?.find(m=>m.id===ref.id)||missing();
    const title=(id:string)=>{const i=recipeIds.indexOf(id);return i>=0?recipeTitles[i]:(s.personalRecipes?.find(r=>r.id===id)?.title||(s as any).generatedRecipes?.find((r:any)=>r.id===id)?.title||'Plat');};
@@ -58,7 +64,8 @@ export function buildChatCard(s:State&ChatCardState,ref:ChatCardRef,actor:number
  }
 }
 
-const stickerWords:Record<string,string>={bisou:'bisou !',calin:'câlin',['je-t-aime']:'je t’aime',coucou:'coucou !',['bonne-nuit']:'bonne nuit',cafe:'café ?',['a-table']:'à table !',courses:'courses ?',arrosage:'on arrose ?',merci:'merci !',bravo:'bravo !',pardon:'pardon…',boude:'je boude',['j-arrive']:'j’arrive !',['tu-me-manques']:'tu me manques',fete:'c’est la fête !',film:'soirée film ?',pluie:'il pleut…',vacances:'vacances !',courage:'courage !'};
+const stickerWords:Record<string,string>={bisou:'bisou !',calin:'câlin',['je-t-aime']:'je t’aime',coucou:'coucou !',['bonne-nuit']:'bonne nuit',cafe:'café ?',['a-table']:'à table !',courses:'courses ?',arrosage:'on arrose ?',merci:'merci !',bravo:'bravo !',pardon:'pardon…',boude:'je boude',['j-arrive']:'j’arrive !',['tu-me-manques']:'tu me manques',fete:'c’est la fête !',film:'soirée film ?',pluie:'il pleut…',vacances:'vacances !',courage:'courage !',
+ ['chat-faim']:'le chat a faim',ronron:'ronron…',sieste:'sieste ?',balade:'balade ?',ouaf:'ouaf !',['ca-pousse']:'ça pousse !',['bisou-piquant']:'bisou piquant',resto:'resto ce soir ?',['je-rentre']:'je rentre !',surprise:'surprise !',anniv:'joyeux anniv !',['rendez-vous']:'rendez-vous ?'};
 export const stickerText=(id:string)=>'💞 Sticker « '+(stickerWords[id]||id)+' »';
 
 /** Adds or replaces an unsent record, keeping the state small: older cards fall back to their message text. */

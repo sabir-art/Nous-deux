@@ -1,9 +1,10 @@
 // Cartes « maison » partagées dans la discussion : courses, dépense, plante,
-// mission, rendez-vous partagé, recette et menu. Le serveur valide la référence
+// mission, rendez-vous partagé, recette, menu et petits mots doux tout prêts. Le serveur valide la référence
 // et fournit l’instantané ; ce module ne fait que l’afficher ou le choisir.
 import {useEffect,useMemo,useState,type ReactNode} from 'react';
 import {Buddy,PlantBuddy,Sticker,foodEmoji} from '../design-system/runtime';
-import {ShoppingBasket,Receipt,Leaf,CheckCheck,CalendarDays,BookOpen,UtensilsCrossed,ArrowRight,ArrowLeft,Send,Paperclip,LockKeyhole} from './icons';
+import {ShoppingBasket,Receipt,Leaf,CheckCheck,CalendarDays,BookOpen,UtensilsCrossed,ArrowRight,ArrowLeft,Send,Paperclip,LockKeyhole,Heart,Plus} from './icons';
+import {sweetNotes,sweetNoteTone} from '../lib/sweet-notes';
 import {money,today,type Entry,type Item,type Appointment} from '../lib/domain';
 import {plantCare,plantMood,plantQuips,careLabels,type Plant} from '../lib/life';
 import {weekStart,weekLabel} from '../lib/shopping';
@@ -11,7 +12,7 @@ import {apiFetch} from '../lib/api-client';
 import type {HousePage} from './use-house-navigation';
 import LifeDialog from './life-dialog';
 
-export type HouseCardKind='shopping'|'expense'|'plant'|'task'|'appointment'|'recipe'|'menu';
+export type HouseCardKind='shopping'|'expense'|'plant'|'task'|'appointment'|'recipe'|'menu'|'mot';
 export type HouseCard={kind:HouseCardKind;ref:string;data:Record<string,any>;note?:string};
 export type HouseCardRef={kind:'shopping';weekStart?:string}|{kind:Exclude<HouseCardKind,'shopping'>;id:string};
 export type HouseOpenTarget={page:HousePage;weekStart?:string;date?:string};
@@ -22,7 +23,7 @@ type MealPlan={id:string;weekStart:string;slots:{day:number;meal:'lunch'|'dinner
 const shortDate=(d:string)=>d?new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'}):'';
 const days=['Lun.','Mar.','Mer.','Jeu.','Ven.','Sam.','Dim.'];
 const who=(n:number,names:string[])=>n===0||n===1?names[n]:'L’un de nous';
-export const shareChoices:{kind:HouseCardKind;label:string;hint:string;icon:import('react').ComponentType<import('lucide-react').LucideProps>;tone:string}[]=[
+export const shareChoices:{kind:Exclude<HouseCardKind,'mot'>;label:string;hint:string;icon:import('react').ComponentType<import('lucide-react').LucideProps>;tone:string}[]=[
  {kind:'shopping',label:'La liste de courses',hint:'Ce qu’il reste à acheter cette semaine',icon:ShoppingBasket,tone:'menthe'},
  {kind:'expense',label:'Une dépense',hint:'Un paiement récent, avec un petit mot',icon:Receipt,tone:'beurre'},
  {kind:'plant',label:'Une plante',hint:'Son humeur et ses soins à faire',icon:Leaf,tone:'menthe'},
@@ -31,8 +32,8 @@ export const shareChoices:{kind:HouseCardKind;label:string;hint:string;icon:impo
  {kind:'recipe',label:'Une recette',hint:'Une idée pour le prochain repas',icon:BookOpen,tone:'rose'},
  {kind:'menu',label:'Un menu de la semaine',hint:'Nos repas déjà prévus',icon:UtensilsCrossed,tone:'rose'},
 ];
-export const openTarget=(card:HouseCard):HouseOpenTarget=>card.kind==='shopping'?{page:'shopping',weekStart:card.ref}:card.kind==='expense'?{page:'expenses'}:card.kind==='plant'?{page:'plants'}:card.kind==='task'?{page:'tasks'}:card.kind==='appointment'?{page:'calendar',date:String(card.data.date||'')}:{page:'meals'};
-const openLabels:Record<HouseCardKind,string>={shopping:'Ouvrir les courses',expense:'Voir notre argent',plant:'Voir le jardin',task:'Voir nos missions',appointment:'Voir dans l’agenda',recipe:'Ouvrir le carnet',menu:'Voir nos menus'};
+export const openTarget=(card:HouseCard):HouseOpenTarget=>card.kind==='mot'?{page:'chat'}:card.kind==='shopping'?{page:'shopping',weekStart:card.ref}:card.kind==='expense'?{page:'expenses'}:card.kind==='plant'?{page:'plants'}:card.kind==='task'?{page:'tasks'}:card.kind==='appointment'?{page:'calendar',date:String(card.data.date||'')}:{page:'meals'};
+const openLabels:Record<HouseCardKind,string>={shopping:'Ouvrir les courses',expense:'Voir notre argent',plant:'Voir le jardin',task:'Voir nos missions',appointment:'Voir dans l’agenda',recipe:'Ouvrir le carnet',menu:'Voir nos menus',mot:''};
 
 function CardShell({card,tone,label,title,children,deco,onOpen}:{card:HouseCard;tone:string;label:string;title:ReactNode;children?:ReactNode;deco?:ReactNode;onOpen?:(t:HouseOpenTarget)=>void}){
  return <article className={`house-card house-card-${card.kind} nd-tone-${tone}`}>
@@ -75,6 +76,8 @@ export function HouseCardMessage({card,names,onOpen}:{card:HouseCard;names:strin
   case 'recipe':return <CardShell card={card} tone="rose" label="Recette" title={<><span aria-hidden="true">{foodEmoji(String(d.title||''),'🍽️')} </span>{String(d.title||'Recette')}</>} onOpen={onOpen} deco={<Sticker tone="citron" size="sm" rotate={6}>miam !</Sticker>}>
    {(d.minutes||d.servings||d.group)&&<p className="house-card-meta">{[d.minutes&&`${d.minutes} min`,d.servings&&`${d.servings} portions`,d.group].filter(Boolean).join(' · ')}</p>}
   </CardShell>;
+  // Petit mot doux : pas de page à ouvrir, juste le message et nos deux mascottes.
+  case 'mot':return <CardShell card={card} tone={sweetNoteTone(card.ref)} label="Un petit mot doux" title={String(d.text||'Je pense à toi.')} deco={<><Buddy shape="pill" tone="lavande" mood="love" look="right" size={38}/><Buddy shape="flower" tone="peche" mood="happy" size={40}/></>}/>;
   case 'menu':{const slots:{day:number;meal:string;title:string}[]=Array.isArray(d.slots)?d.slots:[];
    return <CardShell card={card} tone="rose" label={'Menu · '+(d.weekStart?weekLabel(String(d.weekStart)):'semaine')} title={<>Notre menu <em>de la semaine</em></>} onOpen={onOpen}>
     <ul className="house-card-list">{slots.slice(0,6).map((s,n)=><li key={n}><span aria-hidden="true">{foodEmoji(s.title,'🍽️')}</span><span>{s.title}</span><small>{days[s.day]||''} {s.meal==='lunch'?'midi':'soir'}</small></li>)}</ul>
@@ -86,7 +89,7 @@ export function HouseCardMessage({card,names,onOpen}:{card:HouseCard;names:strin
 
 /** Choix d’un élément de la maison à partager. La confidentialité reste vérifiée par le serveur. */
 export function HouseSharePicker({home,names,active,onClose,onSend,onFiles}:{home?:HouseShareData;names:string[];active:number;onClose:()=>void;onSend:(ref:HouseCardRef,note:string)=>Promise<boolean>;onFiles:()=>void}){
- const[kind,setKind]=useState<HouseCardKind|null>(null),[pick,setPick]=useState(''),[note,setNote]=useState(''),[busy,setBusy]=useState(false),[query,setQuery]=useState('');
+ const[kind,setKind]=useState<HouseCardKind|null>(null),[pick,setPick]=useState(''),[note,setNote]=useState(''),[withNote,setWithNote]=useState(false),[busy,setBusy]=useState(false),[query,setQuery]=useState('');
  const[recipes,setRecipes]=useState<Recipe[]|null>(null),[plans,setPlans]=useState<MealPlan[]|null>(null),[error,setError]=useState('');
  useEffect(()=>{if((kind!=='recipe'&&kind!=='menu')||recipes)return;let alive=true;
   Promise.all([import('../lib/recipes'),apiFetch('/api/recipes').then(r=>r.ok?r.json():Promise.reject()).catch(()=>({recipes:[],plans:[]}))]).then(([lib,d])=>{if(!alive)return;setRecipes([...lib.recipes,...(d.recipes||[]).filter((r:Recipe)=>!r.archived)]);setPlans(d.plans||[]);});
@@ -105,17 +108,21 @@ export function HouseSharePicker({home,names,active,onClose,onSend,onFiles}:{hom
   return [];
  },[kind,home,names,recipes,plans,query,now]);
  const toBuy=(home?.items||[]).filter(i=>i.kind==='shopping'&&i.weekStart===week&&!i.done);
- const choice=shareChoices.find(c=>c.kind===kind);
+ const choice=kind==='mot'?{label:'Un petit mot doux'}:shareChoices.find(c=>c.kind===kind);
+ const choose=(next:HouseCardKind|null)=>{setKind(next);setPick('');setError('');setNote('');setWithNote(false);};
  async function send(){if(!kind||busy)return;if(kind!=='shopping'&&!pick){setError('Choisissez un élément à partager.');return;}setBusy(true);setError('');
+  // Le petit mot reste facultatif : sans texte, seule la carte part.
   const ok=await onSend(kind==='shopping'?{kind,weekStart:week}:{kind,id:pick} as HouseCardRef,note.trim());setBusy(false);if(ok)onClose();}
  return <LifeDialog title={choice?choice.label:'Partager avec '+names[1-active]} onClose={onClose} busy={busy} className="house-share-dialog">
   {!kind?<>
    <button type="button" className="house-share-files" onClick={()=>{onClose();onFiles();}}><Paperclip size={20}/><span><strong>Photos ou documents</strong><small>Images, PDF, documents · 30 Mo</small></span></button>
+   <button type="button" className="house-share-sweet nd-tone-rose" onClick={()=>choose('mot')}><Heart size={22} aria-hidden="true"/><span><strong>Un petit mot doux</strong><small>Des mots tout prêts, à envoyer en un geste</small></span></button>
    <h3 className="house-share-heading">Partager depuis la maison</h3>
-   <div className="house-share-grid">{shareChoices.map(c=><button type="button" key={c.kind} className={'nd-tone-'+c.tone} onClick={()=>{setKind(c.kind);setPick('');setError('');}}><c.icon size={22} aria-hidden="true"/><span><strong>{c.label}</strong><small>{c.hint}</small></span></button>)}</div>
+   <div className="house-share-grid">{shareChoices.map(c=><button type="button" key={c.kind} className={'nd-tone-'+c.tone} onClick={()=>choose(c.kind)}><c.icon size={22} aria-hidden="true"/><span><strong>{c.label}</strong><small>{c.hint}</small></span></button>)}</div>
   </>:<>
-   <button type="button" className="text-link house-share-back" disabled={busy} onClick={()=>{setKind(null);setPick('');setError('');}}><ArrowLeft size={18} aria-hidden="true"/>Autre chose à partager</button>
+   <button type="button" className="text-link house-share-back" disabled={busy} onClick={()=>choose(null)}><ArrowLeft size={18} aria-hidden="true"/>Autre chose à partager</button>
    {kind==='shopping'?(toBuy.length?<HouseCardMessage names={names} card={{kind:'shopping',ref:week,data:{weekStart:week,toBuy:toBuy.length,bought:(home?.items||[]).filter(i=>i.kind==='shopping'&&i.weekStart===week&&i.done).length,items:toBuy.slice(0,12).map(i=>({title:i.title,quantity:i.quantity}))}}}/>:<p className="helper-copy">La liste de cette semaine est vide pour l’instant.</p>)
+   :kind==='mot'?<div className="house-share-options house-share-sweet-list" role="radiogroup" aria-label="Choisir un petit mot doux">{sweetNotes.map(n=><button type="button" role="radio" aria-checked={pick===n.id} key={n.id} className={'nd-tone-'+n.tone} onClick={()=>setPick(n.id)}><span>{n.text}</span></button>)}</div>
    :<>
     {kind==='appointment'&&<p className="helper-copy"><LockKeyhole size={14}/> Seuls les rendez-vous partagés apparaissent. Les privés restent privés.</p>}
     {kind==='recipe'&&<label className="house-share-search">Chercher une recette<input type="search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Chakchouka, curry…"/></label>}
@@ -123,7 +130,8 @@ export function HouseSharePicker({home,names,active,onClose,onSend,onFiles}:{hom
     :options.length?<div className="house-share-options" role="radiogroup" aria-label={choice?.label}>{options.map(o=><button type="button" role="radio" aria-checked={pick===o.id} key={o.id} onClick={()=>setPick(o.id)}><strong>{o.title}</strong>{o.meta&&<small>{o.meta}</small>}</button>)}</div>
     :<p className="helper-copy">Rien à partager ici pour l’instant.</p>}
    </>}
-   <label className="house-share-note">Un petit mot <span className="optional">(facultatif)</span><textarea rows={2} maxLength={280} value={note} disabled={busy} onChange={e=>setNote(e.target.value)} placeholder={kind==='plant'?'Regarde, elle a soif, tu peux l’arroser ?':kind==='shopping'?'Tu peux passer au marché ?':'Un mot doux…'}/></label>
+   {withNote?<label className="house-share-note"><span>{kind==='mot'?'Une ligne en plus':'Un petit mot'} <span className="optional">(facultatif)</span></span><textarea rows={2} maxLength={280} value={note} disabled={busy} autoFocus onChange={e=>setNote(e.target.value)} placeholder={kind==='plant'?'Regarde, elle a soif, tu peux l’arroser ?':kind==='shopping'?'Tu peux passer au marché ?':kind==='mot'?'Rien que pour toi…':'Un mot doux…'}/></label>
+   :<button type="button" className="text-link house-share-add-note" disabled={busy} onClick={()=>setWithNote(true)}><Plus size={18} aria-hidden="true"/>{kind==='mot'?'Ajouter une ligne perso':'Ajouter un petit mot'}<span className="optional">(facultatif)</span></button>}
    {error&&<p className="form-error" role="alert">{error}</p>}
    <div className="chat-upload-actions"><button type="button" className="secondary" disabled={busy} onClick={onClose}>Annuler</button><button type="button" className="primary" disabled={busy||(kind==='shopping'?!toBuy.length:!pick)} onClick={send}><Send size={18}/>{busy?'Envoi…':'Envoyer'}</button></div>
   </>}
