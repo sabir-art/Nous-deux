@@ -399,3 +399,91 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 [data-theme=dark] .pets-tile{--tile-corail:#55261f}@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .pets-tile{--tile-corail:#55261f}}
 /* Recipe import: three short entries, wrapped on small screens, 48px targets. */
 .recipe-import{background:var(--rose);border-radius:var(--radius-lg);padding:var(--space-5);display:flex;flex-direction:column;gap:var(--space-3);margin-bottom:var(--space-5);min-width:0}.recipe-import h3{display:flex;align-items:center;gap:var(--space-2);margin:0;font:700 18px/24px var(--font-sans)}.recipe-import p,.recipe-import small{color:var(--ink);line-height:20px;margin:0}.recipe-import-actions{display:flex;flex-wrap:wrap;gap:var(--space-2);min-width:0}.recipe-import-actions>.secondary,.recipe-import-actions>.photo-upload{flex:1 1 150px;justify-content:center;min-height:48px;width:auto}.recipe-import .photo-upload.is-disabled{opacity:.6;pointer-events:none}.recipe-import-link{display:flex;flex-direction:column;gap:var(--space-2)}.recipe-import-link label{display:flex;flex-direction:column;gap:var(--space-2);font:600 14px/18px var(--font-sans)}.recipe-import-link>button{align-self:flex-start;min-height:48px}.recipe-import .ai-status,.recipe-import .form-error{margin:0}.recipe-import-done{margin:0 0 var(--space-3)}.recipe-source{align-items:start}
+/* Discussion connectée : stickers du couple et cartes partagées depuis la maison. */
+.couple-sticker{display:inline-block;line-height:0;transform:rotate(var(--sticker-tilt,0deg));animation:couple-sticker-pop 320ms cubic-bezier(.2,1.4,.4,1) both}
+.couple-sticker.still{animation:none}
+.couple-sticker svg{display:block;overflow:visible;max-width:100%;height:auto}
+@keyframes couple-sticker-pop{from{transform:rotate(var(--sticker-tilt,0deg)) scale(.6);opacity:0}to{transform:rotate(var(--sticker-tilt,0deg)) scale(1);opacity:1}}
+.couple-sticker .cs-lavande{fill:var(--buddy-lavande)}.couple-sticker .cs-peche{fill:var(--buddy-peche)}
+.couple-sticker .cs-eye{fill:var(--eye)}.couple-sticker .cs-pupil{fill:var(--pupil)}
+.couple-sticker .cs-line{fill:none;stroke:var(--pupil);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.couple-sticker .cs-heart{fill:var(--marque)}.couple-sticker .cs-cheek{fill:var(--marque);opacity:.35}
+.couple-sticker .cs-water{fill:var(--water)}
+.couple-sticker .cs-word-bg{stroke:var(--pupil);stroke-width:2.5}
+.couple-sticker .cs-citron{fill:var(--buddy-citron)}.couple-sticker .cs-rose{fill:var(--buddy-rose)}.couple-sticker .cs-beurre{fill:var(--buddy-beurre)}.couple-sticker .cs-menthe{fill:var(--buddy-menthe)}.couple-sticker .cs-lilas{fill:var(--buddy-lilas)}
+.couple-sticker .cs-word{font:italic 600 19px/1 var(--font-fun);font-variation-settings:"SOFT" 100;fill:var(--pupil)}
+.couple-sticker .cs-zzz{font:italic 700 18px/1 var(--font-fun);fill:var(--pupil)}
+.couple-sticker .cs-citron-deep{fill:var(--buddy-citron);stroke:var(--pupil);stroke-width:1.5}
+.couple-sticker .cs-peche-fill{fill:var(--buddy-peche)}
+.couple-sticker .cs-cup{fill:var(--eye);stroke:var(--pupil);stroke-width:2.5}
+.couple-sticker :is(.cs-stroke,.cs-steam,.cs-dash,.cs-scribble,.cs-sun-ray,.cs-dotted,.cs-red-stroke,.cs-cream-stroke,.cs-leaf-deep-stroke){fill:none;stroke-linecap:round;stroke-linejoin:round}
+.couple-sticker .cs-stroke{stroke:var(--pupil);stroke-width:2.5}
+.couple-sticker .cs-steam{stroke:var(--pupil);stroke-width:2;opacity:.55}
+.couple-sticker .cs-dash{stroke:var(--pupil);stroke-width:4;opacity:.6}
+.couple-sticker .cs-scribble{stroke:var(--pupil);stroke-width:3.5}
+.couple-sticker .cs-dotted{stroke:var(--pupil);stroke-width:3;stroke-dasharray:2 7;opacity:.7}
+.couple-sticker .cs-plate{fill:var(--eye);stroke:var(--pupil);stroke-width:2.5}
+.couple-sticker .cs-basket{fill:var(--buddy-beurre);stroke:var(--pupil);stroke-width:2.5}
+.couple-sticker .cs-red{fill:var(--marque)}.couple-sticker .cs-leaf{fill:var(--leaf)}
+.couple-sticker .cs-leaf-deep-stroke{stroke:var(--leaf-deep);stroke-width:4}
+.couple-sticker .cs-cloud{fill:var(--eye);stroke:var(--pupil);stroke-width:2.5}
+.couple-sticker .cs-plane{fill:var(--eye);stroke:var(--pupil);stroke-width:2;stroke-linejoin:round}
+.couple-sticker .cs-sun{fill:var(--buddy-beurre);stroke:var(--pupil);stroke-width:2}
+.couple-sticker .cs-sun-ray{stroke:var(--pupil);stroke-width:2.5}
+.couple-sticker .cs-popcorn{fill:var(--eye);stroke:var(--pupil);stroke-width:2.5}
+.couple-sticker .cs-red-stroke{stroke:var(--marque);stroke-width:3}
+.couple-sticker .cs-cream{fill:var(--buddy-beurre);stroke:var(--pupil);stroke-width:1.5}
+.couple-sticker .cs-cream-stroke{stroke:var(--eye);stroke-width:3}
+.chat-emoji-picker header{flex-wrap:wrap}
+.chat-emoji-tabs{display:flex;gap:var(--space-1);padding:var(--space-1);border-radius:var(--radius-pill);background:var(--surface-sunken);margin-inline-start:auto}
+.chat-emoji-tabs button{min-height:44px;padding:0 var(--space-4);border-radius:var(--radius-pill);font:600 14px/1 var(--font-sans);background:transparent;color:var(--ink);white-space:nowrap}
+.chat-emoji-tabs button[aria-pressed=true]{background:var(--ink);color:var(--on-ink)}
+.chat-emoji-picker:has(.chat-sticker-grid){max-height:min(380px,45dvh)}
+.chat-sticker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:var(--space-2);margin-top:var(--space-2)}
+.chat-sticker-grid button{min-height:88px;padding:var(--space-1);border-radius:var(--radius-lg);background:transparent;display:grid;place-items:center}
+.chat-sticker-grid button:hover,.chat-sticker-grid button:focus-visible{background:var(--rose)}
+.chat-sticker-grid button:disabled{opacity:.5}
+.chat-message.chat-sticker-bubble.nd-bubble,.chat-message.chat-card-bubble.nd-bubble{background:transparent;color:var(--ink);padding:0;box-shadow:none}
+.chat-message.chat-sticker-bubble.nd-bubble{max-width:min(190px,70%)}
+.chat-message.chat-card-bubble.nd-bubble{width:min(330px,88%);max-width:min(330px,88%)}
+.chat-sticker-bubble footer,.chat-card-bubble footer{width:fit-content;margin-inline-start:auto;padding:0 var(--space-2);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink-muted)}
+.chat-message.nd-bubble-them.chat-sticker-bubble footer,.chat-message.nd-bubble-them.chat-card-bubble footer{margin-inline-start:0}
+.house-card{position:relative;display:grid;gap:var(--space-2);padding:var(--space-5);border-radius:var(--radius-lg);color:var(--ink);overflow:hidden;font:500 15px/1.4 var(--font-sans);text-align:start;min-width:0}
+.house-card.nd-tone-sapin{color:var(--on-sapin)}
+.house-card-label{justify-self:start;padding:var(--space-1) var(--space-3);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink);font:600 12px/16px var(--font-sans)}
+.house-card-title{margin:0;font:700 20px/1.2 var(--font-sans);overflow-wrap:anywhere;padding-inline-end:56px}
+.house-card-title em{font-family:var(--font-fun);font-style:italic;font-weight:600;font-variation-settings:"SOFT" 100}
+.house-card-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-1)}
+.house-card-list li{display:flex;align-items:center;gap:var(--space-2);min-width:0;padding:var(--space-1) var(--space-3);border-radius:var(--radius-md);background:var(--surface);color:var(--ink)}
+.house-card-list li span:nth-child(2){flex:1;min-width:0;overflow-wrap:anywhere}
+.house-card-list small,.house-card-meta{font:500 13px/18px var(--font-sans)}
+.house-card-meta{margin:0}
+.house-card-amount{margin:0;font:800 30px/1.1 var(--font-sans);font-variant-numeric:tabular-nums}
+.house-card-note{margin:0;font:italic 500 17px/1.35 var(--font-fun);font-variation-settings:"SOFT" 100;overflow-wrap:anywhere}
+.house-card-deco{position:absolute;top:var(--space-3);right:var(--space-3);pointer-events:none;line-height:0}
+.house-card-deco .nd-buddy{position:static}
+.house-card-plant{display:flex;align-items:center;gap:var(--space-3);min-width:0}
+.house-card-plant p{margin:0;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:var(--surface);color:var(--ink);font:italic 500 15px/1.35 var(--font-fun);font-variation-settings:"SOFT" 100;min-width:0}
+.house-card-plant>:first-child{flex:none}
+.house-card-when{display:flex;align-items:center;gap:var(--space-3)}
+.house-card-day{display:grid;place-items:center;min-width:52px;padding:var(--space-2);border-radius:var(--radius-md);background:var(--surface);color:var(--ink)}
+.house-card-day b{font:800 22px/1 var(--font-sans)}.house-card-day small{font:600 12px/16px var(--font-sans)}
+.house-card-open{justify-self:start;display:inline-flex;align-items:center;gap:var(--space-2);min-height:44px;padding:0 var(--space-4);border-radius:var(--radius-pill);background:var(--ink);color:var(--on-ink);font:600 14px/1 var(--font-sans)}
+.house-card.nd-tone-sapin .house-card-open{background:var(--on-sapin);color:var(--sapin)}
+.house-share-dialog .dialog-inner{gap:var(--space-3)}
+.house-share-files,.house-share-grid button,.house-share-options button{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:56px;padding:var(--space-3) var(--space-4);border-radius:var(--radius-lg);text-align:start;color:var(--ink)}
+.house-share-files{background:var(--surface-sunken)}
+.house-share-files span,.house-share-grid span{display:grid;gap:2px;min-width:0}
+.house-share-options button{display:grid;gap:2px;justify-items:start}
+.house-share-files small,.house-share-grid small{font:500 13px/18px var(--font-sans);color:var(--ink)}
+.house-share-heading{margin:var(--space-2) 0 0;font:700 16px/1.3 var(--font-sans)}
+.house-share-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:var(--space-2)}
+.house-share-grid svg{flex:none}
+.house-share-options{display:grid;gap:var(--space-2);max-height:min(320px,42dvh);overflow-y:auto;overscroll-behavior:contain}
+.house-share-options button{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line)}
+.house-share-options small{font:500 13px/18px var(--font-sans);color:var(--ink-muted)}
+.house-share-options button[aria-checked=true]{background:var(--action-soft);box-shadow:inset 0 0 0 2px var(--action)}
+.house-share-note,.house-share-search{display:grid;gap:var(--space-1)}
+.house-share-back{display:inline-flex;align-items:center;gap:var(--space-2);min-height:44px}
+.house-share-dialog .house-card{max-width:360px}
+@media(prefers-reduced-motion:reduce){.couple-sticker{animation:none}}

@@ -36,6 +36,7 @@ jobs:
       - run: node tests/notification-photo.test.mjs
       - run: node tests/voices-places.test.mjs
       - run: node tests/chat-attachments.test.mjs
+      - run: node tests/chat-cards.test.mjs
       - run: node tests/chat-navigation-ui.test.mjs
       - run: node tests/life.test.mjs
       - run: node tests/meals.test.mjs

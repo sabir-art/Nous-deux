@@ -1,4 +1,5 @@
 import {placeInput} from './places.ts';
+import {chatCardInput,chatStickerInput,MAX_CARD_NOTE} from './chat-card-input.ts';
 import {z} from 'npm:zod@3.25.76';
 import {validDate,categories} from './domain.ts';
 const label=z.string().trim().min(1).max(100);
@@ -33,7 +34,16 @@ export const shoppingCheckInput=z.object({id:z.string().uuid(),version:z.number(
 // A list type is either a copy of a week (weekStart) or written directly, article by article (items), without touching « À acheter ».
 export const templateInput=z.object({id:z.string().uuid(),title:label,weekStart:date.optional(),items:z.array(z.object({title:label,quantity:z.string().trim().max(50).default('')})).min(1).max(200).optional()}).refine(v=>!!v.weekStart!==!!v.items,'Choisissez une semaine ou écrivez les articles.');
 export const templateApplyInput=z.object({id:z.string().uuid(),operationId:z.string().uuid(),weekStart:date});
-export const chatInput=z.object({action:z.enum(['send','edit','delete','hide','clear']),id:z.string().uuid().optional(),scope:z.enum(['me','everyone']).default('me'),text:z.string().trim().min(1).max(2000).optional(),voiceId:z.string().uuid().optional(),attachmentId:z.string().uuid().optional(),version:z.number().int().min(1).optional()}).refine(v=>(v.action==='clear'||!!v.id)&&(['delete','hide','clear'].includes(v.action)||(v.action==='edit'?!!v.text&&!v.voiceId&&!v.attachmentId:v.voiceId?!v.text&&!v.attachmentId:!!v.text||!!v.attachmentId)));
+export const chatInput=z.object({action:z.enum(['send','edit','delete','hide','clear']),id:z.string().uuid().optional(),scope:z.enum(['me','everyone']).default('me'),text:z.string().trim().min(1).max(2000).optional(),voiceId:z.string().uuid().optional(),attachmentId:z.string().uuid().optional(),card:chatCardInput.optional(),sticker:chatStickerInput.optional(),version:z.number().int().min(1).optional()}).refine(v=>{
+ if(v.action!=='clear'&&!v.id)return false;
+ if(['delete','hide','clear'].includes(v.action))return true;
+ const kinds=[v.voiceId,v.attachmentId,v.card,v.sticker].filter(x=>x!==undefined).length;
+ if(v.action==='edit')return !!v.text&&!kinds;
+ if(kinds>1)return false;
+ if(v.voiceId||v.sticker)return !v.text;
+ if(v.card)return !v.text||v.text.length<=MAX_CARD_NOTE;
+ return !!v.text||!!v.attachmentId;
+});
 
 
 export const chatCursorInput=z.object({before:z.string().datetime({offset:true}),beforeId:z.string().uuid()});
