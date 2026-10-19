@@ -2778,7 +2778,7 @@ export const products:Product[]=[
   "aliases": "patee chien"
  }
 ];
-// Rayons famille : toujours trouvables par la recherche, mais leurs onglets n'apparaissent qu'avec un profil enfant.
+// Rayons famille : toujours trouvables par la recherche, mais leurs onglets n'apparaissent qu'avec l'espace famille activé.
 export const familyProductCategories=['Bébé','Goûters','École'];
 products.push(
  {title:"Lait infantile",icon:"🍼",category:"Bébé",presets:["1 boîte", "2 boîtes"],aliases:"lait bebe lait 1er age 2eme age"},

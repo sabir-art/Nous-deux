@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
-import {realpathSync} from 'node:fs';
+import {realpathSync,readFileSync} from 'node:fs';
 const {build}=createRequire(realpathSync('node_modules/wrangler/package.json'))('esbuild');
 const bundle=await build({entryPoints:['supabase/functions/house-api/model.ts'],bundle:true,platform:'node',format:'esm',write:false,plugins:[{name:'npm-prefix',setup(b){b.onResolve({filter:/^npm:zod@/},()=>({path:realpathSync('node_modules/zod/index.js')}));}}]});
 const {householdMutation}=await import('data:text/javascript;base64,'+Buffer.from(bundle.outputFiles[0].text).toString('base64'));
@@ -32,6 +32,14 @@ assert.equal(householdMutation(s,{action:'task-check',payload:{id:task.id,versio
 assert.throws(()=>householdMutation(s,{action:'item',payload:{...task,id:crypto.randomUUID(),child:crypto.randomUUID()}},1),e=>e.status===400);
 const bread={id:crypto.randomUUID(),kind:'shopping',title:'Pain',quantity:'',assignee:-1,due:'',priority:0,done:false,child:kid.id,version:0};
 householdMutation(s,{action:'item',payload:bread},1);assert.equal(s.items[1].child,undefined);
+// Family space hidden: profiles stay, and editing a record keeps its link to the hidden child.
+householdMutation(s,{action:'family-mode',payload:{enabled:false}},0);assert.equal(s.children.length,1);
+householdMutation(s,{action:'appointment',payload:{...ap,version:1,title:'Pédiatre (rappel)'}},0);assert.equal(s.appointments[0].child,kid.id);
+householdMutation(s,{action:'family-mode',payload:{enabled:true}},0);
+// The interface follows the mode itself, not the number of profiles, and never drops a hidden child on save.
+const app=readFileSync('app/house-app.tsx','utf8'),agenda=readFileSync('app/house-calendar.tsx','utf8');
+assert.ok(!app.includes('family={kids.length>0}')&&app.includes('<HouseShopping family={familyMode}')&&app.includes('<BudgetOverview family={familyMode}'));
+assert.ok(app.includes("!kids.length&&item?.child")&&app.includes("||!family)?entry.child")&&agenda.includes("{child:appointment.child}"));
 // Each parent picks an agenda colour, never the partner's nor « nous deux ».
 assert.throws(()=>householdMutation(s,{action:'agenda-color',payload:{tone:'peche'}},0),e=>e.status===400);
 assert.throws(()=>householdMutation(s,{action:'agenda-color',payload:{tone:'rose'}},1),e=>e.status===400);
@@ -44,4 +52,4 @@ householdMutation(s,{action:'delete-child',payload:{id:kid.id,version:2}},1);
 assert.equal(s.children.length,0);assert.equal(s.appointments[0].child,undefined);assert.equal(s.entries[0].child,undefined);assert.equal(s.items[0].child,undefined);assert.equal(s.entries.length,1);
 // Turning family mode off hides profiles without deleting them.
 householdMutation(s,{action:'family-mode',payload:{enabled:false}},0);assert.equal(s.familyMode,false);
-console.log('PASS: optional child profiles, shared edits, version checks, child links on appointments and expenses, tasks given to a parent, opt-in family mode, agenda colours, cleanup on delete.');
+console.log('PASS: optional child profiles, shared edits, version checks, child links on appointments and expenses, tasks given to a parent, opt-in family mode (hidden links kept), agenda colours, cleanup on delete.');
