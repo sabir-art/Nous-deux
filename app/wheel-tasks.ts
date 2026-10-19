@@ -7,5 +7,8 @@ export const wheelGroups:{title:string;tasks:WheelTask[]}[]=[
  {title:'Nos moments',tasks:[{key:'film',label:'Choisir le film',emoji:'🎬'},{key:'resto',label:'Choisir le resto',emoji:'🍕'},{key:'sortie',label:'Organiser la sortie',emoji:'🎟️'},{key:'appel',label:'Appeler la famille',emoji:'📞'}]}
 ];
 export const wheelTasks:Record<string,WheelTask>=Object.fromEntries(wheelGroups.flatMap(g=>g.tasks).map(t=>[t.key,t]));
+// Same characters as the server accepts (house-api wheel-tasks.ts).
+export const customKey=(label:string)=>'perso:'+label.replace(/[^\p{L}\p{N} '’,.!?-]/gu,'').replace(/\s+/g,' ').replace(/^[^\p{L}\p{N}]+/u,'').trim().slice(0,40);
+export const customLabel=(key:string)=>key.startsWith('perso:')?key.slice(6):'';
 export const defaultHomeTasks=['vaisselle','courses','rangement'];
 export const defaultRecipeTasks=['cuisine','vaisselle','courses'];
