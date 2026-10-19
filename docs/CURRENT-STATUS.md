@@ -41,6 +41,8 @@ Ce document est un état daté, pas un contrôle permanent de production. Vérif
 - 19 octobre (PR #16) : tuile « Nos enfants » en citron (le jardin reste menthe) ; fusion de la branche dépenses (rien de coché par défaut).
 - 19 octobre (branche `claude/retouches-accueil`) : tuile « Les courses » en bleu ciel ; bouton pause des « grands moments » retiré, une carte ouvre le moment pour le modifier (ou les idées pour une proposition) ; mascotte des sorties et de la famille en cœur. Liste type créée directement (nom + articles « Titre : quantité ») sans passer par « À acheter » (`template-create` accepte `items` ou `weekStart`, pas les deux). Phrase « Contactez la personne… » retirée. À table : filtres « Rapide » (≤ 30 min) et « Sans gluten », « Autre » seulement s’il sert. Roue « Qui fait quoi ? » : trois missions au choix parmi 18 (mémorisées sur l’appareil, le dîner reste sur la roue d’un plat) ; le serveur n’accepte que les clés connues (`wheel-tasks.ts`) et 12 tirages par jour maximum. **`house-api` doit être redéployée** après fusion.
 
+- 19 octobre (PR #15) : tuile « Nos compagnons » en corail, distincte de « Nos idées ».
+
 ## Données réelles : ne pas réinitialiser
 
 Le 10 octobre, à la demande explicite du propriétaire, les données de test des deux comptes ont été supprimées (courses, tâches, dépenses, événements personnels, plantes, idées, recettes personnelles, menus, favoris, messages et appels). Les deux mots de passe, photos de profil, sessions, appareils et secrets de configuration ont été conservés. Les recettes intégrées et repères calendaires n'ont pas été retirés.
