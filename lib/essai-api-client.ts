@@ -12,7 +12,7 @@ import {parisDate} from '../supabase/functions/house-api/life.ts';
 import {visibleGifts,giftsOn} from '../supabase/functions/house-api/gifts.ts';
 
 export const APP_BASE=location.pathname.replace(/[^/]*$/,'');
-const STATE_KEY='nous-deux-essai-state-v10',MEMBER_KEY='nous-deux-essai-member',PHOTOS_KEY='nous-deux-essai-photos-v1',CHAT_KEY='nous-deux-essai-chat-v1';
+const STATE_KEY='nous-deux-essai-state-v11',MEMBER_KEY='nous-deux-essai-member',PHOTOS_KEY='nous-deux-essai-photos-v1',CHAT_KEY='nous-deux-essai-chat-v1';
 const unavailable='Pas disponible en mode essai.';
 
 const read=<T,>(key:string,fallback:()=>T):T=>{try{const raw=localStorage.getItem(key);if(raw)return JSON.parse(raw) as T;}catch{}return fallback();};
@@ -54,6 +54,8 @@ function chatChange(p:any,actor:number){
 function route(path:string,method:string,url:URL,p:any){
  const actor=member();
  switch(path){
+  // Trial only: no server or AI here, so any photo or link fills in the same example recipe, to try the flow.
+  case 'recipe-import':return {method:'structured',draft:{title:'Gratin de courgettes (exemple d’import)',group:'Végétarien',difficulty:'Facile',minutes:40,servings:2,ingredients:['2 courgettes','2 œufs','10 cl de crème','50 g de gruyère râpé','Sel, poivre'],steps:['Couper les courgettes en rondelles et les faire revenir 5 minutes.','Battre les œufs avec la crème, saler, poivrer.','Verser sur les courgettes, parsemer de gruyère et cuire 25 minutes à 200 °C.'],sourceUrl:p.kind==='url'?String(p.url||''):'',sourceTitle:p.kind==='url'?'Page importée (essai)':'Photo importée (essai)'}};
   case 'access':if(p.action==='logout'){reset();return {ok:true};}return {configured:true};
   case 'household':
    if(method==='GET'){const s=load();return {member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[],gifts:visibleGifts(s,actor),pets:(s as {pets?:unknown[]}).pets||[],children:(s as {children?:unknown[]}).children||[],shoppingPending:!!s.shoppingPending?.[actor],familyMode:!!s.familyMode,petsMode:!!(s as {petsMode?:boolean}).petsMode,giftsMode:giftsOn(s as {giftsMode?:Record<string,boolean>},actor),colors:s.colors||{}};}
