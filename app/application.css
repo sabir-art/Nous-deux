@@ -400,40 +400,56 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 /* Recipe import: three short entries, wrapped on small screens, 48px targets. */
 .recipe-import{background:var(--rose);border-radius:var(--radius-lg);padding:var(--space-5);display:flex;flex-direction:column;gap:var(--space-3);margin-bottom:var(--space-5);min-width:0}.recipe-import h3{display:flex;align-items:center;gap:var(--space-2);margin:0;font:700 18px/24px var(--font-sans)}.recipe-import p,.recipe-import small{color:var(--ink);line-height:20px;margin:0}.recipe-import-actions{display:flex;flex-wrap:wrap;gap:var(--space-2);min-width:0}.recipe-import-actions>.secondary,.recipe-import-actions>.photo-upload{flex:1 1 150px;justify-content:center;min-height:48px;width:auto}.recipe-import .photo-upload.is-disabled{opacity:.6;pointer-events:none}.recipe-import-link{display:flex;flex-direction:column;gap:var(--space-2)}.recipe-import-link label{display:flex;flex-direction:column;gap:var(--space-2);font:600 14px/18px var(--font-sans)}.recipe-import-link>button{align-self:flex-start;min-height:48px}.recipe-import .ai-status,.recipe-import .form-error{margin:0}.recipe-import-done{margin:0 0 var(--space-3)}.recipe-source{align-items:start}
 /* Discussion connectée : stickers du couple et cartes partagées depuis la maison. */
-.couple-sticker{display:inline-block;line-height:0;transform:rotate(var(--sticker-tilt,0deg));animation:couple-sticker-pop 320ms cubic-bezier(.2,1.4,.4,1) both}
-.couple-sticker.still{animation:none}
-.couple-sticker svg{display:block;overflow:visible;max-width:100%;height:auto}
+.couple-sticker{position:relative;display:inline-block;vertical-align:top;line-height:0;transform:rotate(var(--sticker-tilt,0deg));animation:couple-sticker-pop 320ms cubic-bezier(.2,1.4,.4,1) both}
+.couple-sticker.still,.couple-sticker.still *{animation:none!important}
 @keyframes couple-sticker-pop{from{transform:rotate(var(--sticker-tilt,0deg)) scale(.6);opacity:0}to{transform:rotate(var(--sticker-tilt,0deg)) scale(1);opacity:1}}
-.couple-sticker .cs-lavande{fill:var(--buddy-lavande)}.couple-sticker .cs-peche{fill:var(--buddy-peche)}
-.couple-sticker .cs-eye{fill:var(--eye)}.couple-sticker .cs-pupil{fill:var(--pupil)}
-.couple-sticker .cs-line{fill:none;stroke:var(--pupil);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
-.couple-sticker .cs-heart{fill:var(--marque)}.couple-sticker .cs-cheek{fill:var(--marque);opacity:.35}
-.couple-sticker .cs-water{fill:var(--water)}
-.couple-sticker .cs-word-bg{stroke:var(--pupil);stroke-width:2.5}
-.couple-sticker .cs-citron{fill:var(--buddy-citron)}.couple-sticker .cs-rose{fill:var(--buddy-rose)}.couple-sticker .cs-beurre{fill:var(--buddy-beurre)}.couple-sticker .cs-menthe{fill:var(--buddy-menthe)}.couple-sticker .cs-lilas{fill:var(--buddy-lilas)}
-.couple-sticker .cs-word{font:italic 600 19px/1 var(--font-fun);font-variation-settings:"SOFT" 100;fill:var(--pupil)}
-.couple-sticker .cs-zzz{font:italic 700 18px/1 var(--font-fun);fill:var(--pupil)}
-.couple-sticker .cs-citron-deep{fill:var(--buddy-citron);stroke:var(--pupil);stroke-width:1.5}
-.couple-sticker .cs-peche-fill{fill:var(--buddy-peche)}
-.couple-sticker .cs-cup{fill:var(--eye);stroke:var(--pupil);stroke-width:2.5}
-.couple-sticker :is(.cs-stroke,.cs-steam,.cs-dash,.cs-scribble,.cs-sun-ray,.cs-dotted,.cs-red-stroke,.cs-cream-stroke,.cs-leaf-deep-stroke){fill:none;stroke-linecap:round;stroke-linejoin:round}
-.couple-sticker .cs-stroke{stroke:var(--pupil);stroke-width:2.5}
+.cs-stage{position:absolute;left:0;top:0;width:200px;height:168px;transform-origin:0 0;pointer-events:none}
+.cs-scene{position:absolute;inset:0;transform:scale(1.14);transform-origin:100px 166px}
+.cs-layer{position:absolute;inset:0;width:200px;height:168px;overflow:visible}
+.cs-actor{position:absolute;display:block;line-height:0;transform-origin:50% 100%}
+.cs-actor>svg,.cs-actor .nd-plantb-wrap,.cs-actor .nd-plantb-wrap>div{display:block;width:100%;height:100%}
+.cs-actor .nd-plantb{width:100%;height:100%}
+.cs-actor .travel-buddy{position:static;display:block;width:100%;height:100%;transform:none}
+.couple-sticker .moment-pupils{animation-iteration-count:1}
+.cs-word{position:absolute;left:0;right:0;top:0;display:flex;justify-content:center;line-height:normal}
+.cs-word .nd-sticker{font-size:22px;line-height:26px;box-shadow:0 2px 0 rgba(29,26,35,.14),inset 0 0 0 2px var(--pupil)}
+.cs-word-long .nd-sticker{font-size:18px;line-height:24px;padding-inline:var(--space-3)}
+.couple-sticker .cs-tear,.couple-sticker .cs-water{fill:var(--water)}
+.couple-sticker .cs-heart{fill:var(--marque)}
+.couple-sticker .cs-sparkle{fill:var(--buddy-citron);stroke:var(--pupil);stroke-width:1.5}
+.couple-sticker :is(.cs-zzz,.cs-question){font:italic 700 20px/1 var(--font-fun);fill:var(--pupil)}.couple-sticker .cs-question{font-size:34px}
+.couple-sticker .cs-moon{fill:var(--buddy-beurre);stroke:var(--pupil);stroke-width:1.5}
+.couple-sticker .cs-sun{fill:var(--buddy-beurre);stroke:var(--pupil);stroke-width:2}
+.couple-sticker :is(.cs-cup,.cs-plate,.cs-cloud,.cs-plane,.cs-popcorn){fill:var(--eye);stroke:var(--pupil);stroke-width:2.5;stroke-linejoin:round}
+.couple-sticker :is(.cs-stroke,.cs-steam,.cs-dash,.cs-scribble,.cs-ray,.cs-dotted,.cs-red-stroke,.cs-leaf-stroke){fill:none;stroke-linecap:round;stroke-linejoin:round}
+.couple-sticker :is(.cs-stroke,.cs-ray){stroke:var(--pupil);stroke-width:2.5}
 .couple-sticker .cs-steam{stroke:var(--pupil);stroke-width:2;opacity:.55}
 .couple-sticker .cs-dash{stroke:var(--pupil);stroke-width:4;opacity:.6}
-.couple-sticker .cs-scribble{stroke:var(--pupil);stroke-width:3.5}
+.couple-sticker .cs-scribble{stroke:var(--pupil);stroke-width:3}
 .couple-sticker .cs-dotted{stroke:var(--pupil);stroke-width:3;stroke-dasharray:2 7;opacity:.7}
-.couple-sticker .cs-plate{fill:var(--eye);stroke:var(--pupil);stroke-width:2.5}
-.couple-sticker .cs-basket{fill:var(--buddy-beurre);stroke:var(--pupil);stroke-width:2.5}
-.couple-sticker .cs-red{fill:var(--marque)}.couple-sticker .cs-leaf{fill:var(--leaf)}
-.couple-sticker .cs-leaf-deep-stroke{stroke:var(--leaf-deep);stroke-width:4}
-.couple-sticker .cs-cloud{fill:var(--eye);stroke:var(--pupil);stroke-width:2.5}
-.couple-sticker .cs-plane{fill:var(--eye);stroke:var(--pupil);stroke-width:2;stroke-linejoin:round}
-.couple-sticker .cs-sun{fill:var(--buddy-beurre);stroke:var(--pupil);stroke-width:2}
-.couple-sticker .cs-sun-ray{stroke:var(--pupil);stroke-width:2.5}
-.couple-sticker .cs-popcorn{fill:var(--eye);stroke:var(--pupil);stroke-width:2.5}
+.couple-sticker .cs-food{fill:var(--buddy-peche)}.couple-sticker .cs-red{fill:var(--marque)}.couple-sticker .cs-leaf{fill:var(--leaf)}
+.couple-sticker .cs-leaf-stroke{stroke:var(--leaf-deep);stroke-width:3}
+.couple-sticker .cs-carrot{fill:var(--buddy-peche);stroke:var(--pupil);stroke-width:1.5;stroke-linejoin:round}
+.couple-sticker .cs-can{fill:var(--buddy-lilas);stroke:var(--pupil);stroke-width:2.5;stroke-linejoin:round}
 .couple-sticker .cs-red-stroke{stroke:var(--marque);stroke-width:3}
 .couple-sticker .cs-cream{fill:var(--buddy-beurre);stroke:var(--pupil);stroke-width:1.5}
-.couple-sticker .cs-cream-stroke{stroke:var(--eye);stroke-width:3}
+.couple-sticker .cs-bowl{fill:var(--buddy-lavande);stroke:var(--pupil);stroke-width:2.5;stroke-linejoin:round}.couple-sticker .cs-bowl-in{fill:var(--eye);stroke:var(--pupil);stroke-width:2.5}
+.couple-sticker .cs-paw{fill:var(--pupil);opacity:.35}
+.cs-pet .f-beurre{--pet:var(--buddy-beurre)}.cs-pet .f-peche{--pet:var(--buddy-peche)}.cs-pet .f-lavande{--pet:var(--buddy-lavande)}.cs-pet .f-rose{--pet:var(--buddy-rose)}.cs-pet .f-menthe{--pet:var(--buddy-menthe)}.cs-pet .f-lilas{--pet:var(--buddy-lilas)}.cs-pet .f-citron{--pet:var(--buddy-citron)}
+.cs-pet [class*=f-]{fill:var(--pet)}
+.cs-pet .pet-tail{fill:none;stroke:var(--pet);stroke-width:11;stroke-linecap:round}
+.cs-pet .pet-ear{stroke:var(--pet);stroke-width:6;stroke-linejoin:round}
+.cs-pet .pet-inner-ear{fill:var(--buddy-rose)}
+.cs-pet .pet-paw,.cs-pet .pet-snout{fill:var(--eye)}
+.cs-pet .pet-shade,.cs-pet .pet-patch{fill:var(--pupil);opacity:.13}
+.cs-pet .pet-stripe{fill:none;stroke:var(--pupil);stroke-width:3;stroke-linecap:round;opacity:.18}
+.cs-pet .pet-whisker{fill:none;stroke:var(--pupil);stroke-width:2;stroke-linecap:round;opacity:.45}
+.cs-pet .pet-line{fill:none;stroke:var(--pupil);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.cs-pet .pet-nose,.cs-pet .pupil{fill:var(--pupil)}
+.cs-pet .pet-tongue{fill:var(--heart);opacity:.75}
+.cs-pet .eye,.cs-pet .glint{fill:var(--eye)}
+.cs-pet .heart-eye{fill:var(--heart)}
+.cs-pet .cheek{fill:var(--heart);opacity:.3}
 .chat-emoji-picker header{flex-wrap:wrap}
 .chat-emoji-tabs{display:flex;gap:var(--space-1);padding:var(--space-1);border-radius:var(--radius-pill);background:var(--surface-sunken);margin-inline-start:auto}
 .chat-emoji-tabs button{min-height:44px;padding:0 var(--space-4);border-radius:var(--radius-pill);font:600 14px/1 var(--font-sans);background:transparent;color:var(--ink);white-space:nowrap}
@@ -514,3 +530,15 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .recipe-import{background:var(--rose);border-radius:var(--radius-lg);padding:var(--space-5);display:flex;flex-direction:column;gap:var(--space-3);margin-bottom:var(--space-5);min-width:0}.recipe-import h3{display:flex;align-items:center;gap:var(--space-2);margin:0;font:700 18px/24px var(--font-sans)}.recipe-import p,.recipe-import small{color:var(--ink);line-height:20px;margin:0}.recipe-import-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2);min-width:0}.recipe-import-actions>.secondary,.recipe-import-actions>.photo-upload{display:flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:48px;width:100%;min-width:0;padding-inline:var(--space-3);white-space:nowrap}.recipe-import .photo-upload.is-disabled{opacity:.6;pointer-events:none}.recipe-import-link{display:flex;flex-direction:column;gap:var(--space-2)}.recipe-import-link label{display:flex;flex-direction:column;gap:var(--space-2);font:600 14px/18px var(--font-sans)}.recipe-import-link>button{align-self:flex-start;min-height:48px}.recipe-import .ai-status,.recipe-import .form-error{margin:0}.recipe-import-done{margin:0 0 var(--space-3)}.recipe-source{align-items:start}
 .diet-choices{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--space-3)}.diet-choices legend{font:600 14px/18px var(--font-sans);padding:0;margin-bottom:var(--space-3)}.diet-chips{display:flex;flex-wrap:wrap;gap:var(--space-2);min-width:0}.diet-chips>button{font:600 14px/18px var(--font-sans);min-height:44px;max-width:100%;display:inline-flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-4);background:var(--surface);color:var(--ink);border-radius:var(--radius-pill);box-shadow:inset 0 0 0 1.5px var(--line);text-align:left;overflow-wrap:anywhere;transition:background-color 180ms ease,color 180ms ease}.diet-chips>.selected{background:var(--ink);color:var(--on-ink);box-shadow:none}.diet-chips>button:focus-visible{outline:3px solid var(--action);outline-offset:2px}.diet-partner{display:flex;flex-direction:column;gap:var(--space-1);padding:var(--space-4);background:var(--surface-sunken);border-radius:var(--radius-md);overflow-wrap:anywhere}.diet-warnings{background:var(--beurre);color:var(--ink);padding:var(--space-4);border-radius:var(--radius-md);display:flex;flex-direction:column;gap:var(--space-2);overflow-wrap:anywhere}.diet-warnings h3{font:700 16px/22px var(--font-sans)}.diet-warnings ul{margin:0;padding-left:var(--space-5);display:flex;flex-direction:column;gap:var(--space-1)}.diet-warnings small{font:500 13px/18px var(--font-sans)}
 @media (prefers-reduced-motion:reduce){.diet-chips>button{transition:none}}
+.house-share-sweet{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:56px;padding:var(--space-3) var(--space-4);border-radius:var(--radius-lg);text-align:start;color:var(--ink)}
+.house-share-sweet span{display:grid;gap:2px;min-width:0}.house-share-sweet small{font:500 13px/18px var(--font-sans);color:var(--ink)}.house-share-sweet svg{flex:none}
+.house-share-sweet-list button{display:block;width:100%;text-align:start;color:var(--ink);box-shadow:none;font:italic 500 17px/1.35 var(--font-fun);font-variation-settings:"SOFT" 100}
+.house-share-sweet-list button.nd-tone-rose{background:var(--rose)}.house-share-sweet-list button.nd-tone-lilas{background:var(--lilas)}.house-share-sweet-list button.nd-tone-menthe{background:var(--menthe)}.house-share-sweet-list button.nd-tone-beurre{background:var(--beurre)}.house-share-sweet-list button.nd-tone-peche{background:var(--peche)}.house-share-sweet-list button.nd-tone-lavande{background:var(--lavande)}.house-share-sweet-list button.nd-tone-citron{background:var(--citron)}
+.house-share-sweet-list button[aria-checked=true]{box-shadow:inset 0 0 0 3px var(--ink)}
+.house-share-add-note{justify-self:start;align-self:flex-start}.house-share-add-note .optional{font-size:14px}
+.house-share-dialog .chat-upload-actions{position:sticky;bottom:0;z-index:1;padding-block:var(--space-3) var(--space-1);background:var(--surface)}
+.house-card-mot{padding-block-end:calc(var(--space-5) + 30px)}
+.house-card-mot .house-card-title{padding-inline-end:0;font:italic 600 23px/1.25 var(--font-fun);font-variation-settings:"SOFT" 100}
+.house-card-mot .house-card-deco{top:auto;bottom:var(--space-3);display:flex;align-items:center;padding:2px 8px;border-radius:var(--radius-pill);background:var(--surface)}
+.house-card-mot .house-card-deco .nd-buddy+.nd-buddy{margin-inline-start:-8px}
+@media(prefers-reduced-motion:reduce){.couple-sticker,.couple-sticker *{animation:none!important}}

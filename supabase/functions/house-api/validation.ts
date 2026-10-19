@@ -34,7 +34,7 @@ export const shoppingCheckInput=z.object({id:z.string().uuid(),version:z.number(
 // A list type is either a copy of a week (weekStart) or written directly, article by article (items), without touching « À acheter ».
 export const templateInput=z.object({id:z.string().uuid(),title:label,weekStart:date.optional(),items:z.array(z.object({title:label,quantity:z.string().trim().max(50).default('')})).min(1).max(200).optional()}).refine(v=>!!v.weekStart!==!!v.items,'Choisissez une semaine ou écrivez les articles.');
 export const templateApplyInput=z.object({id:z.string().uuid(),operationId:z.string().uuid(),weekStart:date});
-export const chatInput=z.object({action:z.enum(['send','edit','delete','hide','clear']),id:z.string().uuid().optional(),scope:z.enum(['me','everyone']).default('me'),text:z.string().trim().min(1).max(2000).optional(),voiceId:z.string().uuid().optional(),attachmentId:z.string().uuid().optional(),card:chatCardInput.optional(),sticker:chatStickerInput.optional(),version:z.number().int().min(1).optional()}).refine(v=>{
+export const chatInput=z.object({action:z.enum(['send','edit','delete','hide','clear']),id:z.string().uuid().optional(),scope:z.enum(['me','everyone']).default('me'),text:z.string().trim().max(2000).transform(t=>t||undefined).optional(),voiceId:z.string().uuid().optional(),attachmentId:z.string().uuid().optional(),card:chatCardInput.optional(),sticker:chatStickerInput.optional(),version:z.number().int().min(1).optional()}).refine(v=>{
  if(v.action!=='clear'&&!v.id)return false;
  if(['delete','hide','clear'].includes(v.action))return true;
  const kinds=[v.voiceId,v.attachmentId,v.card,v.sticker].filter(x=>x!==undefined).length;
