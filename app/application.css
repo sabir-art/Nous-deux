@@ -246,8 +246,36 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}details[op
 .call-audio-control{position:relative;display:flex;flex-direction:column;align-items:center}.call-audio-control>.call-audio-options{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%);width:240px;max-width:70vw;box-shadow:var(--shadow-lift);z-index:3}.call-audio-control>.call-audio-help{position:absolute;bottom:calc(100% + 12px);width:220px;background:var(--surface);color:var(--ink);padding:12px;border-radius:16px}
 .chat-view .chat-header{padding-top:calc(12px + env(safe-area-inset-top,0px))}
 .split-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.split-options button{justify-content:center;text-align:center;white-space:nowrap;padding:var(--space-2) var(--space-3);line-height:18px}
+/* Children (optional family profiles): each child keeps one pastel colour across the agenda, the budget and their space */
+.child-tone-menthe{--child:var(--buddy-menthe)}.child-tone-beurre{--child:var(--buddy-beurre)}.child-tone-rose{--child:var(--buddy-rose)}.child-tone-lilas{--child:var(--buddy-lilas)}.child-tone-peche{--child:var(--buddy-peche)}.child-tone-lavande{--child:var(--buddy-lavande)}.child-tone-neutre{--child:var(--surface-sunken)}.child-tone-citron{--child:var(--buddy-citron)}.child-tone-ciel{--child:var(--buddy-ciel)}.child-tone-corail{--child:var(--buddy-corail)}.child-tone-sable{--child:var(--buddy-sable)}.child-tone-perle{--child:var(--buddy-perle)}
+i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--child);color:var(--pupil)}
+.child-pill i{display:inline-block;width:10px;height:10px;border-radius:var(--radius-pill);background:var(--child);margin-right:var(--space-2)}
+.tone-swatches{display:flex;flex-wrap:wrap;gap:var(--space-2)}.tone-swatch{min-height:44px;padding:0 var(--space-4);border-radius:var(--radius-pill);color:var(--pupil);font:600 15px/20px var(--font-sans);border:2px solid transparent;background:var(--child)}.tone-swatch[aria-pressed=true]{border-color:var(--pupil)}
+.family-space,.child-space{display:grid;gap:var(--space-4);min-width:0}.family-space .life-filters{margin:0}
+.child-card{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3);padding:var(--space-5);border-radius:var(--radius-lg);background:var(--child);color:var(--pupil)}.child-card h2{margin:0;overflow-wrap:anywhere}.child-card p{margin:var(--space-1) 0 0}.child-card .icon-button{color:var(--pupil)}
+.child-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:var(--space-3);align-items:start}
+.child-section{display:grid;gap:var(--space-3);min-width:0}.child-section h3{margin:0}.child-section .section-title{margin:0}.child-section>.text-link{justify-self:start}
+.child-info{display:grid;gap:var(--space-3);margin:0}.child-info dt{font:600 13px/18px var(--font-sans);color:var(--ink-muted)}.child-info dd{margin:2px 0 0;white-space:pre-line;overflow-wrap:anywhere}.child-text{margin:0;white-space:pre-line;overflow-wrap:anywhere}
+.child-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-2)}.child-list button{display:flex;gap:var(--space-3);align-items:center;width:100%;min-height:44px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:var(--surface-sunken);color:var(--ink);text-align:left}.child-list span{display:grid;min-width:0}.child-list small{color:var(--ink-muted)}
+.renewal-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-2)}.renewal-list li{display:flex;align-items:center;gap:var(--space-2);min-height:44px}.renewal-list li>span{flex:1;display:grid;min-width:0}.renewal-list small{color:var(--ink-muted)}
+.renewal-status{min-height:44px;padding:0 var(--space-3);border-radius:var(--radius-pill);font:600 14px/18px var(--font-sans);background:var(--surface-sunken);color:var(--ink)}.renewal-soon .renewal-status{background:var(--buddy-beurre);color:var(--pupil)}.renewal-now .renewal-status{background:var(--buddy-rose);color:var(--pupil)}
+.renewal-form{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto;gap:var(--space-2);align-items:end}@media(max-width:520px){.renewal-form{grid-template-columns:minmax(0,1fr)}}
+.child-cost{margin:0;font:700 28px/34px var(--font-sans)}
+.category-icon.cat-6{background:var(--menthe)}
+
+/* Extra agenda pastels so children and parents never share a colour (chosen in Notre espace / a child's profile). */
+:root,[data-theme=light]{--ciel:#bfe2fb;--corail:#ffb9ad;--sable:#eadcc5;--perle:#dcdee6;--buddy-ciel:#bfe2fb;--buddy-corail:#ffb9ad;--buddy-sable:#eadcc5;--buddy-perle:#dcdee6}
+[data-theme=dark]{--ciel:#1c3a55;--corail:#55261f;--sable:#3e3527;--perle:#34353d}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--ciel:#1c3a55;--corail:#55261f;--sable:#3e3527;--perle:#34353d}}
+.nd-tone-ciel{background:var(--ciel)}.nd-tone-corail{background:var(--corail)}.nd-tone-sable{background:var(--sable)}.nd-tone-perle{background:var(--perle)}
+.event-open.who-a .nd-event-card{background:var(--partner-a)}.event-open.who-b .nd-event-card{background:var(--partner-b)}
+.item-child{display:inline-flex;align-items:center;gap:var(--space-1)}.item-child i{width:8px;height:8px;border-radius:var(--radius-pill);background:var(--child)}
+.child-agenda-link{align-self:flex-start}.agenda-colour{margin-top:var(--space-4)}.child-tasks li{display:flex;align-items:center;gap:var(--space-2)}.child-tasks li>button:last-child{flex:1;width:auto;min-width:0}.child-tasks .checkbox{flex:none;width:44px;padding:0;background:var(--surface);border-radius:var(--radius-pill)}
+.agenda-of{margin:0 0 calc(var(--space-2) * -1);font:600 14px/18px var(--font-sans);color:var(--ink-muted)}
+.due-presets{margin-top:calc(var(--space-2) * -1)}
 .budget-overview .nd-split-labels{margin-top:var(--space-5);padding-inline:var(--space-2)}
 .split-fieldset{display:grid;gap:var(--space-4)}.split-fieldset legend{margin-bottom:var(--space-3)}.split-fieldset>label{gap:var(--space-3)}.split-solo{margin:0}
 .gauge-wrap{display:contents}
 /* Nothing left this month: a very pale start of arc, so the gauge never looks broken. The figure still reads 0 %. */
 .gauge-empty .nd-gauge-track{stroke:color-mix(in srgb,var(--rose) 22%,var(--surface))}.gauge-empty .nd-gauge-fill{stroke:color-mix(in srgb,var(--rose) 50%,var(--surface))!important;stroke-dashoffset:130px!important}
+.kids-tile{display:contents}.kids-tile .nd-tile{background:var(--citron)}

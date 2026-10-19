@@ -2778,7 +2778,33 @@ export const products:Product[]=[
   "aliases": "patee chien"
  }
 ];
-export const productCategories=[...new Set(products.map(p=>p.category))];
+// Rayons famille : toujours trouvables par la recherche, mais leurs onglets n'apparaissent qu'avec l'espace famille activé.
+export const familyProductCategories=['Bébé','Goûters','École'];
+products.push(
+ {title:"Lait infantile",icon:"🍼",category:"Bébé",presets:["1 boîte", "2 boîtes"],aliases:"lait bebe lait 1er age 2eme age"},
+ {title:"Lingettes",icon:"🧻",category:"Bébé",presets:["1 paquet", "3 paquets"],aliases:"lingette"},
+ {title:"Petits pots",icon:"🥣",category:"Bébé",presets:["4 pots", "8 pots", "12 pots"],aliases:"petit pot puree bebe"},
+ {title:"Liniment",icon:"🧴",category:"Bébé",presets:["1 flacon"],aliases:"liniment oleo calcaire"},
+ {title:"Crème pour le change",icon:"🧴",category:"Bébé",presets:["1 tube"],aliases:"creme change erytheme"},
+ {title:"Sérum physiologique",icon:"💧",category:"Bébé",presets:["1 boîte"],aliases:"serum physio dosettes"},
+ {title:"Biberon",icon:"🍼",category:"Bébé",presets:["1", "2"],aliases:"biberons tetine"},
+ {title:"Céréales bébé",icon:"🥣",category:"Bébé",presets:["1 boîte"],aliases:"cereales infantiles"},
+ {title:"Compotes à boire",icon:"🍏",category:"Goûters",presets:["4 gourdes", "8 gourdes", "12 gourdes"],aliases:"gourde compote pom pote"},
+ {title:"Biscuits goûter",icon:"🍪",category:"Goûters",presets:["1 paquet", "2 paquets"],aliases:"biscuit gateau gouter"},
+ {title:"Petits fromages",icon:"🧀",category:"Goûters",presets:["1 paquet"],aliases:"fromage portion kiri"},
+ {title:"Briquettes de jus",icon:"🧃",category:"Goûters",presets:["3 briquettes", "6 briquettes"],aliases:"jus brique"},
+ {title:"Yaourts à boire",icon:"🥛",category:"Goûters",presets:["4", "8"],aliases:"yaourt boire"},
+ {title:"Barres de céréales",icon:"🍫",category:"Goûters",presets:["1 boîte"],aliases:"barre cereales"},
+ {title:"Cahiers",icon:"📓",category:"École",presets:["1", "3", "5"],aliases:"cahier grands carreaux"},
+ {title:"Stylos",icon:"🖊️",category:"École",presets:["1 lot"],aliases:"stylo bic"},
+ {title:"Crayons de couleur",icon:"🖍️",category:"École",presets:["1 boîte"],aliases:"crayon couleur feutres"},
+ {title:"Colle",icon:"🧴",category:"École",presets:["1", "3"],aliases:"baton de colle"},
+ {title:"Trousse",icon:"👝",category:"École",presets:["1"],aliases:"trousse"},
+ {title:"Cartable",icon:"🎒",category:"École",presets:["1"],aliases:"sac cartable"},
+ {title:"Gourde",icon:"🚰",category:"École",presets:["1"],aliases:"gourde ecole"},
+ {title:"Protège-cahiers",icon:"📒",category:"École",presets:["1 lot"],aliases:"protege cahier"}
+);
+export const productCategories=[...new Set(products.map(p=>p.category))].filter(c=>!familyProductCategories.includes(c));
 export const normalizeProduct=(s:string)=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('fr').replace(/œ/g,'oe').replace(/[^a-z0-9]+/g,' ').trim();
 function distance(a:string,b:string){let row=Array.from({length:b.length+1},(_,i)=>i);for(let i=0;i<a.length;i++){const next=[i+1];for(let j=0;j<b.length;j++)next.push(Math.min(next[j]+1,row[j+1]+1,row[j]+(a[i]===b[j]?0:1)));row=next;}return row[b.length];}
 export function searchProducts(query:string,category='Tous'){
