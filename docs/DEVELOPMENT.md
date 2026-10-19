@@ -29,7 +29,7 @@ La liste complète et les versions des outils de test figurent dans `.github/wor
 | Modèle, droits, mutations | `tests/supabase-model.test.mjs`, `tests/chat-api.test.mjs` |
 | Agenda / invitations | `tests/calendar.test.mjs`, `tests/invitation-calendar.test.mjs` |
 | Courses / plantes / photos | `tests/life.test.mjs`, `tests/photos.test.mjs`, `tests/browser-layout.test.mjs` |
-| Repas / recettes / IA | `tests/meals.test.mjs`, `tests/recipe-library.test.mjs`, `tests/recipe-experience.test.mjs`, `tests/recipe-discovery.test.mjs`, `tests/ai-settings.test.mjs` |
+| Repas / recettes / IA | `tests/meals.test.mjs`, `tests/recipe-library.test.mjs`, `tests/recipe-experience.test.mjs`, `tests/diets.test.mjs`, `tests/recipe-discovery.test.mjs`, `tests/ai-settings.test.mjs` |
 | Chat / fichiers / voix | `tests/chat-attachments.test.mjs`, `tests/voices-places.test.mjs`, `tests/chat-controls-browser.test.mjs`, `tests/chat-database.test.mjs` |
 | Navigation / cycle de vie React | `tests/app-navigation-browser.test.mjs`, `tests/chat-navigation-ui.test.mjs` |
 | Appels | `tests/daily-calls.test.mjs`, `tests/daily-database.test.mjs`, `tests/daily-browser.test.mjs` |
