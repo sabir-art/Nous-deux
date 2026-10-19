@@ -391,3 +391,6 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .event-open.day-tone-2 .nd-event-card{background:color-mix(in srgb,var(--lilas) 40%,var(--surface))}
 .event-open.day-tone-3 .nd-event-card{background:color-mix(in srgb,var(--citron) 30%,var(--surface))}
 .kids-tile{display:contents}.kids-tile .nd-tile{background:var(--citron)}
+/* Home tiles beyond the design-system tones: sky blue for shopping, so it never matches the garden. */
+.shopping-tile{display:contents;--tile-ciel:#bfe2fb}.shopping-tile .nd-tile{background:var(--tile-ciel)}
+[data-theme=dark] .shopping-tile{--tile-ciel:#1c3a55}@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .shopping-tile{--tile-ciel:#1c3a55}}
