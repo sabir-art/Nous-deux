@@ -282,3 +282,6 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}details[op
 .pet-appointments{display:grid;gap:var(--space-2)}.pet-appointments .text-link{justify-self:start;display:inline-flex;align-items:center;gap:var(--space-2)}.pet-appointment{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:44px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:var(--surface-sunken);color:var(--ink);text-align:left}.pet-appointment span{display:grid;min-width:0}.pet-appointment small{color:var(--ink-muted)}
 /* Pets keep their own colour on the home page: a neutral card, never the mint plant card (a mint pet vanished on it). */
 .home-pets .plant-parade>button{background:var(--surface);box-shadow:var(--shadow-card)}
+/* Pets tile in coral, so it never matches the ideas tile (beurre). */
+.pets-tile{display:contents;--tile-corail:#ffb9ad}.pets-tile .nd-tile{background:var(--tile-corail)}
+[data-theme=dark] .pets-tile{--tile-corail:#55261f}@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .pets-tile{--tile-corail:#55261f}}

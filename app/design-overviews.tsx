@@ -11,7 +11,7 @@ export function HomeOverview({counts,onNavigate,children}:{counts:{shopping:numb
  <CategoryTile title="Nos missions" count={`${counts.tasks} à faire`} tone="lavande" onClick={()=>onNavigate('tasks')}/>
  <CategoryTile title="Nos idées" count={counts.ideas?`${counts.ideas} invitation${counts.ideas>1?'s':''}`:'À imaginer'} tone="beurre" onClick={()=>onNavigate('ideas')}/>
  <CategoryTile title="Le jardin" count={`${counts.plants} plante${counts.plants>1?'s':''}`} tone="menthe" onClick={()=>onNavigate('plants')}/>
- {counts.petsMode&&<CategoryTile title="Nos compagnons" count={counts.petsDue?`${counts.petsDue} à chouchouter`:counts.pets?`${counts.pets} compagnon${counts.pets>1?'s':''}`:'Chien, chat…'} tone="beurre" onClick={()=>onNavigate('pets')}/>}
+ {counts.petsMode&&<div className="pets-tile"><CategoryTile title="Nos compagnons" count={counts.petsDue?`${counts.petsDue} à chouchouter`:counts.pets?`${counts.pets} compagnon${counts.pets>1?'s':''}`:'Chien, chat…'} tone="neutre" onClick={()=>onNavigate('pets')}/></div>}
  <CategoryTile title="Notre argent" count="Notre budget" tone="peche" onClick={()=>onNavigate('expenses')}/>
  </div></section>{children}</div>;
 }
