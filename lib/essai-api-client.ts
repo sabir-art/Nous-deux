@@ -10,6 +10,7 @@ import {placeMutation} from '../supabase/functions/house-api/places.ts';
 import {defaultPreferences} from '../supabase/functions/house-api/communication.ts';
 import {parisDate} from '../supabase/functions/house-api/life.ts';
 import {visibleGifts,giftsOn} from '../supabase/functions/house-api/gifts.ts';
+import {dietProjection} from '../supabase/functions/house-api/diets.ts';
 import {chatInput} from '../supabase/functions/house-api/validation.ts';
 import {buildChatCard,storeChatCard,dropChatCards,attachChatCards,stickerText,type ChatCardState} from '../supabase/functions/house-api/chat-cards.ts';
 
@@ -63,7 +64,7 @@ function route(path:string,method:string,url:URL,p:any){
   case 'recipe-import':return {method:'structured',draft:{title:'Gratin de courgettes (exemple d’import)',group:'Végétarien',difficulty:'Facile',minutes:40,servings:2,ingredients:['2 courgettes','2 œufs','10 cl de crème','50 g de gruyère râpé','Sel, poivre'],steps:['Couper les courgettes en rondelles et les faire revenir 5 minutes.','Battre les œufs avec la crème, saler, poivrer.','Verser sur les courgettes, parsemer de gruyère et cuire 25 minutes à 200 °C.'],sourceUrl:p.kind==='url'?String(p.url||''):'',sourceTitle:p.kind==='url'?'Page importée (essai)':'Photo importée (essai)'}};
   case 'access':if(p.action==='logout'){reset();return {ok:true};}return {configured:true};
   case 'household':
-   if(method==='GET'){const s=load();return {member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[],gifts:visibleGifts(s,actor),pets:(s as {pets?:unknown[]}).pets||[],children:(s as {children?:unknown[]}).children||[],shoppingPending:!!s.shoppingPending?.[actor],familyMode:!!s.familyMode,petsMode:!!(s as {petsMode?:boolean}).petsMode,giftsMode:giftsOn(s as {giftsMode?:Record<string,boolean>},actor),colors:s.colors||{}};}
+   if(method==='GET'){const s=load();return {member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[],gifts:visibleGifts(s,actor),pets:(s as {pets?:unknown[]}).pets||[],children:(s as {children?:unknown[]}).children||[],shoppingPending:!!s.shoppingPending?.[actor],familyMode:!!s.familyMode,petsMode:!!(s as {petsMode?:boolean}).petsMode,giftsMode:giftsOn(s as {giftsMode?:Record<string,boolean>},actor),colors:s.colors||{},diets:dietProjection(s)};}
    mutate(s=>householdMutation(s,p,actor));return {ok:true};
   case 'meals':if(method==='POST')mutate(s=>p.action==='draw'?mealDraw(s,p,actor):mealVote(s,p,actor));return mealProjection(load(),actor);
   case 'recipes':{if(method==='POST'){if(p.action==='discover'||p.action==='toggle')throw new ApiError(400,'Les idées de recettes par IA : '+unavailable.toLowerCase());mutate(s=>recipeMutation(s,p,actor));}
