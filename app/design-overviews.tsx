@@ -11,13 +11,9 @@ export function HomeOverview({counts,onNavigate,children}:{counts:{shopping:numb
  <CategoryTile title="Nos missions" count={`${counts.tasks} à faire`} tone="lavande" onClick={()=>onNavigate('tasks')}/>
  <CategoryTile title="Nos idées" count={counts.ideas?`${counts.ideas} invitation${counts.ideas>1?'s':''}`:'À imaginer'} tone="beurre" onClick={()=>onNavigate('ideas')}/>
  <CategoryTile title="Le jardin" count={`${counts.plants} plante${counts.plants>1?'s':''}`} tone="menthe" onClick={()=>onNavigate('plants')}/>
-<<<<<<< HEAD
- {counts.family&&<CategoryTile title="Nos enfants" count={counts.kids?`${counts.kids} profil${counts.kids>1?'s':''}`:'Ajouter un enfant'} tone="menthe" onClick={()=>onNavigate('family')}/>}
+ {counts.family&&<div className="kids-tile"><CategoryTile title="Nos enfants" count={counts.kids?`${counts.kids} profil${counts.kids>1?'s':''}`:'Ajouter un enfant'} tone="neutre" onClick={()=>onNavigate('family')}/></div>}
  {counts.giftsMode&&<CategoryTile title="Idées cadeaux" count={counts.gifts?`${counts.gifts} idée${counts.gifts>1?'s':''}`:'À noter'} tone="lilas" onClick={()=>onNavigate('gifts')}/>}
  {counts.petsMode&&<CategoryTile title="Nos compagnons" count={counts.petsDue?`${counts.petsDue} à chouchouter`:counts.pets?`${counts.pets} compagnon${counts.pets>1?'s':''}`:'Chien, chat…'} tone="beurre" onClick={()=>onNavigate('pets')}/>}
-=======
- {counts.family&&<div className="kids-tile"><CategoryTile title="Nos enfants" count={counts.kids?`${counts.kids} profil${counts.kids>1?'s':''}`:'Ajouter un enfant'} tone="neutre" onClick={()=>onNavigate('family')}/></div>}
->>>>>>> 63aa603 (Enfants : tuile d’accueil en citron)
  <CategoryTile title="Notre argent" count="Notre budget" tone="peche" onClick={()=>onNavigate('expenses')}/>
  </div></section>{children}</div>;
 }
