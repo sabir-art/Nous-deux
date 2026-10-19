@@ -14,6 +14,7 @@ globalThis.fetch=async(url,init={})=>{
   uploads++;assert(init.body instanceof Uint8Array);objects.add(u.pathname.slice('/storage/v1/object/nous-deux-chat/'.length));return Response.json({});
  }
  if(u.pathname.endsWith('/nd_sessions'))return Response.json([{member:actor}]);
+ if(u.pathname.endsWith('/nd_state')){assert.equal(u.searchParams.get('select'),'chatCards:data->chatCards','Chat reads only the card snapshots');return Response.json([{chatCards:null}]);}
  if(u.pathname.endsWith('/rpc/nd_rate_hit'))return Response.json(1);
  if(u.pathname.endsWith('/rpc/nd_chat_change')){const p=JSON.parse(init.body),m=messages.find(m=>m.id===p.p_id);if(m?.member!==actor)return Response.json({status:403,error:'Interdit'});if(m.version!==p.p_version)return Response.json({status:409,error:'Version'});if(p.p_action==='edit')return Response.json({status:400,error:'Pas de modification de fichier'});const id=m.attachment_id;m.attachment_id=null;m.text='';m.deleted='everyone';return Response.json({ok:true,cleanup:[{attachmentId:id}]});}
  const list=u.pathname.endsWith('/nd_attachments')?files:u.pathname.endsWith('/nd_messages')?messages:null;assert(list,'Unexpected '+u.pathname);
