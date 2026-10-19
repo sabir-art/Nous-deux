@@ -2,7 +2,7 @@ import {knownRecipe,type RecipeState} from './recipe-library.ts';
 import type {DiscoveryState} from './recipe-discovery.ts';
 import {recipeIds} from './recipe-ids.ts';
 import {parisDate} from './life.ts';
-import {wheelTaskKeys,homeDrawLimit} from './wheel-tasks.ts';
+import {isWheelTask,homeDrawLimit} from './wheel-tasks.ts';
 export type MealMatch={recipeId:string;chef:0|1|2;createdAt:string};
 export type MealRound={votes:Record<string,boolean>[];matches:MealMatch[];draws?:Record<string,Record<string,0|1|2>>};
 export type MealState=DiscoveryState & RecipeState & {mealRounds?:Record<string,MealRound>};
@@ -25,7 +25,7 @@ export function mealVote(s:MealState,p:any,actor:number){
 
 export function mealDraw(s:MealState,p:any,actor:number){
  if(actor!==0&&actor!==1)throw new MealError('Compte personnel requis.');if(p.date!==parisDate())throw new MealError('Cette journée est terminée. Actualisez la page.');
- const scoped=typeof p.recipeId==='string';if(p.recipeId!==undefined&&!scoped)throw new MealError('Recette invalide.');if(!(wheelTaskKeys as readonly string[]).includes(p.task))throw new MealError('Mission invalide.');
+ const scoped=typeof p.recipeId==='string';if(p.recipeId!==undefined&&!scoped)throw new MealError('Recette invalide.');if(!isWheelTask(p.task))throw new MealError('Mission invalide.');
  const match=scoped?s.mealRounds?.[p.date]?.matches.find(m=>m.recipeId===p.recipeId):undefined;if(scoped&&!match)throw new MealError('La roue de cuisine est réservée à vos matchs.');
  s.mealRounds??={};const round=s.mealRounds[p.date]??={votes:[{},{}],matches:[]};round.draws??={};const results=round.draws[scoped?p.recipeId:'home']??={};if(results[p.task]===undefined&&Object.keys(results).length>=homeDrawLimit)throw new MealError('Assez de tirages pour aujourd’hui.');if(results[p.task]===undefined)results[p.task]=scoped&&p.task==='cuisine'?match!.chef:drawChef();
 }

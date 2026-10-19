@@ -487,3 +487,27 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .house-share-back{display:inline-flex;align-items:center;gap:var(--space-2);min-height:44px}
 .house-share-dialog .house-card{max-width:360px}
 @media(prefers-reduced-motion:reduce){.couple-sticker{animation:none}}
+/* Filter rows scroll sideways without a visible scrollbar: the cut-off next pill shows there is more. */
+.life-filters{scrollbar-width:none}.life-filters::-webkit-scrollbar{display:none}
+.wheel-custom{display:flex;gap:8px;margin-top:8px}.wheel-custom input{flex:1;min-width:0;min-height:44px}.wheel-custom button{min-height:44px;white-space:nowrap}
+/* Weekly menu editor: each day is a soft card with its title inside, a pale colour per day so the week reads at a glance. */
+.menu-editor-days,.menu-editor-days>fieldset{min-width:0;margin:0;border:0}
+.menu-editor-days{padding:0}
+.menu-editor-days>fieldset{display:grid;gap:var(--space-3)}
+.menu-editor-days>fieldset>legend{float:left;width:100%;padding:0;margin:0 0 var(--space-3);font:700 17px/22px var(--font-sans);color:var(--ink)}
+.menu-editor-days>fieldset>legend+*{clear:both}
+.menu-editor-days .form-grid{min-width:0}
+.menu-editor-days>fieldset:nth-child(7n+1){background:color-mix(in srgb,var(--menthe) 40%,var(--surface))}
+.menu-editor-days>fieldset:nth-child(7n+2){background:color-mix(in srgb,var(--beurre) 45%,var(--surface))}
+.menu-editor-days>fieldset:nth-child(7n+3){background:color-mix(in srgb,var(--lilas) 40%,var(--surface))}
+.menu-editor-days>fieldset:nth-child(7n+4){background:color-mix(in srgb,var(--peche) 40%,var(--surface))}
+.menu-editor-days>fieldset:nth-child(7n+5){background:color-mix(in srgb,var(--lavande) 40%,var(--surface))}
+.menu-editor-days>fieldset:nth-child(7n+6){background:color-mix(in srgb,var(--citron) 30%,var(--surface))}
+.menu-editor-days>fieldset:nth-child(7n+7){background:color-mix(in srgb,var(--rose) 35%,var(--surface))}
+.menu-days>section:nth-child(7n+1){background:color-mix(in srgb,var(--menthe) 40%,var(--surface))}
+.menu-days>section:nth-child(7n+2){background:color-mix(in srgb,var(--beurre) 45%,var(--surface))}
+.menu-days>section:nth-child(7n+3){background:color-mix(in srgb,var(--lilas) 40%,var(--surface))}
+.menu-days>section:nth-child(7n+4){background:color-mix(in srgb,var(--peche) 40%,var(--surface))}
+.menu-days>section:nth-child(7n+5){background:color-mix(in srgb,var(--lavande) 40%,var(--surface))}
+.menu-days>section:nth-child(7n+6){background:color-mix(in srgb,var(--citron) 30%,var(--surface))}
+.menu-days>section:nth-child(7n+7){background:color-mix(in srgb,var(--rose) 35%,var(--surface))}
