@@ -78,10 +78,10 @@ function householdChange(s:State,p:any,actor:number){
   return v.done?{category:'tasks',message:'a terminé une mission.'}:null;
  }
  if(action==='template-create'){
-  const v=templateInput.parse(payload);if(weekMonday(v.weekStart)!==v.weekStart)throw new ApiError(400,'Choisissez une semaine.');
+  const v=templateInput.parse(payload);if(v.weekStart&&weekMonday(v.weekStart)!==v.weekStart)throw new ApiError(400,'Choisissez une semaine.');
   s.templates??=[];if(s.templates.some(t=>t.id===v.id))return null;
   if(s.templates.length>=50)throw new ApiError(400,'Vous pouvez conserver 50 listes types. Supprimez-en une pour continuer.');
-  const items=s.items.filter(i=>i.kind==='shopping'&&i.weekStart===v.weekStart).map(i=>({title:i.title,quantity:i.quantity}));
+  const items=v.items?v.items.map(i=>({title:i.title,quantity:i.quantity})):s.items.filter(i=>i.kind==='shopping'&&i.weekStart===v.weekStart).map(i=>({title:i.title,quantity:i.quantity}));
   if(!items.length||items.length>200)throw new ApiError(400,'La semaine doit contenir entre 1 et 200 articles.');
   s.templates.push({id:v.id,title:v.title,items,owner:actor,createdAt:now});return null;
  }

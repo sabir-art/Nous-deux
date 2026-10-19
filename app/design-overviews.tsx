@@ -6,7 +6,7 @@ import {categories,money,centsFromInput,today,type Entry,type Child} from '../li
 export function HomeOverview({counts,onNavigate,children}:{counts:{shopping:number;tasks:number;matches:number;ideas:number;plants:number;petsMode?:boolean;giftsMode?:boolean;pets:number;petsDue:number;gifts:number;kids:number;family?:boolean};onNavigate:(tab:string)=>void;children:ReactNode}){
  return <div className="overview"><HeroCard tone="citron" title={<>Notre quotidien,<br/><em>à deux.</em></>} text="Un peu d’organisation, beaucoup de nous." action="Voir notre journée" onAction={()=>onNavigate('calendar')} buddy={{shape:'flower',tone:'lavande',mood:'happy'}}/>
  <section aria-label="Les espaces de notre maison"><div className="section-title"><h2>On fait quoi ?</h2></div><div className="category-grid">
- <CategoryTile title="Les courses" count={`${counts.shopping} à acheter`} tone="menthe" onClick={()=>onNavigate('shopping')}/>
+ <CategoryTile title="Les courses" count={`${counts.shopping} à acheter`} tone="lilas" onClick={()=>onNavigate('shopping')}/>
  <CategoryTile title="À table" count={counts.matches?`${counts.matches} match${counts.matches>1?'s':''}`:'À découvrir'} tone="rose" onClick={()=>onNavigate('meals')}/>
  <CategoryTile title="Nos missions" count={`${counts.tasks} à faire`} tone="lavande" onClick={()=>onNavigate('tasks')}/>
  <CategoryTile title="Nos idées" count={counts.ideas?`${counts.ideas} invitation${counts.ideas>1?'s':''}`:'À imaginer'} tone="beurre" onClick={()=>onNavigate('ideas')}/>
