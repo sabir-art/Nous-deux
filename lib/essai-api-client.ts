@@ -10,6 +10,8 @@ import {placeMutation} from '../supabase/functions/house-api/places.ts';
 import {defaultPreferences} from '../supabase/functions/house-api/communication.ts';
 import {parisDate} from '../supabase/functions/house-api/life.ts';
 import {visibleGifts,giftsOn} from '../supabase/functions/house-api/gifts.ts';
+import {chatInput} from '../supabase/functions/house-api/validation.ts';
+import {buildChatCard,storeChatCard,dropChatCards,attachChatCards,stickerText,type ChatCardState} from '../supabase/functions/house-api/chat-cards.ts';
 
 export const APP_BASE=location.pathname.replace(/[^/]*$/,'');
 const STATE_KEY='nous-deux-essai-state-v11',MEMBER_KEY='nous-deux-essai-member',PHOTOS_KEY='nous-deux-essai-photos-v1',CHAT_KEY='nous-deux-essai-chat-v1';
@@ -38,15 +40,18 @@ const load=():State=>memory??=read<State>(STATE_KEY,seed);
 function mutate<T>(fn:(s:State)=>T):T{const s=structuredClone(load());const result=fn(s);memory=s;write(STATE_KEY,s);return result;}
 
 type Chat={id:string;member:number;text:string;created_at:string;version:number;edited_at:string|null;deleted:'everyone'|null;hidden:number[]};
-function chatProjection(actor:number){const all=read<Chat[]>(CHAT_KEY,()=>[]);return {messages:all.filter(m=>!m.hidden.includes(actor)).map(m=>({id:m.id,member:m.member,created_at:m.created_at,version:m.version,deleted:m.deleted,text:m.deleted?'':m.text,edited_at:m.edited_at,editable_until:m.member===actor&&!m.deleted?new Date(Date.parse(m.created_at)+15*60000).toISOString():null,voice_id:null,voice_duration:null,attachment_id:null,attachment_name:null,attachment_mime:null,attachment_bytes:null})),hasMore:false,serverNow:new Date().toISOString()};}
+function chatProjection(actor:number){const all=read<Chat[]>(CHAT_KEY,()=>[]);return {messages:attachChatCards(all.filter(m=>!m.hidden.includes(actor)).map(m=>({id:m.id,member:m.member,created_at:m.created_at,version:m.version,deleted:m.deleted,text:m.deleted?'':m.text,edited_at:m.edited_at,editable_until:m.member===actor&&!m.deleted?new Date(Date.parse(m.created_at)+15*60000).toISOString():null,voice_id:null,voice_duration:null,attachment_id:null,attachment_name:null,attachment_mime:null,attachment_bytes:null})),(load() as ChatCardState).chatCards),hasMore:false,serverNow:new Date().toISOString()};}
 function chatChange(p:any,actor:number){
  const all=read<Chat[]>(CHAT_KEY,()=>[]);
- if(p.action==='send'){if(p.voiceId||p.attachmentId)throw new ApiError(400,'Vocaux et fichiers : '+unavailable.toLowerCase());if(!all.some(m=>m.id===p.id))all.push({id:p.id,member:actor,text:String(p.text||'').slice(0,2000),created_at:new Date().toISOString(),version:1,edited_at:null,deleted:null,hidden:[]});}
- else if(p.action==='clear'){for(const m of all)if(!m.hidden.includes(actor))m.hidden.push(actor);}
+ if(p.action==='send'){if(p.voiceId||p.attachmentId)throw new ApiError(400,'Vocaux et fichiers : '+unavailable.toLowerCase());
+  // Same checks as house-api: a card is built from the sender's own view of the house.
+  let text=String(p.text||'').slice(0,2000);if((p.card||p.sticker)&&!all.some(m=>m.id===p.id)){const v=chatInput.parse(p);const now=new Date().toISOString();text=mutate(s=>{if(v.sticker){storeChatCard(s as ChatCardState,v.id!,{member:actor,kind:'sticker',ref:v.sticker,at:now});return stickerText(v.sticker);}const card=buildChatCard(s,v.card!,actor);storeChatCard(s as ChatCardState,v.id!,{member:actor,kind:v.card!.kind,ref:card.ref,data:card.data,...(v.text?{note:v.text}:{}),at:now});return card.summary;});}
+  if(!all.some(m=>m.id===p.id))all.push({id:p.id,member:actor,text,created_at:new Date().toISOString(),version:1,edited_at:null,deleted:null,hidden:[]});}
+ else if(p.action==='clear'){if(p.scope==='everyone')mutate(s=>dropChatCards(s as ChatCardState,(_,r)=>r.member===actor));for(const m of all)if(!m.hidden.includes(actor))m.hidden.push(actor);}
  else{const m=all.find(m=>m.id===p.id);if(!m)throw new ApiError(404,'Ce message n’est plus visible.');
   if(p.action==='hide'||p.action==='delete'&&p.scope!=='everyone'){m.hidden.push(actor);}
   else{if(m.member!==actor)throw new ApiError(403,'Vous contrôlez uniquement vos propres messages.');
-   if(p.action==='delete'){m.deleted='everyone';m.version++;}
+   if(p.action==='delete'){m.deleted='everyone';m.version++;mutate(s=>dropChatCards(s as ChatCardState,id=>id===m.id));}
    else{if(Date.now()>Date.parse(m.created_at)+15*60000)throw new ApiError(400,'Le délai de modification est passé.');m.text=String(p.text||'').slice(0,2000);m.edited_at=new Date().toISOString();m.version++;}}}
  write(CHAT_KEY,all);
 }
