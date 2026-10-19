@@ -11,7 +11,7 @@ export function HomeOverview({counts,onNavigate,children}:{counts:{shopping:numb
  <CategoryTile title="Nos missions" count={`${counts.tasks} à faire`} tone="lavande" onClick={()=>onNavigate('tasks')}/>
  <CategoryTile title="Nos idées" count={counts.ideas?`${counts.ideas} invitation${counts.ideas>1?'s':''}`:'À imaginer'} tone="beurre" onClick={()=>onNavigate('ideas')}/>
  <CategoryTile title="Le jardin" count={`${counts.plants} plante${counts.plants>1?'s':''}`} tone="menthe" onClick={()=>onNavigate('plants')}/>
- {counts.family&&<CategoryTile title="Nos enfants" count={counts.kids?`${counts.kids} profil${counts.kids>1?'s':''}`:'Ajouter un enfant'} tone="menthe" onClick={()=>onNavigate('family')}/>}
+ {counts.family&&<div className="kids-tile"><CategoryTile title="Nos enfants" count={counts.kids?`${counts.kids} profil${counts.kids>1?'s':''}`:'Ajouter un enfant'} tone="neutre" onClick={()=>onNavigate('family')}/></div>}
  <CategoryTile title="Notre argent" count="Notre budget" tone="peche" onClick={()=>onNavigate('expenses')}/>
  </div></section>{children}</div>;
 }

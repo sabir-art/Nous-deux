@@ -278,3 +278,4 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .gauge-wrap{display:contents}
 /* Nothing left this month: a very pale start of arc, so the gauge never looks broken. The figure still reads 0 %. */
 .gauge-empty .nd-gauge-track{stroke:color-mix(in srgb,var(--rose) 22%,var(--surface))}.gauge-empty .nd-gauge-fill{stroke:color-mix(in srgb,var(--rose) 50%,var(--surface))!important;stroke-dashoffset:130px!important}
+.kids-tile{display:contents}.kids-tile .nd-tile{background:var(--citron)}
