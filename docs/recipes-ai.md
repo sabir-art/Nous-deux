@@ -37,7 +37,7 @@ Les photos candidates de Wikimedia Commons sont contrôlées visuellement par le
 
 ## Importer une recette (photo, capture, lien)
 
-Dans **À table → Ajouter ma recette / Importer une recette**, l’éditeur propose trois entrées : **Prendre en photo** (appareil photo), **Une capture d’écran** (image) et **Un lien** (adresse https). Le résultat n’est jamais enregistré directement : il pré-remplit le formulaire, la personne relit, coche « sans porc » puis enregistre par le chemin habituel `recipe-save` (droits d’auteur, versions, photo personnelle vérifiée).
+Dans **À table → Ajouter ma recette**, le bloc « Importer une recette » propose deux entrées : **Une photo** (le téléphone propose l’appareil photo ou la photothèque, captures d’écran comprises) et **Un lien** (adresse https). Le résultat n’est jamais enregistré directement : il pré-remplit le formulaire, la personne relit, coche « sans porc » puis enregistre par le chemin habituel `recipe-save` (droits d’auteur, versions, photo personnelle vérifiée).
 
 - Route `house-api?route=recipe-import` (POST, session `x-house-session` obligatoire) : `{kind:'image',data}` ou `{kind:'url',url}`. Réponse `{draft,method}` avec `method` = `structured` (données schema.org de la page) ou `ai`. Aucune écriture dans l’état du foyer.
 - **Image** : JPEG compressé par l’application (2 000 px maximum, environ 1 Mo), vérifié côté serveur, envoyé à la Responses API en vision (`detail:'high'`), sortie structurée stricte, `store:false`, raisonnement bas, 3 000 jetons de sortie maximum, 60 s, sans outil web. Le modèle adapte les quantités pour 2 personnes quand le nombre de portions d’origine est lisible.

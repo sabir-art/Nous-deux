@@ -22,6 +22,8 @@ Ce document est un état daté, pas un contrôle permanent de production. Vérif
 
 - 19 octobre (branche `claude/recette-import`, non fusionnée) : import de recette par photo, capture d’écran ou lien, et partage « Nous deux » depuis le navigateur Android (`share_target`). Nouvelle route `recipe-import` dans `house-api` (lecture schema.org puis IA, protections réseau, refus du porc, limites par membre) ; le résultat pré-remplit l’éditeur, rien n’est enregistré sans relecture. Champs facultatifs `sourceTitle`/`sourceUrl` des recettes personnelles. Aucune migration SQL. **`house-api` doit être redéployée** après fusion ; vérifier ensuite que `Deno.resolveDns` fonctionne sur Supabase (sinon l’import par lien reste fermé). Détails : `docs/recipes-ai.md`.
 
+  - 19 octobre, 2e série : plus de bouton « Importer une recette » à part (l’import reste dans « Ajouter ma recette ») ; « Une photo » remplace « Prendre en photo » et « Une capture d’écran » (le téléphone propose appareil photo ou photothèque) ; boutons d’import sur deux colonnes, textes dans les boutons.
+
 ## Données réelles : ne pas réinitialiser
 
 Le 10 octobre, à la demande explicite du propriétaire, les données de test des deux comptes ont été supprimées (courses, tâches, dépenses, événements personnels, plantes, idées, recettes personnelles, menus, favoris, messages et appels). Les deux mots de passe, photos de profil, sessions, appareils et secrets de configuration ont été conservés. Les recettes intégrées et repères calendaires n'ont pas été retirés.
