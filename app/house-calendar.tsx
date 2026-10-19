@@ -37,7 +37,7 @@ export default function HouseCalendar({appointments,names,kids=[],onOpen,active=
  const monday=addDays(selected,-((new Date(selected+'T12:00:00Z').getUTCDay()+6)%7));
  const weekDates=Array.from({length:7},(_,i)=>addDays(monday,i));
  const grid=calendarDays(month);
- const filtered=[...appointments.filter(a=>(person==='all'||(person.startsWith('child:')?a.child===person.slice(6):a.person===Number(person)&&!a.child))&&(scope==='all'||(scope==='mine'?a.owner===active:scope==='private'?a.visibility==='private':a.visibility!=='private'))),...(references&&scope==='all'&&!person.startsWith('child:')?holidays.filter(a=>holidayTypes.some(t=>a.category===t||a.holidayGroups?.includes(t))):[])].filter(a=>category==='all'||a.category===category||a.holidayGroups?.includes(category));
+ const filtered=[...appointments.filter(a=>(person==='all'||(person.startsWith('child:')?a.child===person.slice(6):a.person===Number(person)&&!a.child))&&(scope==='all'||(scope==='mine'?a.owner===active:scope==='private'?a.visibility==='private':a.visibility!=='private'))),...(references&&scope==='all'&&person==='all'?holidays.filter(a=>holidayTypes.some(t=>a.category===t||a.holidayGroups?.includes(t))):[])].filter(a=>category==='all'||a.category===category||a.holidayGroups?.includes(category));
  const booked=occurrences(filtered,grid[0],grid[grid.length-1]);
  const toBook=filtered.filter(a=>a.status==='to_book').sort((a,b)=>(a.bookBy||'9999').localeCompare(b.bookBy||'9999')||a.createdAt.localeCompare(b.createdAt));
  const byDay=new Map<string,Appointment[]>();grid.forEach(date=>byDay.set(date,booked.filter(a=>onDay(a,date))));

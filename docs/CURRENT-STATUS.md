@@ -29,6 +29,8 @@ Ce document est un état daté, pas un contrôle permanent de production. Vérif
 - 19 octobre (PR #16) : tuile « Nos enfants » en citron (le jardin reste menthe) ; fusion de la branche dépenses (rien de coché par défaut).
 - 19 octobre (PR #16, cohérence du mode) : tout suit `familyMode`, pas le nombre de profils — rayons Bébé/Goûters/École, catégorie et enveloppe « Enfants », entrée « Un enfant » du menu + ; mode éteint : tout disparaît (filtre enfant des missions réinitialisé) mais les liens vers un enfant masqué sont conservés à l’enregistrement d’une mission, dépense ou rendez-vous. Frontend seulement, `check:web` et tests Node passés, non déployé.
 
+- 19 octobre (PR #16) : filtre de l’agenda « Nous deux » = tout le monde (couple et enfants, avec les repères des fêtes) ; une personne ou un enfant = seulement ses événements, sans les repères.
+
 ## Données réelles : ne pas réinitialiser
 
 Le 10 octobre, à la demande explicite du propriétaire, les données de test des deux comptes ont été supprimées (courses, tâches, dépenses, événements personnels, plantes, idées, recettes personnelles, menus, favoris, messages et appels). Les deux mots de passe, photos de profil, sessions, appareils et secrets de configuration ont été conservés. Les recettes intégrées et repères calendaires n'ont pas été retirés.
