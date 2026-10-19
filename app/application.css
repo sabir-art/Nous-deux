@@ -390,3 +390,4 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .event-open.day-tone-1 .nd-event-card{background:color-mix(in srgb,var(--beurre) 50%,var(--surface))}
 .event-open.day-tone-2 .nd-event-card{background:color-mix(in srgb,var(--lilas) 40%,var(--surface))}
 .event-open.day-tone-3 .nd-event-card{background:color-mix(in srgb,var(--citron) 30%,var(--surface))}
+.kids-tile{display:contents}.kids-tile .nd-tile{background:var(--citron)}
