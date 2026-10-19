@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
-import {realpathSync} from 'node:fs';
+import {realpathSync,readFileSync} from 'node:fs';
 const {build}=createRequire(realpathSync('node_modules/wrangler/package.json'))('esbuild');
 const bundle=await build({entryPoints:['supabase/functions/house-api/pets.ts'],bundle:true,platform:'node',format:'esm',write:false,plugins:[{name:'npm-prefix',setup(b){b.onResolve({filter:/^npm:zod@/},()=>({path:realpathSync('node_modules/zod/index.js')}));}}]});
 const {petMutation,petCare}=await import('data:text/javascript;base64,'+Buffer.from(bundle.outputFiles[0].text).toString('base64'));
@@ -37,4 +37,7 @@ const q={pets:[],petsMode:true};const id=crypto.randomUUID();const base={...pet,
 petMutation(q,'pet',{...base,birthDate:'2021-04-02'},0,now,today);assert.equal(q.pets[0].birthDate,'2021-04-02');
 assert.throws(()=>petMutation(q,'pet',{...base,id:crypto.randomUUID(),birthDate:'2999-01-01'},0,now,today),e=>e.status===400);
 petMutation(q,'pet',{...base,version:1},0,now,today);assert.equal(q.pets[0].birthDate,'');}
+// Mode off: no pet wording in the agenda form, but a vet appointment keeps its pet link when edited.
+const form=readFileSync('app/house-calendar.tsx','utf8');assert.ok(form.includes('petsMode&&appointment?.pet||initialPet?petCategories')&&form.includes('pet:appointment?.pet??initialPet?.id'));
+assert.ok(readFileSync('app/house-app.tsx','utf8').includes('petsMode={petsMode}'));
 console.log('pets ok');
