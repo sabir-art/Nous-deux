@@ -356,7 +356,9 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 
 /* Birthdays and « Notre histoire »: coloured panels and little calendar leaves, readable at a glance. */
 .date-panel{display:flex;flex-direction:column;gap:var(--space-3)}.birthday-panel{background:var(--heart-soft)}.couple-panel{background:var(--lilas)}
-.date-panel .life-filters button{background:var(--surface)}
+.date-panel .life-filters>button:not(.selected){background:var(--surface)}
+.date-panel .life-filters{scrollbar-width:none;margin-inline:calc(-1 * var(--space-5));padding-inline:var(--space-5);scroll-padding-inline:var(--space-5)}.date-panel .life-filters::-webkit-scrollbar{display:none}
+.birthday-list li .date-card{background:var(--surface)}.birthday-panel .date-card em{background:var(--heart-soft);color:var(--ink)}
 .date-cards{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-2);grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))}
 .date-card{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:64px;padding:var(--space-3);border-radius:var(--radius-lg);border:0;background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;box-shadow:var(--shadow-card)}
 .date-leaf{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;width:52px;height:52px;border-radius:var(--radius-md);background:var(--leaf,var(--rose));color:var(--ink)}
@@ -378,13 +380,13 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .holiday-panel small{font:400 12px/16px var(--font-sans);color:var(--ink-muted);margin-top:var(--space-1)}
 .holiday-option{min-height:44px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-pill);font:600 14px/18px var(--font-sans);color:var(--ink)}
 @media (prefers-reduced-motion:reduce){.holiday-add-chevron{transition:none}}
-.event-open.day-tone-0 .nd-event-card{background:color-mix(in srgb,var(--rose) 70%,var(--surface))}
-.event-open.day-tone-1 .nd-event-card{background:color-mix(in srgb,var(--rose) 35%,var(--surface))}
-.event-open.day-tone-2 .nd-event-card{background:color-mix(in srgb,var(--lilas) 45%,var(--surface))}
-.event-open.day-tone-3 .nd-event-card{background:color-mix(in srgb,var(--beurre) 45%,var(--surface))}
 .split-fieldset{display:grid;gap:var(--space-4)}.split-fieldset legend{margin-bottom:var(--space-3)}.split-fieldset>label{gap:var(--space-3)}.split-solo{margin:0}
 .gauge-wrap{display:contents}
 /* Nothing left this month: a very pale start of arc, so the gauge never looks broken. The figure still reads 0 %. */
 .gauge-empty .nd-gauge-track{stroke:color-mix(in srgb,var(--rose) 22%,var(--surface))}.gauge-empty .nd-gauge-fill{stroke:color-mix(in srgb,var(--rose) 50%,var(--surface))!important;stroke-dashoffset:130px!important}
 .template-new{margin-bottom:var(--space-4)}.template-draft{display:grid;gap:var(--space-4);margin-bottom:var(--space-5)}.template-draft-actions{display:flex;gap:var(--space-3);flex-wrap:wrap;justify-content:flex-end}
 .house-wheel .wheel-change{justify-self:center;margin:12px auto 0;display:flex}.wheel-picker{display:grid;gap:12px;margin-top:12px;padding:var(--space-4);border-radius:var(--radius-lg);background:color-mix(in srgb,var(--lilas) 22%,var(--surface))}.wheel-picker fieldset{border:0;margin:0;padding:0;display:grid;gap:8px}.wheel-picker legend{font-weight:700;margin-bottom:6px}.wheel-chips{display:flex;flex-wrap:wrap;gap:8px}.wheel-chip{min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:15px;cursor:pointer}.wheel-chip.selected{background:var(--ink);border-color:var(--ink);color:var(--surface)}.wheel-chip:disabled{opacity:.6;cursor:default}.wheel-chip:focus-visible{outline:3px solid var(--marque);outline-offset:2px}
+.event-open.day-tone-0 .nd-event-card{background:color-mix(in srgb,var(--menthe) 45%,var(--surface))}
+.event-open.day-tone-1 .nd-event-card{background:color-mix(in srgb,var(--beurre) 50%,var(--surface))}
+.event-open.day-tone-2 .nd-event-card{background:color-mix(in srgb,var(--lilas) 40%,var(--surface))}
+.event-open.day-tone-3 .nd-event-card{background:color-mix(in srgb,var(--citron) 30%,var(--surface))}
