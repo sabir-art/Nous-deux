@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
-import {realpathSync} from 'node:fs';
+import {realpathSync,readFileSync} from 'node:fs';
 const {build}=createRequire(realpathSync('node_modules/wrangler/package.json'))('esbuild');
 const bundle=await build({entryPoints:['supabase/functions/house-api/model.ts','supabase/functions/house-api/gifts.ts'],bundle:true,platform:'node',format:'esm',write:false,outdir:'out',plugins:[{name:'npm-prefix',setup(b){b.onResolve({filter:/^npm:zod@/},()=>({path:realpathSync('node_modules/zod/index.js')}));}}]});
 const load=name=>import('data:text/javascript;base64,'+Buffer.from(bundle.outputFiles.find(f=>f.path.endsWith(name)).text).toString('base64'));
@@ -42,4 +42,7 @@ householdMutation(s,{action:'gift',payload:friend},1);assert.equal(s.gifts.at(-1
 assert.throws(()=>householdMutation(s,{action:'gift',payload:{...friend,id:crypto.randomUUID(),recipient:0}},1),e=>e.status===400);
 assert.throws(()=>householdMutation(s,{action:'gift',payload:{...friend,id:crypto.randomUUID(),child:kid}},1),e=>e.status===400);
 assert.throws(()=>householdMutation(s,{action:'gift',payload:{...friend,id:crypto.randomUUID(),other:'  '}},1));
+// The interface follows each person's own switch everywhere: page, home tile and the + menu.
+const app=readFileSync('app/house-app.tsx','utf8');
+assert.ok(app.includes('const gifts=giftsMode?data?.gifts||[]:[]')&&app.includes("if(tab==='gifts'&&data&&!data.giftsMode)setTab('settings')")&&app.includes("...(giftsMode?[['gifts','Un cadeau',Gift]]")&&readFileSync('app/design-overviews.tsx','utf8').includes('{counts.giftsMode&&<CategoryTile title="Idées cadeaux"'));
 console.log('gifts ok');
