@@ -451,7 +451,7 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .cs-pet .heart-eye{fill:var(--heart)}
 .cs-pet .cheek{fill:var(--heart);opacity:.3}
 .chat-emoji-picker header{flex-wrap:wrap}
-.chat-emoji-tabs{display:flex;gap:var(--space-1);padding:var(--space-1);border-radius:var(--radius-pill);background:var(--surface-sunken);margin-inline-start:auto}
+.chat-emoji-tabs{display:flex;gap:var(--space-1);padding:var(--space-1);border-radius:var(--radius-pill);background:var(--surface-sunken);order:3;flex:1 0 100%}.chat-emoji-tabs button{flex:1}.chat-emoji-picker header>.icon-button{margin-inline-start:auto}
 .chat-emoji-tabs button{min-height:44px;padding:0 var(--space-4);border-radius:var(--radius-pill);font:600 14px/1 var(--font-sans);background:transparent;color:var(--ink);white-space:nowrap}
 .chat-emoji-tabs button[aria-pressed=true]{background:var(--ink);color:var(--on-ink)}
 .chat-emoji-picker:has(.chat-sticker-grid){max-height:min(380px,45dvh)}
