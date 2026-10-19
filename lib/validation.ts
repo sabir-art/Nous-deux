@@ -11,7 +11,7 @@ export const itemInput=z.object({id:z.string().uuid(),kind:z.enum(['shopping','t
 export const householdInput=z.object({first:z.string().trim().min(1).max(24),second:z.string().trim().min(1).max(24),name:z.string().trim().min(1).max(50),budget:z.number().int().min(0).max(999999999),version:z.number().int().min(0)}).refine(x=>x.first.toLocaleLowerCase()!==x.second.toLocaleLowerCase(),{message:'Choisissez deux prénoms distincts.'});
 export const deleteInput=z.object({id:z.string().uuid(),version:z.number().int().min(1)});
 export const appointmentInput=z.object({
- circle:z.enum(['close','family','friends','mine']).optional(),
+ circle:z.enum(['close','family','friends','mine','kid']).optional(),
  pet:z.string().uuid().optional(),
  id:z.string().uuid(),title:label,category:z.enum(['medical','personal','admin','other']),
  person:z.number().int().min(-1).max(1),child:z.string().uuid().optional(),status:z.enum(['to_book','scheduled','done']),

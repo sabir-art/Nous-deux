@@ -2,7 +2,7 @@ import type {Appointment,Entry} from './domain';
 export const appointmentCategories={medical:'Médical',personal:'Personnel',admin:'Administratif',work:'Travail',holiday:'Vacances',travel:'Voyage',birthday:'Anniversaire',couple:'Notre histoire',party:'Soirée / sortie',absence:'Absence',family:'Famille',sport:'Sport / bien-être',study:'Études / formation',home:'Maison',other:'Autre',france:'Jours fériés · France',christian:'Fêtes chrétiennes',islam:'Repères musulmans',culture:'Fêtes et traditions',jewish:'Fêtes juives',world:'Fêtes du monde',abroad:'Jours fériés · autres pays'};
 // Whose birthday it is: close family, wider family, friends of both of us, or the author's own friends.
 export const birthdayCircles={close:'Famille proche',family:'Famille',friends:'Amis communs',mine:'Mes amis'} as const;
-export const circleLabel=(a:{circle?:keyof typeof birthdayCircles;owner?:number|null},names:string[])=>a.circle==='mine'?(a.owner!=null?`Amis de ${names[a.owner]}`:'Amis'):a.circle?birthdayCircles[a.circle]:'';
+export const circleLabel=(a:{circle?:keyof typeof birthdayCircles|'kid';owner?:number|null;child?:string},names:string[],kids:{id:string;name:string}[]=[])=>a.circle==='kid'?`Amis de ${kids.find(k=>k.id===a.child)?.name||'notre enfant'}`:a.circle==='mine'?(a.owner!=null?`Amis de ${names[a.owner]}`:'Amis'):a.circle?birthdayCircles[a.circle]:'';
 // The couple's own important dates, each one comes back every year.
 export const coupleMoments={meeting:'Notre rencontre',together:'Notre mise en couple',engagement:'Nos fiançailles',pacs:'Notre PACS',wedding:'Notre mariage'} as const;
 export const yearsSince=(start:string,on:string)=>Number(on.slice(0,4))-Number(start.slice(0,4));
