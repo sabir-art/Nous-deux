@@ -595,3 +595,44 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .event-open.day-tone-1 .nd-event-card{background:color-mix(in srgb,var(--beurre) 22%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--beurre) 75%,var(--surface))}
 .event-open.day-tone-2 .nd-event-card{background:color-mix(in srgb,var(--lilas) 18%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--lilas) 65%,var(--surface))}
 .event-open.day-tone-3 .nd-event-card{background:color-mix(in srgb,var(--citron) 14%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--citron) 55%,var(--surface))}
+
+/* 20 octobre : états vides harmonisés, filtres du carnet plus légers, suppression d’un article */
+.empty-state{gap:var(--space-3)}
+.empty-state>.empty-art{display:grid;place-items:center;max-width:132px}
+.empty-state>h2,.empty-state>h3{font:700 18px/24px var(--font-sans);text-wrap:balance;margin:0}
+.empty-state>p{text-wrap:pretty;margin:0}
+.empty-state>.empty-start{margin-top:var(--space-1);white-space:normal;text-align:center;max-width:100%}
+.shopping-row>.row-delete{order:4}
+.quick-added{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);min-width:0}
+.quick-added>span{font:600 13px/18px var(--font-sans);color:var(--ink-muted)}
+.quick-added>button{display:inline-flex;align-items:center;gap:var(--space-2);min-height:44px;max-width:100%;padding:var(--space-2) var(--space-3) var(--space-2) var(--space-4);border-radius:var(--radius-pill);background:var(--surface-sunken);font:600 14px/18px var(--font-sans);color:var(--ink);overflow-wrap:anywhere;text-align:left}
+.recipe-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-2);align-items:center;min-width:0}
+.recipe-search-row .search-field input{min-width:0;width:100%}
+.origin-select{position:relative;display:inline-flex;align-items:center;min-width:0}
+.origin-select select{appearance:none;-webkit-appearance:none;min-height:44px;max-width:42vw;padding:0 38px 0 var(--space-4);border:0;border-radius:var(--radius-pill);background:var(--surface-sunken);font:600 16px/20px var(--font-sans);color:var(--ink);text-overflow:ellipsis;width:auto}
+.origin-select>svg{position:absolute;right:var(--space-3);pointer-events:none;color:var(--ink)}
+.origin-select.active select{background:var(--ink);color:var(--on-ink)}
+.origin-select.active>svg{color:var(--on-ink)}
+.filter-chips{display:flex;flex-wrap:wrap;gap:var(--space-2);min-width:0;padding:var(--space-1) 0}
+.filter-chips>button{position:relative;display:inline-flex;align-items:center;min-height:36px;padding:var(--space-1) var(--space-3);border-radius:var(--radius-pill);background:var(--surface-sunken);font:600 14px/18px var(--font-sans);color:var(--ink);white-space:nowrap;transition:background-color 180ms ease,color 180ms ease}
+.filter-chips>button::after{content:'';position:absolute;inset:-4px 0}
+.filter-chips>button.selected{background:var(--ink);color:var(--on-ink)}
+@media (prefers-reduced-motion:reduce){.filter-chips>button{transition:none}}
+.recipe-search-row .search-field{min-height:44px;padding:0 var(--space-2) 0 var(--space-4);border-radius:var(--radius-pill);background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line);color:var(--ink-muted)}
+.recipe-search-row .search-field:focus-within{box-shadow:inset 0 0 0 2px var(--focus)}
+.recipe-search-row .search-field input[type=search]{border:0;background:transparent;box-shadow:none;outline:none;padding:0;min-height:42px;border-radius:0;font:400 16px/22px var(--font-sans);color:var(--ink)}
+.swipe-stage{overflow:visible}
+.swipe-card[data-choice=yes]{box-shadow:var(--shadow-lift),0 0 0 3px color-mix(in srgb,var(--heart) 55%,transparent)}
+.swipe-card[data-choice=no]{box-shadow:var(--shadow-lift),0 0 0 3px var(--line)}
+/* « Le menu qui nous met d’accord » : respirations régulières sur téléphone */
+.meal-match-intro{gap:var(--space-2);margin-top:var(--space-2);min-width:0}
+.meal-match-intro>h2{font:700 22px/28px var(--font-sans);margin:0;text-wrap:balance}
+.meal-match-intro>p{font:400 15px/22px var(--font-sans);margin:0;text-wrap:pretty}
+.meal-match-intro>small{align-self:flex-start;max-width:100%;padding:var(--space-1) var(--space-3);border-radius:var(--radius-pill);background:var(--heart-soft);font:600 13px/18px var(--font-sans);color:var(--ink);overflow-wrap:anywhere}
+.meal-match-intro>.nd-match{margin-bottom:var(--space-2)}
+.meals-space>.recipe-grid{margin-top:var(--space-1)}
+.match-empty{padding:var(--space-6) var(--space-5)}
+.match-empty .empty-art{width:80px;height:80px;border-radius:var(--radius-pill);background:var(--heart-soft)}
+.match-empty .meal-empty{font-size:40px}
+@media (max-width:420px){.recipe-tile>div:last-child{padding:var(--space-4) var(--space-5) var(--space-5)}.meal-match-intro>.nd-match{max-width:100%}}
+.shopping-description .edit-hint{display:inline-block;margin-left:var(--space-2);vertical-align:-1px;color:var(--ink-muted)}
