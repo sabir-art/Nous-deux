@@ -280,14 +280,29 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .calendar-event-chip[class*=reference-]{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--reference-tone)}
 .calendar-mobile-dots i[class*=reference-],.calendar-legend i[class*=reference-]{background:transparent;box-shadow:inset 0 0 0 2px var(--reference-tone)}
 .gifts-space{display:grid;gap:var(--space-4);min-width:0}.gifts-space .life-filters{margin:0}
+/* Idées cadeaux: white cards, a pastel tag per recipient, a single accent for the add button. */
+.gifts-intro{display:grid;gap:var(--space-2);justify-items:start}.gifts-intro p{margin:0;color:var(--ink-muted);font:400 15px/22px var(--font-sans)}.gifts-back{padding-inline:0!important;min-height:44px}
+.gift-add{justify-content:center}
 .gift-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-3);grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))}
-.gift-card{min-width:0;display:flex;flex-direction:column;gap:var(--space-3);border-radius:var(--radius-lg);padding:var(--space-4);background:var(--lilas)}
-.gift-card.secret{background:var(--surface);box-shadow:inset 0 0 0 2px var(--lilas)}.gift-card.bought{opacity:.72}.gift-card.bought strong{text-decoration:line-through}
-.gift-open{display:flex;flex-direction:column;align-items:flex-start;gap:var(--space-2);text-align:left;background:none;border:0;padding:0;color:var(--ink);min-height:44px;min-width:0;font:inherit;cursor:pointer}.gift-open:disabled{cursor:default;opacity:1}
-.gift-open strong{font:600 18px/24px var(--font-sans);overflow-wrap:anywhere}.gift-note{overflow-wrap:anywhere;color:var(--ink)}.gift-open small{color:var(--ink-muted)}
-.gift-tags{display:flex;flex-wrap:wrap;gap:var(--space-1)}.gift-tags>span{display:inline-flex;align-items:center;gap:4px;border-radius:var(--radius-pill);padding:2px var(--space-3);font:600 13px/20px var(--font-sans);background:var(--surface);color:var(--ink)}
-.gift-card.secret .gift-tags>span{background:var(--surface-sunken)}
-.gift-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-2)}.gift-actions>button{margin-left:auto}
+.gift-card{min-width:0;display:flex;flex-direction:column;gap:var(--space-2);border-radius:var(--radius-lg);padding:var(--space-4);background:var(--surface);box-shadow:var(--shadow-card)}
+.gift-card.bought{opacity:.72}.gift-card.bought strong{text-decoration:line-through}
+.gift-open{display:flex;flex-direction:column;align-items:flex-start;gap:var(--space-1);text-align:left;background:none;border:0;padding:0;color:var(--ink);min-height:44px;min-width:0;width:100%;font:inherit;cursor:pointer}.gift-open:disabled{cursor:default;opacity:1}
+.gift-open strong{font:600 17px/23px var(--font-sans);overflow-wrap:anywhere}.gift-note{overflow-wrap:anywhere;color:var(--ink);font:400 15px/21px var(--font-sans)}.gift-open small{color:var(--ink-muted);font:400 13px/18px var(--font-sans)}
+.gift-tags{display:flex;flex-wrap:wrap;gap:var(--space-1);margin-bottom:2px}.gift-tags>span{display:inline-flex;align-items:center;gap:4px;border-radius:var(--radius-pill);padding:2px 10px;font:600 13px/20px var(--font-sans);background:var(--surface-sunken);color:var(--ink)}
+.gift-for.tone-lilas{background:var(--lilas)!important}.gift-for.tone-menthe{background:var(--menthe)!important}.gift-for.tone-beurre{background:var(--beurre)!important}.gift-for.tone-peche{background:var(--peche)!important}.gift-for.tone-citron{background:var(--citron)!important}
+.gift-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-2);border-top:1px solid var(--line);padding-top:var(--space-2)}.gift-actions>button{margin-left:auto}
+.gift-done{min-height:44px;padding-block:8px}
+.gift-empty{display:grid;justify-items:center;gap:var(--space-2);text-align:center;color:var(--ink-muted)}.gift-empty p{margin:0}
+.gift-linked{display:flex;align-items:center;gap:var(--space-2);margin:var(--space-2) 0 0;padding:4px 4px 4px var(--space-3);border-radius:var(--radius-md,14px);background:var(--surface-sunken);font:500 14px/20px var(--font-sans)}.gift-linked span{flex:1;min-width:0}.gift-linked .icon-button{flex:none}
+.gift-secret-choice{display:grid;gap:4px}.gift-secret-question{display:flex;align-items:center;gap:var(--space-2);margin:0;font:600 16px/22px var(--font-sans)}.gift-secret-choice .helper-copy{margin:0}
+.gift-actions-row{display:flex;gap:var(--space-2);align-items:center}.gift-actions-row .gift-save{flex:1 1 0;min-width:0;justify-content:center}.gift-save[value=secret]{order:1}.gift-save[value=shared]{order:2}.gift-actions-row .delete-button{order:0;flex:none}
+.person-gifts-body{display:grid;gap:var(--space-3)}.person-gifts-body .text-link{justify-self:center}
+/* In the agenda: the gift ideas sit with each birthday, the whole list one tap away. */
+.gift-shortcut{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:56px;padding:var(--space-2) var(--space-3);border:0;border-radius:var(--radius-lg);background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;box-shadow:var(--shadow-card);font:inherit}
+.gift-shortcut-icon{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--beurre)}.gift-shortcut-text{display:grid;flex:1;min-width:0}.gift-shortcut-text strong{font:600 16px/22px var(--font-sans)}.gift-shortcut-text small{font:400 13px/18px var(--font-sans);color:var(--ink-muted)}
+.birthday-item{display:flex;align-items:stretch;min-width:0;border-radius:var(--radius-lg);background:var(--surface);box-shadow:var(--shadow-card)}.birthday-list li.birthday-item .date-card{flex:1;min-width:0;box-shadow:none;background:transparent}
+.birthday-list li .birthday-gift{flex:none;position:relative;display:grid;place-items:center;width:52px;min-height:44px;margin:var(--space-2) var(--space-2) var(--space-2) 0;padding:0;border:0;border-left:1px solid var(--line);background:none;color:var(--ink-muted);cursor:pointer;border-radius:0 var(--radius-md,14px) var(--radius-md,14px) 0}
+.birthday-gift.has-ideas{color:var(--ink)}.birthday-gift b{position:absolute;top:2px;right:6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--beurre);color:var(--ink);font:700 11px/18px var(--font-sans)}
 .gift-recipients button{justify-content:center}
 /* Pet mascots (app/pet-buddy.tsx), same palette and motion rules as the plant mascots */
 .pet-hit{display:inline-flex;justify-content:center}.pet-buddy{display:block;overflow:visible;touch-action:pan-y}
