@@ -1,5 +1,6 @@
 import {placeInput} from './places.ts';
-import {chatCardInput,chatStickerInput,MAX_CARD_NOTE} from './chat-card-input.ts';
+import {chatCardInput,chatStickerInput,MAX_CARD_NOTE,OWN_NOTE} from './chat-card-input.ts';
+import {unknownNdEmoji} from './nd-emojis.ts';
 import {z} from 'npm:zod@3.25.76';
 import {validDate,categories} from './domain.ts';
 const label=z.string().trim().min(1).max(100);
@@ -41,9 +42,11 @@ export const chatInput=z.object({action:z.enum(['send','edit','delete','hide','c
  if(v.action==='edit')return !!v.text&&!kinds;
  if(kinds>1)return false;
  if(v.voiceId||v.sticker)return !v.text;
+ // A sweet note in the sender's own words needs those words.
+ if(v.card?.kind==='mot'&&v.card.id===OWN_NOTE)return !!v.text&&v.text.length<=MAX_CARD_NOTE;
  if(v.card)return !v.text||v.text.length<=MAX_CARD_NOTE;
  return !!v.text||!!v.attachmentId;
-});
+}).refine(v=>!v.text||!unknownNdEmoji(v.text),{message:'Cet émoji Nous deux n’existe pas.'});
 
 
 export const chatCursorInput=z.object({before:z.string().datetime({offset:true}),beforeId:z.string().uuid()});
