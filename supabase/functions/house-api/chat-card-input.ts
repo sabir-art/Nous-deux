@@ -2,6 +2,7 @@
 import {z} from 'npm:zod@3.25.76';
 import {validDate} from './domain.ts';
 import {sweetNoteIds} from './sweet-notes.ts';
+export const OWN_NOTE='perso';
 const monday=(v:string)=>validDate(v)&&new Date(v+'T12:00:00Z').getUTCDay()===1;
 /** Keep in sync with app/couple-stickers.tsx (checked by tests/chat-cards.test.mjs). */
 // The first 20 ids were sent before the redesign and must keep rendering: never remove or rename one.
@@ -18,7 +19,8 @@ export const chatCardInput=z.discriminatedUnion('kind',[
  z.object({kind:z.literal('appointment'),id:uuid}).strict(),
  z.object({kind:z.literal('recipe'),id:z.string().min(1).max(100)}).strict(),
  z.object({kind:z.literal('menu'),id:uuid}).strict(),
- z.object({kind:z.literal('mot'),id:z.enum(sweetNoteIds)}).strict(),
+ // A ready-made note by id, or « perso »: the sender's own words, sent as the message text (≤ MAX_CARD_NOTE).
+ z.object({kind:z.literal('mot'),id:z.enum([...sweetNoteIds,OWN_NOTE] as [string,...string[]])}).strict(),
  z.object({kind:z.literal('invitation'),id:uuid}).strict(),
 ]);
 export type ChatCardRef=z.infer<typeof chatCardInput>;

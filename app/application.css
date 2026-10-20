@@ -263,7 +263,7 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}details[op
 .couple-sticker .cs-tear,.couple-sticker .cs-water{fill:var(--water)}
 .couple-sticker .cs-heart{fill:var(--marque)}
 .couple-sticker .cs-sparkle{fill:var(--buddy-citron);stroke:var(--pupil);stroke-width:1.5}
-.couple-sticker :is(.cs-zzz,.cs-question){font:italic 700 20px/1 var(--font-fun);fill:var(--pupil)}.couple-sticker .cs-question{font-size:34px}
+.couple-sticker :is(.cs-zzz,.cs-question){font:800 20px/1 var(--font-sans);fill:var(--pupil)}.couple-sticker .cs-question{font-size:34px}
 .couple-sticker .cs-moon{fill:var(--buddy-beurre);stroke:var(--pupil);stroke-width:1.5}
 .couple-sticker .cs-sun{fill:var(--buddy-beurre);stroke:var(--pupil);stroke-width:2}
 .couple-sticker :is(.cs-cup,.cs-plate,.cs-cloud,.cs-plane,.cs-popcorn){fill:var(--eye);stroke:var(--pupil);stroke-width:2.5;stroke-linejoin:round}
@@ -314,19 +314,19 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}details[op
 .house-card.nd-tone-sapin{color:var(--on-sapin)}
 .house-card-label{justify-self:start;padding:var(--space-1) var(--space-3);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink);font:600 12px/16px var(--font-sans)}
 .house-card-title{margin:0;font:700 20px/1.2 var(--font-sans);overflow-wrap:anywhere;padding-inline-end:56px}
-.house-card-title em{font-family:var(--font-fun);font-style:italic;font-weight:600;font-variation-settings:"SOFT" 100}
+.house-card-title em{font-family:var(--font-sans);font-style:normal;font-weight:600}
 .house-card-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-1)}
 .house-card-list li{display:flex;align-items:center;gap:var(--space-2);min-width:0;padding:var(--space-1) var(--space-3);border-radius:var(--radius-md);background:var(--surface);color:var(--ink)}
 .house-card-list li span:nth-child(2){flex:1;min-width:0;overflow-wrap:anywhere}
 .house-card-list small,.house-card-meta{font:500 13px/18px var(--font-sans)}
 .house-card-meta{margin:0}
 .house-card-amount{margin:0;font:800 30px/1.1 var(--font-sans);font-variant-numeric:tabular-nums}
-.house-card-note{margin:0;font:italic 500 17px/1.35 var(--font-fun);font-variation-settings:"SOFT" 100;overflow-wrap:anywhere}
+.house-card-note{margin:0;font:500 15px/22px var(--font-sans);overflow-wrap:anywhere}
 .house-card-deco{position:absolute;top:var(--space-3);right:var(--space-3);pointer-events:none;line-height:0}
 .house-card-deco .nd-buddy{position:static}
-.house-card-plant{display:flex;align-items:center;gap:var(--space-3);min-width:0}
-.house-card-plant p{margin:0;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:var(--surface);color:var(--ink);font:italic 500 15px/1.35 var(--font-fun);font-variation-settings:"SOFT" 100;min-width:0}
-.house-card-plant>:first-child{flex:none}
+.house-card-plant-row{display:flex;align-items:center;gap:var(--space-3);min-width:0}
+.house-card-plant-row p{flex:1;margin:0;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:var(--surface);color:var(--ink);font:500 14px/20px var(--font-sans);min-width:0;overflow-wrap:break-word}
+.house-card-plant-row>:first-child{flex:none}
 .house-card-when{display:flex;align-items:center;gap:var(--space-3)}
 .house-card-day{display:grid;place-items:center;min-width:52px;padding:var(--space-2);border-radius:var(--radius-md);background:var(--surface);color:var(--ink)}
 .house-card-day b{font:800 22px/1 var(--font-sans)}.house-card-day small{font:600 12px/16px var(--font-sans)}
@@ -350,13 +350,61 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}details[op
 .house-share-dialog .house-card{max-width:360px}
 .house-share-sweet{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:56px;padding:var(--space-3) var(--space-4);border-radius:var(--radius-lg);text-align:start;color:var(--ink)}
 .house-share-sweet span{display:grid;gap:2px;min-width:0}.house-share-sweet small{font:500 13px/18px var(--font-sans);color:var(--ink)}.house-share-sweet svg{flex:none}
-.house-share-sweet-list button{display:block;width:100%;text-align:start;color:var(--ink);box-shadow:none;font:italic 500 17px/1.35 var(--font-fun);font-variation-settings:"SOFT" 100}
+.house-share-sweet-list button{display:block;width:100%;text-align:start;color:var(--ink);box-shadow:none;font:600 16px/22px var(--font-sans)}
 .house-share-sweet-list button.nd-tone-rose{background:var(--rose)}.house-share-sweet-list button.nd-tone-lilas{background:var(--lilas)}.house-share-sweet-list button.nd-tone-menthe{background:var(--menthe)}.house-share-sweet-list button.nd-tone-beurre{background:var(--beurre)}.house-share-sweet-list button.nd-tone-peche{background:var(--peche)}.house-share-sweet-list button.nd-tone-lavande{background:var(--lavande)}.house-share-sweet-list button.nd-tone-citron{background:var(--citron)}
 .house-share-sweet-list button[aria-checked=true]{box-shadow:inset 0 0 0 3px var(--ink)}
 .house-share-add-note{justify-self:start;align-self:flex-start}.house-share-add-note .optional{font-size:14px}
 .house-share-dialog .chat-upload-actions{position:sticky;bottom:0;z-index:1;padding-block:var(--space-3) var(--space-1);background:var(--surface)}
-.house-card-mot{padding-block-end:calc(var(--space-5) + 30px)}
-.house-card-mot .house-card-title{padding-inline-end:0;font:italic 600 23px/1.25 var(--font-fun);font-variation-settings:"SOFT" 100}
-.house-card-mot .house-card-deco{top:auto;bottom:var(--space-3);display:flex;align-items:center;padding:2px 8px;border-radius:var(--radius-pill);background:var(--surface)}
+/* Petit mot doux : une petite enveloppe aux coins très arrondis, rabat en V et sceau en cœur. */
+.house-card-mot{border-radius:var(--radius-xl);padding:68px var(--space-5) calc(var(--space-5) + 34px);justify-items:center;text-align:center;box-shadow:inset 0 0 0 1.5px rgba(29,26,35,.12)}
+.mot-flap{position:absolute;inset:0 0 auto;width:100%;height:60px;pointer-events:none}
+.mot-flap-fill{fill:rgba(255,255,255,.38)}
+.mot-flap-line{fill:none;stroke:rgba(29,26,35,.32);stroke-width:1.5;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.mot-seal{position:absolute;top:40px;left:50%;width:34px;height:34px;margin-inline-start:-17px;display:grid;place-items:center;border-radius:50%;background:var(--surface);box-shadow:0 2px 0 rgba(29,26,35,.12)}
+.mot-seal svg{width:18px;height:18px;fill:var(--marque)}
+.house-card-mot .house-card-label{justify-self:center;margin-top:var(--space-2)}
+.mot-text{margin:0;font:700 19px/26px var(--font-sans);overflow-wrap:anywhere;text-wrap:balance}
+.house-card-mot .house-card-note{font-size:15px}
+.house-card-mot .house-card-deco{top:auto;bottom:var(--space-3);right:var(--space-4);display:flex;align-items:center;padding:2px 8px;border-radius:var(--radius-pill);background:var(--surface)}
 .house-card-mot .house-card-deco .nd-buddy+.nd-buddy{margin-inline-start:-8px}
 @media(prefers-reduced-motion:reduce){.couple-sticker,.couple-sticker *{animation:none!important}}
+
+/* Retouches du 20 octobre : rythme des cartes, stickers resserrés, typo Figtree, aucun débordement horizontal. */
+.chat-messages{overflow-x:hidden}
+.chat-message.chat-card-bubble footer{margin-top:var(--space-2)}
+.chat-message.chat-card-bubble footer>button,.chat-message.chat-sticker-bubble footer>button{min-height:36px;min-width:36px}
+/* Stickers : l’heure se range à côté du dessin, pas dessous, pour que deux stickers se suivent de près. */
+.chat-message.chat-sticker-bubble.nd-bubble{position:relative;padding-inline:12px}
+.chat-message.chat-sticker-bubble footer{position:absolute;bottom:0;margin:0;inset-inline-end:calc(100% - 8px);width:max-content;white-space:nowrap}
+.chat-message.nd-bubble-them.chat-sticker-bubble footer{inset-inline:calc(100% - 8px) auto}
+.chat-messages>div:has(>.chat-card-bubble){margin-block:var(--space-2)}
+
+.chat-message.chat-sticker-bubble .couple-sticker{display:block}
+.house-card{gap:var(--space-3)}
+.house-card-label{font:600 13px/16px var(--font-sans)}
+.house-card-title{font:700 20px/26px var(--font-sans)}
+.house-card-meta{font:500 13px/18px var(--font-sans)}
+.house-card-deco .nd-sticker,.cs-word .nd-sticker{font-family:var(--font-sans);font-style:normal;font-weight:800;letter-spacing:-.01em;font-variation-settings:normal}
+.cs-word .nd-sticker{font-size:20px;line-height:26px}.cs-word-long .nd-sticker{font-size:17px;line-height:22px}
+.house-share-weeks{display:flex;gap:var(--space-2);overflow-x:auto;scrollbar-width:none;padding-block:2px;margin-inline:-2px;padding-inline:2px}.house-share-weeks::-webkit-scrollbar{display:none}
+.house-share-weeks button{flex:none;display:grid;gap:2px;justify-items:start;min-height:52px;padding:var(--space-2) var(--space-4);border-radius:var(--radius-md);background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line);text-align:start}
+.house-share-weeks strong{font:600 14px/18px var(--font-sans)}.house-share-weeks small{font:500 12px/16px var(--font-sans);color:var(--ink-muted)}
+.house-share-weeks button[aria-checked=true]{background:var(--action-soft);box-shadow:inset 0 0 0 2px var(--action)}
+.house-share-or{margin:var(--space-1) 0 0;font:600 14px/18px var(--font-sans);color:var(--ink-muted)}
+.house-share-empty{display:grid;justify-items:center;gap:var(--space-3);padding:var(--space-5);border-radius:var(--radius-lg);text-align:center;color:var(--ink)}
+.house-share-empty .nd-buddy{position:static}
+.house-share-empty p{margin:0;font:500 16px/22px var(--font-sans);max-width:30ch}
+.house-share-empty .primary{display:inline-flex;align-items:center;gap:var(--space-2);min-height:48px}
+/* Nos émojis : dessinés dans la ligne de texte, un peu plus grands qu’une lettre. */
+.nd-emoji{display:inline-block;width:1.35em;height:1.35em;vertical-align:-.3em;line-height:0}
+.nd-emoji svg{width:100%;height:100%;overflow:visible}
+.nd-emoji .ne-out{stroke:var(--pupil);stroke-width:1.6;stroke-linejoin:round}
+.nd-emoji .ne-line{fill:none;stroke:var(--pupil);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.nd-emoji .ne-thin{stroke-width:1.1}.nd-emoji .ne-steam{opacity:.55}.nd-emoji .ne-ray{stroke:var(--pupil)}
+.nd-emoji .ne-eye,.nd-emoji .f-eye{fill:var(--eye)}.nd-emoji .ne-pupil{fill:var(--pupil)}
+.nd-emoji .f-lavande{fill:var(--buddy-lavande)}.nd-emoji .f-peche{fill:var(--buddy-peche)}.nd-emoji .f-rose{fill:var(--buddy-rose)}.nd-emoji .f-beurre{fill:var(--buddy-beurre)}.nd-emoji .f-menthe{fill:var(--buddy-menthe)}.nd-emoji .f-lilas{fill:var(--buddy-lilas)}.nd-emoji .f-citron{fill:var(--buddy-citron)}.nd-emoji .f-leaf{fill:var(--leaf)}.nd-emoji .f-heart{fill:var(--marque)}
+.chat-message p.chat-emoji-only{font-size:40px;line-height:48px}
+.chat-emoji-heading{margin:var(--space-2) 0 var(--space-1);font:600 13px/16px var(--font-sans);color:var(--ink-muted)}.chat-emoji-sections>.chat-emoji-heading:first-child{margin-top:0}
+.chat-nd-emoji-grid .nd-emoji{width:30px;height:30px;vertical-align:middle}
+.chat-nd-preview{display:flex;align-items:center;gap:var(--space-2);margin:0 0 var(--space-2);padding:var(--space-1) var(--space-3);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink);font:500 15px/22px var(--font-sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.chat-nd-preview>span:first-child{font:600 12px/16px var(--font-sans);color:var(--ink-muted)}
