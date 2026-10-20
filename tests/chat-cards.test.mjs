@@ -8,11 +8,12 @@ const bundle=await build({entryPoints:['supabase/functions/house-api/index.ts'],
 globalThis.Deno={env:{get:n=>n==='SUPABASE_URL'?'https://db.test':n==='SUPABASE_SERVICE_ROLE_KEY'?'test-service-key':undefined},serve:()=>{}};
 const paris=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const monday=(()=>{const d=new Date(paris+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);return d.toISOString().slice(0,10);})();
+const nextMonday=(()=>{const d=new Date(monday+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+7);return d.toISOString().slice(0,10);})();
 const daysAgo=n=>{const d=new Date(paris+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-n);return d.toISOString().slice(0,10);};
 const id=()=>crypto.randomUUID();
 const ids={expense:id(),plant:id(),task:id(),shared:id(),mine:id(),theirs:id(),plan:id(),personal:id(),milk:id()};
 const household={household:{first:'Alex',second:'Camille',version:1},devices:[],activity:[],sequence:0,
- items:[{id:ids.milk,kind:'shopping',title:'Lait d’avoine',quantity:'2 L',done:false,weekStart:monday,owner:1,version:1},{id:id(),kind:'shopping',title:'Pain',quantity:'',done:true,weekStart:monday,owner:0,version:2},{id:id(),kind:'shopping',title:'Ancienne semaine',quantity:'',done:false,weekStart:'2020-01-06',owner:0,version:1},{id:ids.task,kind:'task',title:'Sortir les poubelles',quantity:'',assignee:1,due:paris,priority:1,done:false,owner:0,version:1,note:'note interne'}],
+ items:[{id:ids.milk,kind:'shopping',title:'Lait d’avoine',quantity:'2 L',done:false,weekStart:monday,owner:1,version:1},{id:id(),kind:'shopping',title:'Pain',quantity:'',done:true,weekStart:monday,owner:0,version:2},{id:id(),kind:'shopping',title:'Ancienne semaine',quantity:'',done:false,weekStart:'2020-01-06',owner:0,version:1},{id:id(),kind:'shopping',title:'Farine',quantity:'1 kg',done:false,weekStart:nextMonday,owner:1,version:1},{id:ids.task,kind:'task',title:'Sortir les poubelles',quantity:'',assignee:1,due:paris,priority:1,done:false,owner:0,version:1,note:'note interne'}],
  entries:[{id:ids.expense,kind:'expense',title:'Restaurant',cents:4250,member:1,category:'Sorties',date:paris,note:'note privée de la dépense',owner:1,version:1}],
  plants:[{id:ids.plant,name:'Fifi',species:'Monstera',location:'Salon',note:'',waterEvery:3,lightEvery:0,feedEvery:0,lastWater:daysAgo(5),lastLight:daysAgo(5),lastFeed:daysAgo(5),reminders:true,remindBoth:true,owner:1,version:1,careLog:[]}],
  appointments:[{id:ids.shared,title:'Dîner chez nos amis',category:'party',visibility:'shared',person:-1,status:'scheduled',date:paris,time:'20:00',bookBy:'',location:'Lyon',note:'code de la porte 1234',owner:1,version:1},
@@ -51,7 +52,11 @@ let card=(await read()).find(x=>x.id===m.id).card;assert.equal(card.kind,'shoppi
 assert.equal((await read()).find(x=>x.id===m.id).editable_until,null,'Card messages are never editable');
 assert.equal((await chat({action:'edit',id:m.id,text:'Autre chose',version:1})).status,400,'Server refuses to edit a card message');assert(m.text.startsWith('🛒'));
 assert.equal((await send({card:{kind:'shopping',weekStart:'2026-10-21'}})).status,400,'A shopping week starts on Monday');
-assert.equal((await send({card:{kind:'shopping',weekStart:'2030-01-07'}})).status,400,'An empty week cannot be shared');
+assert.equal((await send({card:{kind:'shopping',weekStart:'2030-01-07'}})).status,400,'An empty or far-away week cannot be shared');
+assert.equal((await send({card:{kind:'shopping',weekStart:'2020-01-06'}})).status,400,'A week more than a year away is refused even with items');
+// The couple chooses the week: the card is built from that week's real items only.
+r=await send({card:{kind:'shopping',weekStart:nextMonday}});assert.equal(r.status,200,JSON.stringify(r.body));card=household.chatCards[records.at(-1).id];
+assert.equal(card.ref,nextMonday);assert.deepEqual(card.data.items,[{title:'Farine',quantity:'1 kg'}]);assert.equal(card.data.toBuy,1);assert(records.at(-1).text.startsWith('🛒 Liste de courses (semaine du '),records.at(-1).text);
 
 // Expense, plant, mission, recipe and menu snapshots keep only what the card shows.
 r=await send({card:{kind:'expense',id:ids.expense},text:'On était bien 💛'});assert.equal(r.status,200);card=household.chatCards[records.at(-1).id];
@@ -71,7 +76,15 @@ assert.equal((await send({text:''})).status,400,'A plain message still needs tex
 // Sweet notes: only ids of the fixed list, text snapshotted by the server, optional extra line.
 r=await send({card:{kind:'mot',id:'pense'}});assert.equal(r.status,200);card=household.chatCards[records.at(-1).id];assert.deepEqual(card.data,{text:'Je pense à toi.'});assert.equal(card.ref,'pense');assert.equal(records.at(-1).text,'💌 Je pense à toi.');
 r=await send({card:{kind:'mot',id:'calin'},text:'Et un bisou en plus'});assert.equal(r.status,200);assert.equal(records.at(-1).text,'💌 Ce soir, câlin obligatoire.\nEt un bisou en plus');assert.equal(household.chatCards[records.at(-1).id].note,'Et un bisou en plus');
-for(const bad of [{kind:'mot',id:'texte libre'},{kind:'mot',id:'pense',text:'Mon propre texte'},{kind:'mot'}])assert.equal((await send({card:bad})).status,400,JSON.stringify(bad));
+for(const bad of [{kind:'mot',id:'texte libre'},{kind:'mot',id:'pense',text:'Mon propre texte'},{kind:'mot'},{kind:'mot',id:'perso',text:'Dans la carte'}])assert.equal((await send({card:bad})).status,400,JSON.stringify(bad));
+// A sweet note in one's own words: the message text becomes the envelope card, bounded and required.
+r=await send({card:{kind:'mot',id:'perso'},text:'  Merci pour ce matin :nd-coeur:  '});assert.equal(r.status,200,JSON.stringify(r.body));card=household.chatCards[records.at(-1).id];
+assert.equal(card.ref,'perso');assert.deepEqual(card.data,{text:'Merci pour ce matin :nd-coeur:'});assert.equal(card.note,undefined,'Own words are not repeated as a note');assert.equal(records.at(-1).text,'💌 Merci pour ce matin :nd-coeur:');
+for(const extra of [{},{text:''},{text:'   '},{text:'x'.repeat(281)},{text:'Coucou :nd-licorne:'}])assert.equal((await send({card:{kind:'mot',id:'perso'},...extra})).status,400,JSON.stringify(extra).slice(0,60));
+// Our emojis: known short codes only, in plain messages and edits.
+r=await send({text:':nd-chat: le chat a volé ma place :nd-lavande:'});assert.equal(r.status,200);assert.equal(records.at(-1).text,':nd-chat: le chat a volé ma place :nd-lavande:');
+const plainId=records.at(-1).id;assert.equal((await chat({action:'edit',id:plainId,text:'Oups :nd-licorne:',version:1})).status,400,'Unknown emoji codes are refused on edit');
+assert.equal((await send({text:'Bisous :nd-inconnu:'})).status,400,'Unknown emoji codes are refused');assert.equal((await send({text:'Une heure: 12:30, pas un code'})).status,200,'Ordinary colons stay free');
 console.log('PASS: shopping, expense, plant, mission, recipe and menu cards validated server-side with minimal snapshots, non-editable and author forced by the session.');
 
 // Privacy: private appointments never travel through the chat, whoever owns them.
@@ -110,8 +123,8 @@ assert.throws(()=>cards.storeChatCard(s,'c229',{member:0,kind:'task',ref:'y',dat
 const shown=cards.attachChatCards([{id:'c228',member:0,deleted:null,editable_until:'x'},{id:'c229',member:0},{id:'c227',member:1,deleted:'me'}],s.chatCards);
 assert.equal(shown[0].card.kind,'task');assert.equal(shown[0].editable_until,null);assert.equal(shown[1].card,undefined,'A record never attaches to another author’s message');assert.equal(shown[2].card,undefined);
 // Client and server share the same sticker catalogue; each sticker renders with French alt text.
-const ui=await build({stdin:{contents:`import React from 'react';import {renderToStaticMarkup as render} from 'react-dom/server';import {CoupleSticker,coupleStickers} from './app/couple-stickers';import {sweetNotes} from './lib/sweet-notes';import {EmojiPicker} from './app/chat-emoji';import {HouseCardMessage} from './app/chat-house-cards';
-const h=React.createElement,noop=()=>{};export const ids=coupleStickers.map(s=>s.id);export const stickers=coupleStickers.map(s=>render(h(CoupleSticker,{id:s.id})));export const picker=render(h(EmojiPicker,{onChoose:noop,onClose:noop,onSticker:noop}));export const notes=sweetNotes.map(n=>[n.id,n.text]);export const mot=render(h(HouseCardMessage,{card:{kind:'mot',ref:'pense',data:{text:'Je pense à toi.'},note:''},names:['Alex','Camille'],onOpen:noop}));export const plain=render(h(EmojiPicker,{onChoose:noop,onClose:noop}));
+const ui=await build({stdin:{contents:`import React from 'react';import {renderToStaticMarkup as render} from 'react-dom/server';import {CoupleSticker,coupleStickers} from './app/couple-stickers';import {sweetNotes} from './lib/sweet-notes';import {EmojiPicker} from './app/chat-emoji';import {HouseCardMessage} from './app/chat-house-cards';import {RichText,ndEmojiOnly} from './app/nd-emoji';import {ndEmojis,ndEmojiPlain} from './lib/nd-emojis';
+const h=React.createElement,noop=()=>{};export const ids=coupleStickers.map(s=>s.id);export const stickers=coupleStickers.map(s=>render(h(CoupleSticker,{id:s.id})));export const picker=render(h(EmojiPicker,{onChoose:noop,onClose:noop,onSticker:noop}));export const notes=sweetNotes.map(n=>[n.id,n.text]);export const mot=render(h(HouseCardMessage,{card:{kind:'mot',ref:'pense',data:{text:'Je pense à toi.'},note:''},names:['Alex','Camille'],onOpen:noop}));export const plain=render(h(EmojiPicker,{onChoose:noop,onClose:noop}));export const emojiTab=render(h(EmojiPicker,{onChoose:noop,onClose:noop,onSticker:noop,initialTab:'emoji'}));export const nd=ndEmojis.map(e=>e.id);export const rich=render(h('p',null,h(RichText,{text:'Coucou :nd-chat: et :nd-licorne:'})));export const only=[ndEmojiOnly(':nd-coeur::nd-nous:'),ndEmojiOnly(':nd-coeur: oui'),ndEmojiOnly('')];export const plainText=ndEmojiPlain('Le :nd-chat: dort');export const perso=render(h(HouseCardMessage,{card:{kind:'mot',ref:'perso',data:{text:'Mon mot :nd-coeur:'},note:''},names:['Alex','Camille']}));
 export const cards=[['plant',{name:'Fifi',species:'Monstera',mood:'thirsty',due:['water'],overdue:2,waterDue:'2026-10-17'}],['shopping',{weekStart:'2026-10-19',toBuy:14,bought:2,items:[{title:'Lait',quantity:'2 L'}]}],['expense',{title:'Restaurant',cents:4250,payer:1,category:'Sorties',date:'2026-10-19',kind:'expense'}],['task',{title:'Poubelles',assignee:-1,due:'',done:false,priority:0}],['appointment',{title:'Dîner',date:'2026-10-24',time:'20:00',location:'Lyon'}],['recipe',{title:'Chakchouka',minutes:25}],['menu',{weekStart:'2026-10-19',slots:[{day:0,meal:'dinner',title:'Chakchouka'}]}]].map(([kind,data])=>render(h(HouseCardMessage,{card:{kind,ref:'r',data,note:'Regarde !'},names:['Alex','Camille'],onOpen:noop})));`,loader:'tsx',resolveDir:process.cwd()},bundle:true,platform:'node',format:'cjs',packages:'external',jsx:'automatic',write:false});
 const mod={exports:{}};new Function('require','module','exports',ui.outputFiles[0].text)(require,mod,mod.exports);const v=mod.exports;
 assert.deepEqual(v.ids,[...cards.chatStickerIds],'Client and server sticker ids match');assert(v.ids.length>=30);
@@ -121,6 +134,13 @@ const notesServer=await build({entryPoints:['supabase/functions/house-api/sweet-
 assert.deepEqual(v.notes,sn.sweetNotes.map(n=>[...n]),'Client and server sweet notes match');assert(v.notes.length>=15);
 assert(v.mot.includes('Un petit mot doux')&&v.mot.includes('Je pense à toi.'));assert(!v.mot.includes('<button'),'A sweet note has nothing to open');
 for(const html of v.stickers){assert(/role="img" aria-label="Sticker Nous deux : [^"]+\. [A-ZÉ][^"]+\."/.test(html),html.slice(0,200));assert(html.includes('aria-hidden="true"'));assert(!html.includes('NaN'));}
+assert(v.mot.includes('mot-flap')&&v.mot.includes('mot-seal'),'A sweet note looks like a little envelope');assert(v.perso.includes('Mon mot')&&v.perso.includes('aria-label="Un cœur tout doux"'),'Own words render in the same envelope with our emojis');
+assert(v.cards[0].includes('house-card-plant-row')&&!/<div class="house-card-plant"/.test(v.cards[0]),'The plant row no longer shares the article class (vertical text bug)');
+// Our emojis: same list on both sides, drawn inline with a French label, unknown codes stay text.
+const ndServer=await build({entryPoints:['supabase/functions/house-api/nd-emojis.ts'],bundle:true,platform:'node',format:'esm',write:false});const nds=await import('data:text/javascript;base64,'+Buffer.from(ndServer.outputFiles[0].text).toString('base64'));
+assert.deepEqual(v.nd,[...nds.ndEmojiIds],'Client and server emoji codes match');assert(v.nd.length>=12);
+assert(v.rich.includes('role="img" aria-label="Le chat"')&&v.rich.includes(':nd-licorne:'),v.rich);assert.deepEqual(v.only,[true,false,false]);assert.equal(v.plainText,'Le 🐱 dort');
+assert(v.emojiTab.includes('Les nôtres')&&v.emojiTab.includes('Les classiques'));for(const e of v.nd)assert(v.emojiTab.includes('nd-emoji'),e);assert.equal((v.emojiTab.match(/class="nd-emoji" aria-hidden="true"/g)||[]).length,v.nd.length,'Picker buttons name each emoji once');
 assert(v.picker.includes('Nos stickers'));assert(v.picker.includes('aria-pressed="true">Nos stickers'),'Stickers open first');assert.equal((v.picker.match(/Envoyer le sticker/g)||[]).length,v.ids.length);assert(!v.plain.includes('Nos stickers'),'Stickers are hidden while editing a message');
 const [plant,shopping,expense,task,appointment,recipe,menu]=v.cards;
 assert(plant.includes('a soif !')&&plant.includes('Voir le jardin')&&plant.includes('« Regarde ! »'));assert(shopping.includes('14 articles')&&shopping.includes('+ 13 autres')&&shopping.includes('Ouvrir les courses'));

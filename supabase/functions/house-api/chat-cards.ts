@@ -7,8 +7,8 @@ import {plantCare,plantMood,parisDate,type Plant} from './life.ts';
 import {recipeIds,recipeTitles} from './recipe-ids.ts';
 import {sweetNoteText} from './sweet-notes.ts';
 
-export {chatStickerIds,chatCardKinds,chatCardInput,chatStickerInput,MAX_CARD_NOTE,type ChatCardKind,type ChatCardRef} from './chat-card-input.ts';
-import type {ChatCardKind,ChatCardRef} from './chat-card-input.ts';
+export {chatStickerIds,chatCardKinds,chatCardInput,chatStickerInput,MAX_CARD_NOTE,OWN_NOTE,type ChatCardKind,type ChatCardRef} from './chat-card-input.ts';
+import {OWN_NOTE,MAX_CARD_NOTE,type ChatCardKind,type ChatCardRef} from './chat-card-input.ts';
 export type ChatCardRecord={member:number;kind:ChatCardKind|'sticker';ref:string;data?:Record<string,unknown>;note?:string;at:string};
 export type ChatCardState={chatCards?:Record<string,ChatCardRecord>};
 const MAX_CARDS=200,MAX_STICKERS=600,MAX_LIST=12;
@@ -17,14 +17,17 @@ const money=(cents:number)=>new Intl.NumberFormat('fr-FR',{style:'currency',curr
 function missing():never{throw new ApiError(404,'Cet élément n’existe plus dans la maison.');}
 const short=(v:unknown,n=100)=>String(v??'').slice(0,n);
 
-/** Validates a reference with the sender's rights and returns the minimal snapshot. */
-export function buildChatCard(s:State&ChatCardState,ref:ChatCardRef,actor:number,today=parisDate()):{ref:string;data:Record<string,unknown>;summary:string;push:string}{
+/** Validates a reference with the sender's rights and returns the minimal snapshot.
+ * `ownText` means the note became the card itself (a sweet note in the sender's own words). */
+export function buildChatCard(s:State&ChatCardState,ref:ChatCardRef,actor:number,today=parisDate(),note=''):{ref:string;data:Record<string,unknown>;summary:string;push:string;ownText?:true}{
  if(actor!==0&&actor!==1)throw new ApiError(403,'Compte personnel requis.');
  switch(ref.kind){
   case 'shopping':{
-   const week=ref.weekStart||weekMonday(today),list=s.items.filter(i=>i.kind==='shopping'&&i.weekStart===week),toBuy=list.filter(i=>!i.done);
-   if(!toBuy.length)throw new ApiError(400,'Il n’y a rien à acheter cette semaine.');
-   return {ref:week,data:{weekStart:week,toBuy:toBuy.length,bought:list.length-toBuy.length,items:toBuy.slice(0,MAX_LIST).map(i=>({title:short(i.title),quantity:short(i.quantity,50)}))},summary:`🛒 Liste de courses : ${toBuy.length} article${toBuy.length>1?'s':''} à acheter`,push:'🛒 La liste de courses dans votre discussion'};
+   // Any week the couple filled, chosen in the picker; bounded to about a year around today.
+   const week=ref.weekStart||weekMonday(today);if(Math.abs(Date.parse(week)-Date.parse(weekMonday(today)))>371*86400000)throw new ApiError(400,'Choisissez une semaine plus proche.');
+   const list=s.items.filter(i=>i.kind==='shopping'&&i.weekStart===week),toBuy=list.filter(i=>!i.done);
+   if(!toBuy.length)throw new ApiError(400,'Il n’y a rien à acheter cette semaine-là.');
+   return {ref:week,data:{weekStart:week,toBuy:toBuy.length,bought:list.length-toBuy.length,items:toBuy.slice(0,MAX_LIST).map(i=>({title:short(i.title),quantity:short(i.quantity,50)}))},summary:`🛒 Liste de courses${week===weekMonday(today)?'':' (semaine du '+new Date(week+'T12:00:00Z').toLocaleDateString('fr-FR',{day:'numeric',month:'short',timeZone:'UTC'})+')'} : ${toBuy.length} article${toBuy.length>1?'s':''} à acheter`,push:'🛒 La liste de courses dans votre discussion'};
   }
   case 'expense':{
    const e=s.entries.find(e=>e.id===ref.id)||missing();
@@ -52,6 +55,8 @@ export function buildChatCard(s:State&ChatCardState,ref:ChatCardRef,actor:number
    return {ref:ref.id,data:{title:short(r.title),...(Number.isInteger(r.minutes)?{minutes:r.minutes}:{}),...(Number.isInteger(r.servings)?{servings:r.servings}:{}),...(typeof r.group==='string'?{group:short(r.group,40)}:{})},summary:`🍽️ Recette : ${short(r.title)}`,push:'🍽️ Une recette dans votre discussion'};
   }
   case 'mot':{
+   // The sender's own words, bounded like any card note, shown in the same envelope card.
+   if(ref.id===OWN_NOTE){const text=note.trim().slice(0,MAX_CARD_NOTE);if(!text)throw new ApiError(400,'Écrivez votre petit mot.');return {ref:OWN_NOTE,data:{text},summary:'💌 '+text,push:'💌 Un petit mot doux pour vous',ownText:true};}
    // A ready-made sweet note: only ids of the fixed list are accepted, the text is a snapshot.
    const text=sweetNoteText(ref.id)||missing();
    return {ref:ref.id,data:{text},summary:'💌 '+text,push:'💌 Un petit mot doux pour vous'};
