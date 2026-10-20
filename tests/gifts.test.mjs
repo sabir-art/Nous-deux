@@ -8,12 +8,9 @@ const {householdMutation}=await load('model.js'),{visibleGifts}=await load('gift
 const s={household:null,entries:[],items:[],appointments:[],activity:[],devices:[],call:null,sequence:0};
 const secret={id:crypto.randomUUID(),version:0,title:'Montre',recipient:0,note:'',link:'',price:12000,secret:true,bought:false};
 const shared={id:crypto.randomUUID(),version:0,title:'Week-end à la mer',recipient:-1,secret:false};
-// Idées cadeaux is off by default: nothing can be noted until it is switched on.
-assert.throws(()=>householdMutation(s,{action:'gift',payload:secret},1),e=>e.status===400);
-// It is personal: Abdellah (0) switching it on does not switch it on for Laura (1).
-assert.equal(householdMutation(s,{action:'gifts-mode',payload:{enabled:true}},0),null);assert.deepEqual(s.giftsMode,{0:true});
-assert.throws(()=>householdMutation(s,{action:'gift',payload:secret},1),e=>e.status===400);
-assert.equal(householdMutation(s,{action:'gifts-mode',payload:{enabled:true}},1),null);assert.deepEqual(s.giftsMode,{0:true,1:true});
+// Idées cadeaux no longer needs a switch: both of us can note ideas straight away.
+// An older page may still send the former personal switch; it is accepted and changes nothing.
+assert.equal(householdMutation(s,{action:'gifts-mode',payload:{enabled:false}},0),null);
 // Laura (1) notes a secret idea for Abdellah (0) and a shared one; no push, no activity.
 assert.equal(householdMutation(s,{action:'gift',payload:secret},1),null);
 assert.equal(householdMutation(s,{action:'gift',payload:shared},1),null);
@@ -42,7 +39,32 @@ householdMutation(s,{action:'gift',payload:friend},1);assert.equal(s.gifts.at(-1
 assert.throws(()=>householdMutation(s,{action:'gift',payload:{...friend,id:crypto.randomUUID(),recipient:0}},1),e=>e.status===400);
 assert.throws(()=>householdMutation(s,{action:'gift',payload:{...friend,id:crypto.randomUUID(),child:kid}},1),e=>e.status===400);
 assert.throws(()=>householdMutation(s,{action:'gift',payload:{...friend,id:crypto.randomUUID(),other:'  '}},1));
-// The interface follows each person's own switch everywhere: page, home tile and the + menu.
-const app=readFileSync('app/house-app.tsx','utf8');
-assert.ok(app.includes('const gifts=giftsMode?data?.gifts||[]:[]')&&app.includes("if(tab==='gifts'&&data&&!data.giftsMode)setTab('settings')")&&app.includes("...(giftsMode?[['gifts','Un cadeau',Gift]]")&&readFileSync('app/design-overviews.tsx','utf8').includes('{counts.giftsMode&&<CategoryTile title="Idées cadeaux"'));
+// An idea can hang from a birthday of the agenda, only one the author can see.
+const sophie={id:crypto.randomUUID(),title:'Anniversaire de Sophie',category:'birthday',visibility:'shared',owner:1};
+const secretBirthday={id:crypto.randomUUID(),title:'Anniversaire de Paul',category:'birthday',visibility:'private',owner:1};
+const dinner={id:crypto.randomUUID(),title:'Dîner',category:'party',visibility:'shared',owner:0};
+s.appointments.push(sophie,secretBirthday,dinner);
+const forSophie={id:crypto.randomUUID(),version:0,title:'Un foulard',recipient:-1,other:'Sophie',birthday:sophie.id,secret:false};
+householdMutation(s,{action:'gift',payload:forSophie},0);assert.equal(s.gifts.at(-1).birthday,sophie.id);
+for(const birthday of ['inconnu',dinner.id,secretBirthday.id])assert.throws(()=>householdMutation(s,{action:'gift',payload:{...forSophie,id:crypto.randomUUID(),birthday}},0),e=>e.status===400);
+// Laura links a shared idea to her private birthday: Abdellah gets the idea, never the link to what he cannot see.
+const forPaul={id:crypto.randomUUID(),version:0,title:'Un vinyle',recipient:-1,other:'Paul',birthday:secretBirthday.id,secret:false};
+householdMutation(s,{action:'gift',payload:forPaul},1);
+assert.equal(visibleGifts(s,1).find(g=>g.id===forPaul.id).birthday,secretBirthday.id);
+assert.equal(visibleGifts(s,0).find(g=>g.id===forPaul.id).birthday,undefined);assert.equal(s.gifts.find(g=>g.id===forPaul.id).birthday,secretBirthday.id);
+// A deleted birthday leaves the idea in place, without the link; removing the link on edit is kept.
+s.appointments=s.appointments.filter(a=>a.id!==sophie.id);
+const kept=visibleGifts(s,0).find(g=>g.id===forSophie.id);assert.equal(kept.title,'Un foulard');assert.equal(kept.birthday,undefined);
+householdMutation(s,{action:'gift',payload:{...forSophie,birthday:undefined,version:1}},0);assert.equal(s.gifts.find(g=>g.id===forSophie.id).birthday,undefined);
+// Secrets stay secret with a birthday too.
+const secretForSophie={...forSophie,id:crypto.randomUUID(),version:0,birthday:undefined,secret:true};householdMutation(s,{action:'gift',payload:secretForSophie},0);
+assert.ok(!visibleGifts(s,1).some(g=>g.id===secretForSophie.id));
+// The interface: no home tile, no switch in Notre espace, the ideas live with the agenda's birthdays.
+const app=readFileSync('app/house-app.tsx','utf8'),calendar=readFileSync('app/house-calendar.tsx','utf8'),page=readFileSync('app/house-gifts.tsx','utf8');
+assert.ok(!app.includes('giftsMode')&&!app.includes("'gifts-mode'")&&!readFileSync('app/design-overviews.tsx','utf8').includes('Idées cadeaux'));
+assert.ok(app.includes('<PersonGifts ')&&calendar.includes('className="gift-shortcut"')&&calendar.includes('gifts.onFor(a)'));
+// A new idea starts with the person of the current filter, and the add button never depends on the list being empty.
+assert.ok(page.includes("const preset:GiftPreset|undefined=filter==='all'?undefined:{who:filter};")&&/<button className="primary wide gift-add"/.test(page));
+// Saving asks again whether the idea stays secret, putting the current choice first.
+assert.ok(page.includes('On la garde secrète ?')&&page.includes("name=\"secret\" value={value}"));
 console.log('gifts ok');

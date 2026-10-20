@@ -2,16 +2,27 @@ import {z} from 'npm:zod@3.25.76';
 // Gift ideas: for the two of us, for Abdellah (0), for Laura (1) for one of their children (recipient -1 + child)
 // or for someone outside the household, named freely (recipient -1 + other), such as a friend of the couple. A secret idea is visible to its author only:
 // it never leaves the server for the partner, never enters the shared activity feed and never triggers a push.
-export type Gift={id:string;owner:number;recipient:-1|0|1;child?:string;other?:string;title:string;note:string;link:string;price:number|null;secret:boolean;bought:boolean;version:number;createdAt:string};
+// An idea may also point at a birthday of the agenda (`birthday`, the id of a stored birthday), so it shows under that person.
+export type Gift={id:string;owner:number;recipient:-1|0|1;child?:string;other?:string;birthday?:string;title:string;note:string;link:string;price:number|null;secret:boolean;bought:boolean;version:number;createdAt:string};
+type Appointment={id:string;category?:string;visibility?:string;owner?:number|null};
+type GiftState={gifts?:Gift[];giftsMode?:Record<string,boolean>;children?:{id:string}[];appointments?:Appointment[]};
 export class GiftError extends Error{constructor(public status:number,message:string){super(message);}}
-const giftInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),title:z.string().trim().min(1).max(100),recipient:z.union([z.literal(-1),z.literal(0),z.literal(1)]),child:z.string().uuid().optional(),other:z.string().trim().min(1).max(40).optional(),note:z.string().trim().max(500).default(''),link:z.union([z.literal(''),z.string().trim().max(500).url().refine(u=>/^https?:\/\//i.test(u),'Lien invalide.')]).default(''),price:z.number().int().min(0).max(99999999).nullable().default(null),secret:z.boolean().default(false),bought:z.boolean().default(false)});
+const giftInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),title:z.string().trim().min(1).max(100),recipient:z.union([z.literal(-1),z.literal(0),z.literal(1)]),child:z.string().uuid().optional(),other:z.string().trim().min(1).max(40).optional(),birthday:z.string().trim().min(1).max(80).optional(),note:z.string().trim().max(500).default(''),link:z.union([z.literal(''),z.string().trim().max(500).url().refine(u=>/^https?:\/\//i.test(u),'Lien invalide.')]).default(''),price:z.number().int().min(0).max(99999999).nullable().default(null),secret:z.boolean().default(false),bought:z.boolean().default(false)});
 const deleteInput=z.object({id:z.string().uuid(),version:z.number().int().min(1)});
-export const giftsOn=(s:{giftsMode?:Record<string,boolean>},actor:number)=>!!s.giftsMode?.[actor];
-export function visibleGifts(s:{gifts?:Gift[]},actor:number):Gift[]{return (s.gifts||[]).filter(g=>!g.secret||g.owner===actor);}
+// A birthday is only usable by someone who can see it: a partner's private birthday stays unknown to the other.
+const birthdayFor=(s:GiftState,id:string,actor:number)=>(s.appointments||[]).find(a=>a.id===id&&a.category==='birthday'&&(a.visibility!=='private'||a.owner===actor));
+export function visibleGifts(s:GiftState,actor:number):Gift[]{
+ return (s.gifts||[]).filter(g=>!g.secret||g.owner===actor).map(g=>{
+  // A link to a birthday that was removed, or that this person cannot see, is left out: the idea itself stays.
+  if(!g.birthday||birthdayFor(s,g.birthday,actor))return g;
+  const {birthday:_unused,...rest}=g;return rest;
+ });
+}
 // No push for gift ideas: it is a wish list, not news, and a push would hint at a secret.
 const modeInput=z.object({enabled:z.boolean()});
-export function giftMutation(s:{gifts?:Gift[];giftsMode?:Record<string,boolean>;children?:{id:string}[]},action:string,payload:unknown,actor:number,now:string):null{
- // Idées cadeaux is optional and personal: each of us switches it on for ourselves in Notre espace; switching it off only hides the ideas.
+export function giftMutation(s:GiftState,action:string,payload:unknown,actor:number,now:string):null{
+ // Idées cadeaux used to be switched on in Notre espace. It now lives with the agenda's birthdays and is always there:
+ // an older page may still send the switch; it is accepted and simply has no effect any more.
  if(action==='gifts-mode'){s.giftsMode={...s.giftsMode,[actor]:modeInput.parse(payload).enabled};return null;}
  s.gifts??=[];
  const existing=s.gifts.find(g=>g.id===(payload as {id?:string})?.id);
@@ -23,9 +34,9 @@ export function giftMutation(s:{gifts?:Gift[];giftsMode?:Record<string,boolean>;
  if(!existing&&v.version!==0||existing&&existing.version!==v.version)throw new GiftError(409,'Cette idée a changé. Fermez puis rouvrez-la.');
  if(v.other!==undefined&&(v.recipient!==-1||v.child!==undefined))throw new GiftError(400,'Choisissez une seule personne pour cette idée.');
  if(v.child!==undefined&&(v.recipient!==-1||!(s.children||[]).some(c=>c.id===v.child)))throw new GiftError(400,'Cet enfant n’existe plus dans votre espace.');
- if(!existing&&!s.giftsMode?.[actor])throw new GiftError(400,'Activez d’abord Idées cadeaux dans Notre espace.');
+ if(v.birthday!==undefined&&!birthdayFor(s,v.birthday,actor))throw new GiftError(400,'Cet anniversaire n’existe plus dans l’agenda.');
  if(!existing&&s.gifts.length>=500)throw new GiftError(400,'La liste est pleine. Supprimez des idées avant d’en ajouter.');
  const gift:Gift={...v,owner:actor,version:v.version+1,createdAt:existing?.createdAt||now};
- if(existing){delete existing.child;delete existing.other;Object.assign(existing,gift);}else s.gifts.push(gift);
+ if(existing){delete existing.child;delete existing.other;delete existing.birthday;Object.assign(existing,gift);}else s.gifts.push(gift);
  return null;
 }
