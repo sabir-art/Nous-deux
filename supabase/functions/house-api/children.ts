@@ -11,10 +11,11 @@ const defaultColors=['lavande','peche'];
 export const parentTone=(s:{colors?:Record<string,string>},member:number)=>s.colors?.[member]||defaultColors[member];
 export type Renewal={id:string;title:string;size:string;status:'ok'|'soon'|'now'};
 export type Child={id:string;owner:number;name:string;birthDate:string;tone:typeof childTones[number];school:string;sizes?:string;health:string;contacts:string;notes:string;needs:string;renewals:Renewal[];version:number;createdAt:string};
+// « À savoir » (notes) is still accepted and kept for older screens; the new screens fold it into the needs (up to 700 + 700 characters).
 export class ChildError extends Error{constructor(public status:number,message:string){super(message);}}
 const text=(max:number)=>z.string().trim().max(max).default('');
 const renewalInput=z.object({id:z.string().uuid(),title:z.string().trim().min(1).max(80),size:text(40),status:z.enum(['ok','soon','now']).default('ok')});
-const childInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),name:z.string().trim().min(1).max(60),birthDate:z.union([z.literal(''),z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]).default(''),tone:z.enum(childTones).default('menthe'),school:text(150),sizes:text(150),health:text(500),contacts:text(500),notes:text(700),needs:text(700),renewals:z.array(renewalInput).max(60).default([])});
+const childInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),name:z.string().trim().min(1).max(60),birthDate:z.union([z.literal(''),z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]).default(''),tone:z.enum(childTones).default('menthe'),school:text(150),sizes:text(150),health:text(500),contacts:text(500),notes:text(700),needs:text(1400),renewals:z.array(renewalInput).max(60).default([])});
 const deleteInput=z.object({id:z.string().uuid(),version:z.number().int().min(1)});
 const conflict=()=>new ChildError(409,'Cette fiche a changé sur un autre appareil. Fermez puis rouvrez-la.');
 // Family features are opt-in: nothing about children shows (or can be created) until a parent turns them on.
