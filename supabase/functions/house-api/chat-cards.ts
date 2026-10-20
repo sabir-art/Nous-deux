@@ -6,6 +6,7 @@ import {ApiError,weekMonday,visibleAppointments,type State} from './model.ts';
 import {plantCare,plantMood,parisDate,type Plant} from './life.ts';
 import {recipeIds,recipeTitles} from './recipe-ids.ts';
 import {sweetNoteText} from './sweet-notes.ts';
+import {buildInvitationCard} from './chat-invitation.ts';
 
 export {chatStickerIds,chatCardKinds,chatCardInput,chatStickerInput,MAX_CARD_NOTE,OWN_NOTE,type ChatCardKind,type ChatCardRef} from './chat-card-input.ts';
 import {OWN_NOTE,MAX_CARD_NOTE,type ChatCardKind,type ChatCardRef} from './chat-card-input.ts';
@@ -61,6 +62,7 @@ export function buildChatCard(s:State&ChatCardState,ref:ChatCardRef,actor:number
    const text=sweetNoteText(ref.id)||missing();
    return {ref:ref.id,data:{text},summary:'💌 '+text,push:'💌 Un petit mot doux pour vous'};
   }
+  case 'invitation':return buildInvitationCard(s,ref.id,actor);
   case 'menu':{
    const plan=s.mealPlans?.find(m=>m.id===ref.id)||missing();
    const title=(id:string)=>{const i=recipeIds.indexOf(id);return i>=0?recipeTitles[i]:(s.personalRecipes?.find(r=>r.id===id)?.title||(s as any).generatedRecipes?.find((r:any)=>r.id===id)?.title||'Plat');};
