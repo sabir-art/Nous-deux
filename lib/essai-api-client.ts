@@ -15,7 +15,7 @@ import {chatInput} from '../supabase/functions/house-api/validation.ts';
 import {buildChatCard,storeChatCard,dropChatCards,attachChatCards,stickerText,type ChatCardState} from '../supabase/functions/house-api/chat-cards.ts';
 
 export const APP_BASE=location.pathname.replace(/[^/]*$/,'');
-const STATE_KEY='nous-deux-essai-state-v12',MEMBER_KEY='nous-deux-essai-member',PHOTOS_KEY='nous-deux-essai-photos-v1',CHAT_KEY='nous-deux-essai-chat-v1';
+const STATE_KEY='nous-deux-essai-state-v13',MEMBER_KEY='nous-deux-essai-member',PHOTOS_KEY='nous-deux-essai-photos-v1',CHAT_KEY='nous-deux-essai-chat-v1';
 const unavailable='Pas disponible en mode essai.';
 
 const read=<T,>(key:string,fallback:()=>T):T=>{try{const raw=localStorage.getItem(key);if(raw)return JSON.parse(raw) as T;}catch{}return fallback();};
@@ -31,9 +31,9 @@ function seed():State{
  return {household:{first:'Abdellah',second:'Laura',name:'Nous deux',budget:80000,categoryBudgets:{Courses:40000,Transport:3000,Sorties:12000},version:1},profiles:{},
   entries:[entry('Courses de la semaine',6420,0,'Courses',-3),entry('Facture d’électricité',8900,1,'Factures',-6),entry('Billet de train',4250,1,'Transport',-1,{split:'full'}),entry('Loyer',85000,0,'Maison',-40,{recurrence:'monthly'})],
   items:[item('Pain','1',0),item('Tomates','1 kg',1),{...item('Lait','2 bouteilles',0),priority:1}],familyMode:false,colors:{},
-  appointments:[{id:id(),title:'Notre mise en couple',category:'couple',countdown:true,person:-1,status:'scheduled',date:`${Number(day(12).slice(0,4))-5}${day(12).slice(4)}`,time:'',bookBy:'',location:'',note:'',visibility:'shared',recurrence:'yearly',endDate:'',repeatUntil:'',owner:0,version:1,createdAt:now},...([['Anniversaire de maman','close',1,9],['Anniversaire de tonton Ali','family',0,47],['Anniversaire de Sophie','friends',1,21],['Anniversaire de Karim','mine',0,75]] as const).map(([title,circle,owner,offset])=>({id:id(),title,category:'birthday',circle,person:-1,status:'scheduled',date:day(offset-365*30),time:'',bookBy:'',location:'',note:'',visibility:'shared',recurrence:'yearly',endDate:'',repeatUntil:'',owner,version:1,createdAt:now})),{id:id(),title:'Dîner chez nos amis',category:'party',person:-1,status:'scheduled',date:day(4),time:'20:00',bookBy:'',location:'',note:'',visibility:'shared',recurrence:'none',endDate:'',repeatUntil:'',owner:1,version:1,createdAt:now}],
+  appointments:[{id:id(),title:'Notre mise en couple',category:'couple',countdown:true,person:-1,status:'scheduled',date:`${Number(day(12).slice(0,4))-5}${day(12).slice(4)}`,time:'',bookBy:'',location:'',note:'',visibility:'shared',recurrence:'yearly',endDate:'',repeatUntil:'',owner:0,version:1,createdAt:now},{id:id(),title:'Dîner chez nos amis',category:'party',person:-1,status:'scheduled',date:day(4),time:'20:00',bookBy:'',location:'',note:'',visibility:'shared',recurrence:'none',endDate:'',repeatUntil:'',owner:1,version:1,createdAt:now}],
   activity:[],devices:[],call:null,sequence:0,templates:[],ideas:[],plants:[],
-  gifts:[{id:id(),owner:0,recipient:1,title:'Un collier avec nos initiales',note:'Idée secrète d’Abdellah : passez sur son compte pour la voir.',link:'',price:6500,secret:true,bought:false,version:1,createdAt:now},{id:id(),owner:1,recipient:-1,other:'Sophie',title:'Un bon pour un massage',note:'Pour ses 30 ans.',link:'',price:4500,secret:false,bought:false,version:1,createdAt:now},{id:id(),owner:1,recipient:-1,title:'Un week-end à la mer',note:'',link:'',price:null,secret:false,bought:false,version:1,createdAt:now}],
+  gifts:[{id:id(),owner:0,recipient:1,title:'Un collier avec nos initiales',note:'Idée secrète d’Abdellah : passez sur son compte pour la voir.',link:'',price:6500,secret:true,bought:false,version:1,createdAt:now},{id:id(),owner:1,recipient:-1,other:'Une amie',title:'Un bon pour un massage',note:'Pour ses 30 ans.',link:'',price:4500,secret:false,bought:false,version:1,createdAt:now},{id:id(),owner:1,recipient:-1,title:'Un week-end à la mer',note:'',link:'',price:null,secret:false,bought:false,version:1,createdAt:now}],
   children:[],
   pets:[]} as unknown as State;
 }
