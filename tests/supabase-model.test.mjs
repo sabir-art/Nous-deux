@@ -68,4 +68,15 @@ assert.equal(weekMonday('2027-01-01'),'2026-12-28');assert.equal(weekMonday('202
 assert.throws(()=>authorizeChat({member:0,version:2},1,2),e=>e.status===403);
 assert.throws(()=>authorizeChat({member:0,version:2},0,1),e=>e.status===409);
 assert.doesNotThrow(()=>authorizeChat({member:0,version:2},0,2));
+{// A birthday says whose it is (family, friends…); other events never carry that field.
+const q=structuredClone(s);const b={id:crypto.randomUUID(),title:'Anniversaire de Sophie',category:'birthday',circle:'friends',person:-1,status:'scheduled',date:'2026-11-03',time:'',bookBy:'',location:'',note:'',visibility:'shared',recurrence:'yearly',version:0};
+householdMutation(q,{action:'appointment',payload:{...b,recurrence:'none'}},0);assert.equal(q.appointments.find(a=>a.id===b.id).circle,'friends');assert.equal(q.appointments.find(a=>a.id===b.id).recurrence,'yearly');
+householdMutation(q,{action:'appointment',payload:{...b,category:'party',version:1}},0);assert.equal(q.appointments.find(a=>a.id===b.id).circle,undefined);
+assert.throws(()=>householdMutation(q,{action:'appointment',payload:{...b,id:crypto.randomUUID(),circle:'collegues'}},0));}
+{// A couple date is always ours: shared, for both of us, back every year.
+const q=structuredClone(s);const c={id:crypto.randomUUID(),title:'Notre mariage',category:'couple',person:1,status:'scheduled',date:'2021-06-12',time:'',bookBy:'',location:'',note:'',visibility:'private',recurrence:'none',circle:'friends',version:0};
+householdMutation(q,{action:'appointment',payload:c},0);const saved=q.appointments.find(a=>a.id===c.id);
+assert.equal(saved.person,-1);assert.equal(saved.visibility,'shared');assert.equal(saved.recurrence,'yearly');assert.equal(saved.circle,undefined);
+householdMutation(q,{action:'appointment',payload:{...c,version:1,countdown:true}},0);assert.equal(q.appointments.find(a=>a.id===c.id).countdown,true);
+householdMutation(q,{action:'appointment',payload:{...c,version:2,category:'party',countdown:true}},0);assert.equal(q.appointments.find(a=>a.id===c.id).countdown,undefined);}
 console.log('PASS: cross-member shopping checks, buyer integrity, status bypasses, weekly template copies, retries and author-only chat changes.');

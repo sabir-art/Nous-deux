@@ -73,9 +73,9 @@ input::-webkit-date-and-time-value{text-align:left;min-width:0}
 .invitation-meta{justify-content:center;gap:var(--space-2)}.invitation-meta>span{padding:var(--space-2) var(--space-3);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink)}
 .invitation-reply{width:100%;text-align:left}.invitation-reply summary{justify-content:center;background:var(--surface-sunken);border-radius:var(--radius-pill);padding:var(--space-2) var(--space-4)}.invitation-response{width:100%;gap:var(--space-3)}.invitation-response .primary{background:var(--heart);color:var(--on-heart)}.invitation-response button{width:100%;min-height:48px}.invitation-arrival .invitation-paper>.text-link{width:100%;margin:0}
 @keyframes invitation-open{from{transform:translateY(12px) rotate(-2deg);opacity:0}to{transform:translateY(0);opacity:1}}
-.calendar-page>.nd-hero{max-width:none}.calendar-panel{background:var(--canvas)}.calendar-day-panel{border-top:6px solid var(--rose)}.booking-panel{border-top:6px solid var(--beurre)}.calendar-options{background:var(--surface-sunken)}
+.calendar-page>.nd-hero{max-width:none}.calendar-panel{background:var(--canvas)}.calendar-day-panel{border-top:6px solid var(--rose)}.booking-panel{border-top:6px solid var(--beurre)}.calendar-options{background:var(--beurre)}
 .holiday-filters>div{display:flex;flex-wrap:wrap;gap:var(--space-2)}.holiday-filter{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-4);min-height:44px;border-radius:var(--radius-pill);font:600 14px/18px var(--font-sans);border:2px solid transparent;color:var(--ink)}.holiday-filter[aria-pressed=false]{background:var(--surface);border-color:var(--line)}.holiday-filter[aria-pressed=true]{border-color:var(--ink)}
-.reference-islam{--reference-tone:var(--menthe);background:var(--menthe)}.reference-christian{--reference-tone:var(--beurre);background:var(--beurre)}.reference-france{--reference-tone:var(--lilas);background:var(--lilas)}.reference-culture{--reference-tone:var(--peche);background:var(--peche)}
+.reference-islam{--reference-tone:var(--menthe);background:var(--menthe)}.reference-christian{--reference-tone:var(--beurre);background:var(--beurre)}.reference-france{--reference-tone:var(--lilas);background:var(--lilas)}.reference-culture{--reference-tone:var(--citron);background:var(--citron)}
 .event-open[class*=reference-]:not(.reference-none){background:transparent}
 @media(prefers-reduced-motion:reduce){.invitation-ticket{animation:none}}
 /* Real recipes and reusable weekly menus. */
@@ -245,3 +245,50 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}details[op
 .call-audio-options{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:8px;border-radius:20px;background:var(--surface);color:var(--ink)}.call-audio-options button{min-height:44px;border-radius:16px;padding:10px 14px}.call-audio-options button[aria-pressed=true]{background:var(--lavande)}.call-audio-help{font-size:13px;line-height:18px;text-align:center;margin:0}
 .call-audio-control{position:relative;display:flex;flex-direction:column;align-items:center}.call-audio-control>.call-audio-options{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%);width:240px;max-width:70vw;box-shadow:var(--shadow-lift);z-index:3}.call-audio-control>.call-audio-help{position:absolute;bottom:calc(100% + 12px);width:220px;background:var(--surface);color:var(--ink);padding:12px;border-radius:16px}
 .chat-view .chat-header{padding-top:calc(12px + env(safe-area-inset-top,0px))}
+/* Calendar landmarks (holidays) are outlined, never filled, so they can't be mistaken for an event someone added, whatever its person colour. */
+.event-open[class*=reference-]:not(.reference-none) .nd-event-card{background:var(--surface);border:2px dashed var(--reference-tone);padding:calc(var(--space-5) - 2px)}
+.calendar-event-chip[class*=reference-]{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--reference-tone)}
+.calendar-mobile-dots i[class*=reference-],.calendar-legend i[class*=reference-]{background:transparent;box-shadow:inset 0 0 0 2px var(--reference-tone)}
+.holiday-filter.birthday-filter[aria-pressed=true]{background:var(--heart-soft)}
+.birthday-list{display:flex;flex-direction:column;gap:var(--space-3)}.birthday-list ul{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-2)}.birthday-list li button{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:52px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:var(--surface-sunken);color:var(--ink);text-align:left}.birthday-list li span:nth-child(2){display:grid;flex:1;min-width:0}.birthday-list small{color:var(--ink-muted)}.birthday-list em{font-style:normal;font-weight:600;white-space:nowrap}
+.birthday-list em{font-family:var(--font-sans)}
+.birthday-circles{flex-wrap:wrap}.birthday-circles button{flex:1 1 auto;justify-content:center;white-space:nowrap}
+.holiday-filter.couple-filter[aria-pressed=true]{background:var(--heart-soft)}
+.couple-dates small{display:block}
+/* Extra calendar landmarks: their own pastels, kept apart from the partners', « nous deux » and the other landmarks. */
+:root{--fete-juive:#c6e3f7;--fete-monde:#f3dcc0;--fete-pays:#dcd8d0}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--fete-juive:#1d3a4d;--fete-monde:#4a3720;--fete-pays:#3a3833}}
+[data-theme=dark]{--fete-juive:#1d3a4d;--fete-monde:#4a3720;--fete-pays:#3a3833}
+.reference-jewish{--reference-tone:var(--fete-juive);background:var(--fete-juive)}.reference-world{--reference-tone:var(--fete-monde);background:var(--fete-monde)}.reference-abroad{--reference-tone:var(--fete-pays);background:var(--fete-pays)}
+
+
+/* Birthdays and « Notre histoire »: coloured panels and little calendar leaves, readable at a glance. */
+.date-panel{display:flex;flex-direction:column;gap:var(--space-3)}.birthday-panel{background:var(--heart-soft)}.couple-panel{background:var(--lilas)}
+.date-panel .life-filters>button:not(.selected){background:var(--surface)}
+.date-panel .life-filters{scrollbar-width:none;margin-inline:calc(-1 * var(--space-5));padding-inline:var(--space-5);scroll-padding-inline:var(--space-5)}.date-panel .life-filters::-webkit-scrollbar{display:none}
+.birthday-list li .date-card{background:var(--surface)}.birthday-panel .date-card em{background:var(--heart-soft);color:var(--ink)}
+.date-cards{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-2);grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))}
+.date-card{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:64px;padding:var(--space-3);border-radius:var(--radius-lg);border:0;background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;box-shadow:var(--shadow-card)}
+.date-leaf{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;width:52px;height:52px;border-radius:var(--radius-md);background:var(--leaf,var(--rose));color:var(--ink)}
+.date-leaf b{font:700 20px/22px var(--font-sans)}.date-leaf small{font:600 12px/14px var(--font-sans);text-transform:uppercase;letter-spacing:.02em}
+.date-card.tone-rose{--leaf:var(--rose)}.date-card.tone-beurre{--leaf:var(--beurre)}.date-card.tone-menthe{--leaf:var(--menthe)}.date-card.tone-citron{--leaf:var(--citron)}.date-card.tone-lilas{--leaf:var(--lilas)}.date-card.tone-peche{--leaf:var(--peche)}
+.date-card-text{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.date-card-text strong{font:600 16px/22px var(--font-sans);overflow-wrap:anywhere}.date-card-text small{font:400 14px/19px var(--font-sans);color:var(--ink-muted)}
+.date-card em{flex:none;font:600 14px/18px var(--font-sans);font-style:normal;padding:4px var(--space-3);border-radius:var(--radius-pill);background:var(--surface-sunken);white-space:nowrap}
+/* Countdown cards rotate through four pastels so two moments side by side never look alike. */
+.countdown-card:nth-child(4n+1){background:var(--beurre)}.countdown-card:nth-child(4n+2){background:var(--menthe)}.countdown-card:nth-child(4n+3){background:var(--lilas)}.countdown-card:nth-child(4n+4){background:var(--rose)}
+.holiday-picker{position:relative}
+.holiday-filter.holiday-add{background:var(--surface);border:2px dashed var(--line);gap:var(--space-1)}
+.holiday-filter.holiday-add[aria-expanded=true]{border-style:solid;border-color:var(--ink)}
+.holiday-add-chevron{transition:transform 160ms ease}.holiday-add[aria-expanded=true] .holiday-add-chevron{transform:rotate(180deg)}
+.holiday-panel{position:absolute;z-index:20;top:calc(100% + var(--space-2));right:0;width:min(320px,calc(100vw - 2 * var(--space-6)));background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-lift);padding:var(--space-4);display:grid;gap:var(--space-2)}
+.holiday-panel p{font:600 13px/18px var(--font-sans);color:var(--ink-muted);margin:var(--space-1) 0 0}
+.holiday-panel>div{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.holiday-panel small{font:400 12px/16px var(--font-sans);color:var(--ink-muted);margin-top:var(--space-1)}
+.holiday-option{min-height:44px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-pill);font:600 14px/18px var(--font-sans);color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.holiday-add-chevron{transition:none}}
+/* 20 octobre : teintes beaucoup plus pâles ; un fin contour de la même famille garde les jours différenciés. */
+.event-open.day-tone-0 .nd-event-card{background:color-mix(in srgb,var(--menthe) 20%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--menthe) 65%,var(--surface))}
+.event-open.day-tone-1 .nd-event-card{background:color-mix(in srgb,var(--beurre) 22%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--beurre) 75%,var(--surface))}
+.event-open.day-tone-2 .nd-event-card{background:color-mix(in srgb,var(--lilas) 18%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--lilas) 65%,var(--surface))}
+.event-open.day-tone-3 .nd-event-card{background:color-mix(in srgb,var(--citron) 14%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--citron) 55%,var(--surface))}
