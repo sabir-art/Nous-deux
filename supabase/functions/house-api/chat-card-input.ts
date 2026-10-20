@@ -7,7 +7,7 @@ const monday=(v:string)=>validDate(v)&&new Date(v+'T12:00:00Z').getUTCDay()===1;
 // The first 20 ids were sent before the redesign and must keep rendering: never remove or rename one.
 export const chatStickerIds=['bisou','calin','je-t-aime','coucou','bonne-nuit','cafe','a-table','courses','arrosage','merci','bravo','pardon','boude','j-arrive','tu-me-manques','fete','film','pluie','vacances','courage',
  'chat-faim','ronron','sieste','balade','ouaf','ca-pousse','bisou-piquant','resto','je-rentre','surprise','anniv','rendez-vous'] as const;
-export const chatCardKinds=['shopping','expense','plant','task','appointment','recipe','menu','mot'] as const;
+export const chatCardKinds=['shopping','expense','plant','task','appointment','recipe','menu','mot','invitation'] as const;
 export type ChatCardKind=typeof chatCardKinds[number];
 const uuid=z.string().uuid();
 export const chatCardInput=z.discriminatedUnion('kind',[
@@ -19,6 +19,7 @@ export const chatCardInput=z.discriminatedUnion('kind',[
  z.object({kind:z.literal('recipe'),id:z.string().min(1).max(100)}).strict(),
  z.object({kind:z.literal('menu'),id:uuid}).strict(),
  z.object({kind:z.literal('mot'),id:z.enum(sweetNoteIds)}).strict(),
+ z.object({kind:z.literal('invitation'),id:uuid}).strict(),
 ]);
 export type ChatCardRef=z.infer<typeof chatCardInput>;
 export const chatStickerInput=z.enum(chatStickerIds);
