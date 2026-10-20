@@ -1,5 +1,5 @@
-import type {Appointment,Entry} from './domain';
-export const appointmentCategories={medical:'Médical',personal:'Personnel',admin:'Administratif',work:'Travail',holiday:'Vacances',travel:'Voyage',birthday:'Anniversaire',couple:'Notre histoire',party:'Soirée / sortie',absence:'Absence',family:'Famille',sport:'Sport / bien-être',study:'Études / formation',home:'Maison',other:'Autre',france:'Jours fériés · France',christian:'Fêtes chrétiennes',islam:'Repères musulmans',culture:'Fêtes et traditions',jewish:'Fêtes juives',world:'Fêtes du monde',abroad:'Jours fériés · autres pays'};
+import type {Appointment,Entry,Item} from './domain';
+export const appointmentCategories={medical:'Médical',personal:'Personnel',admin:'Administratif',work:'Travail',holiday:'Vacances',travel:'Voyage',birthday:'Anniversaire',couple:'Notre histoire',party:'Soirée / sortie',absence:'Absence',family:'Famille',sport:'Sport / bien-être',study:'Études / formation',home:'Maison',other:'Autre',france:'Jours fériés · France',christian:'Fêtes chrétiennes',islam:'Repères musulmans',culture:'Fêtes et traditions',jewish:'Fêtes juives',world:'Fêtes du monde',abroad:'Jours fériés · autres pays',mission:'Mission'};
 // Whose birthday it is: close family, wider family, friends of both of us, or the author's own friends.
 export const birthdayCircles={close:'Famille proche',family:'Famille',friends:'Amis communs',mine:'Mes amis'} as const;
 export const circleLabel=(a:{circle?:keyof typeof birthdayCircles|'kid';owner?:number|null;child?:string},names:string[],kids:{id:string;name:string}[]=[])=>a.circle==='kid'?`Amis de ${kids.find(k=>k.id===a.child)?.name||'notre enfant'}`:a.circle==='mine'?(a.owner!=null?`Amis de ${names[a.owner]}`:'Amis'):a.circle?birthdayCircles[a.circle]:'';
@@ -8,7 +8,20 @@ export const coupleMoments={meeting:'Notre rencontre',together:'Notre mise en co
 export const yearsSince=(start:string,on:string)=>Number(on.slice(0,4))-Number(start.slice(0,4));
 // An animal's appointments: the vet, grooming, a pet sitter… never work or studies.
 export const petCategories:[string,string][]=[['medical','Santé, vétérinaire'],['home','Soins, toilettage'],['travel','Garde, pension'],['other','Autre']];
-export const editableCategories=Object.entries(appointmentCategories).filter(([id])=>!['france','christian','islam','culture','jewish','world','abroad','couple'].includes(id));
+export const editableCategories=Object.entries(appointmentCategories).filter(([id])=>!['france','christian','islam','culture','jewish','world','abroad','couple','mission'].includes(id));
+// A child's appointments get a soft colour by kind (health, school, activity…), on top of the child's own colour,
+// which stays the main colour of the event so the child is still recognised at a glance in the shared agenda.
+export type ChildKind='sante'|'ecole'|'activite'|'autre';
+export const childKindLabels:Record<ChildKind,string>={sante:'Santé',ecole:'École',activite:'Activité',autre:'Autre'};
+export const childKind=(category:string):ChildKind=>category==='medical'?'sante':category==='study'||category==='admin'?'ecole':['sport','party','family','holiday','travel','birthday','personal'].includes(category)?'activite':'autre';
+// Missions with a date show in the agenda as computed events (never stored as appointments, so never twice):
+// in the agenda of the person they are given to, in both when they are for « l’un de nous », at the child's colour
+// when they concern a child. Missions are already shared by both of us, so nobody sees a mission they could not see before.
+export function missionEvents(items:Item[]):Appointment[]{
+ return items.filter(t=>t.kind==='task'&&/^\d{4}-\d{2}-\d{2}$/.test(t.due||'')).map(t=>({id:'task-'+t.id,taskId:t.id,assignee:t.assignee,title:t.title,category:'mission',person:t.assignee===0||t.assignee===1?t.assignee:-1,...(t.child?{child:t.child}:{}),status:t.done?'done':'scheduled',date:t.due,time:'',bookBy:'',location:'',note:'',visibility:'shared',recurrence:'none',endDate:'',repeatUntil:'',owner:t.owner??null,version:t.version,createdAt:t.createdAt}));
+}
+// Person filter of the agenda: a mission « pour l’un de nous » belongs to both agendas, a child's mission also to the parent it is given to.
+export const inAgendaOf=(a:Appointment,person:string)=>person==='all'||(person.startsWith('child:')?a.child===person.slice(6):a.taskId?(person==='-1'?a.assignee===-1:a.assignee===Number(person)||a.assignee===-1):a.person===Number(person)&&!a.child);
 const isoDate=(d:Date)=>d.toISOString().slice(0,10);
 export function calendarDays(month:string):string[]{
  const first=new Date(month+'-01T12:00:00Z');

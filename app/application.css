@@ -259,7 +259,24 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .child-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-2)}.child-list button{display:flex;gap:var(--space-3);align-items:center;width:100%;min-height:44px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:var(--surface-sunken);color:var(--ink);text-align:left}.child-list span{display:grid;min-width:0}.child-list small{color:var(--ink-muted)}
 .renewal-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-2)}.renewal-list li{display:flex;align-items:center;gap:var(--space-2);min-height:44px}.renewal-list li>span{flex:1;display:grid;min-width:0}.renewal-list small{color:var(--ink-muted)}
 .renewal-status{min-height:44px;padding:0 var(--space-3);border-radius:var(--radius-pill);font:600 14px/18px var(--font-sans);background:var(--surface-sunken);color:var(--ink)}.renewal-soon .renewal-status{background:var(--buddy-beurre);color:var(--pupil)}.renewal-now .renewal-status{background:var(--buddy-rose);color:var(--pupil)}
-.renewal-form{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto;gap:var(--space-2);align-items:end}@media(max-width:520px){.renewal-form{grid-template-columns:minmax(0,1fr)}}
+.renewal-form{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title title" "size add";gap:var(--space-3) var(--space-2);align-items:end}.renewal-form label{display:flex;flex-direction:column;gap:var(--space-2);min-width:0;font:600 14px/18px var(--font-sans)}.renewal-form .renewal-title{grid-area:title}.renewal-form .renewal-size{grid-area:size}.renewal-form>button{grid-area:add;min-height:48px;white-space:nowrap;padding-inline:var(--space-4)}
+.child-renewals{container-type:inline-size}@container (min-width:500px){.renewal-form{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto;grid-template-areas:"title size add"}}@container (max-width:260px){.renewal-form{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "size" "add"}}
+.renewal-list li{flex-wrap:wrap;row-gap:var(--space-1)}.renewal-list li>span:first-child{flex:1 1 120px}.renewal-list li>.renewal-actions{display:flex;flex:none;align-items:center;gap:var(--space-1);margin-left:auto}
+/* A label and its « · facultatif » stay on one line instead of two stacked flex items. */
+.field-label{display:block}.field-label .optional{font-weight:400}
+/* Kinds of a child's appointments: a pastel dot and pill on top of the child's own colour, which stays the event's main colour. */
+.kid-kind-sante{--kind:var(--buddy-corail)}.kid-kind-ecole{--kind:var(--buddy-ciel)}.kid-kind-activite{--kind:var(--buddy-menthe)}.kid-kind-autre{--kind:var(--buddy-sable)}
+.kid-kind{display:inline-flex;align-items:center;gap:6px;flex:none;font:600 12px/16px var(--font-sans);font-style:normal;padding:3px 9px 3px 7px;border-radius:var(--radius-pill);background:var(--surface);color:var(--ink);border:1px solid var(--line);white-space:nowrap}.kid-kind::before{content:'';width:9px;height:9px;border-radius:50%;background:var(--kind);box-shadow:0 0 0 1px color-mix(in srgb,var(--kind) 55%,var(--ink) 45%)}
+.event-open .kid-kind{margin-right:var(--space-1)}
+.calendar-event-chip[class*=kid-kind-]{box-shadow:inset 4px 0 0 color-mix(in srgb,var(--kind) 70%,var(--ink) 30%)}
+.child-appointments button{background:color-mix(in srgb,var(--child) 26%,var(--surface))}.child-appointments button>span:nth-child(2){flex:1}
+.kid-kind-icon{display:inline-grid;place-items:center;flex:none;width:32px;height:32px;border-radius:var(--radius-pill);background:var(--kind,var(--child));color:var(--pupil);box-shadow:0 0 0 1.5px var(--surface)}
+.child-needs-form{display:grid;gap:var(--space-2)}.child-needs-form .helper-copy{margin:0}.child-needs-actions{display:flex;justify-content:flex-end;gap:var(--space-2);flex-wrap:wrap}.child-needs-actions button{min-height:44px}
+.child-section .section-title .text-link{display:inline-flex;align-items:center;gap:var(--space-1);min-height:44px}
+/* Missions with a date in the agenda: a round tick, crossed out once done. */
+.mission-title{display:inline-flex;align-items:center;gap:var(--space-2)}.mission-check{flex:none;display:inline-grid;place-items:center;width:20px;height:20px;border-radius:var(--radius-pill);border:2px solid currentColor;opacity:.75}.mission-check.done{background:var(--ink);color:var(--on-ink);border-color:var(--ink);opacity:1}
+.mission-event.appointment-done .mission-title>span:last-child,.calendar-event-chip.mission-chip.calendar-event-done{text-decoration:line-through}
+.calendar-event-chip.mission-chip{border:1.5px dashed color-mix(in srgb,var(--ink) 35%,transparent)}
 .child-cost{margin:0;font:700 28px/34px var(--font-sans)}
 .category-icon.cat-6{background:var(--menthe)}
 

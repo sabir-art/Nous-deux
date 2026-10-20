@@ -50,6 +50,24 @@ assert.throws(()=>householdMutation(s,{action:'agenda-color',payload:{tone:'lava
 assert.throws(()=>householdMutation(s,{action:'delete-child',payload:{id:kid.id,version:2}},0),e=>e.status===403);
 householdMutation(s,{action:'delete-child',payload:{id:kid.id,version:2}},1);
 assert.equal(s.children.length,0);assert.equal(s.appointments[0].child,undefined);assert.equal(s.entries[0].child,undefined);assert.equal(s.items[0].child,undefined);assert.equal(s.entries.length,1);
+// « Ses besoins du moment » takes what used to be « À savoir »: up to 1400 characters, notes still accepted (older screens).
+const kid2={...kid,id:crypto.randomUUID(),version:0,notes:'Doudou lapin',needs:'Sieste à 13 h'};
+householdMutation(s,{action:'family-mode',payload:{enabled:true}},0);householdMutation(s,{action:'child',payload:kid2},0);
+householdMutation(s,{action:'child',payload:{...kid2,version:1,needs:'x'.repeat(1400),notes:''}},1);assert.equal(s.children.at(-1).needs.length,1400);assert.equal(s.children.at(-1).notes,'');
+assert.throws(()=>householdMutation(s,{action:'child',payload:{...kid2,version:2,needs:'x'.repeat(1401)}},1));
+const libBundle=await build({stdin:{contents:"export {childNeeds} from './lib/domain.ts';export {missionEvents,inAgendaOf,childKind,editableCategories} from './lib/calendar.ts';",resolveDir:process.cwd(),loader:'ts'},bundle:true,platform:'node',format:'esm',write:false});
+const lib=await import('data:text/javascript;base64,'+Buffer.from(libBundle.outputFiles[0].text).toString('base64'));
+assert.equal(lib.childNeeds({needs:'Sieste à 13 h',notes:'Doudou lapin'}),'Sieste à 13 h\nDoudou lapin');assert.equal(lib.childNeeds({needs:'Sieste, Doudou lapin',notes:'Doudou lapin'}),'Sieste, Doudou lapin');assert.equal(lib.childNeeds({needs:'',notes:'Doudou'}),'Doudou');
+assert.equal(lib.childKind('medical'),'sante');assert.equal(lib.childKind('study'),'ecole');assert.equal(lib.childKind('sport'),'activite');assert.equal(lib.childKind('other'),'autre');
+assert.ok(!lib.editableCategories.some(([id])=>id==='mission'));
+// Dated missions are computed agenda events (never stored), at the assignee's or the child's colour, ticked when done.
+const mk=(o)=>({id:crypto.randomUUID(),kind:'task',title:'Préparer le sac',quantity:'',assignee:1,due:'2026-10-02',priority:0,done:false,owner:0,version:1,createdAt:'',...o});
+const events=lib.missionEvents([mk({child:kid2.id}),mk({assignee:-1,done:true}),mk({due:''}),{...mk({}),kind:'shopping'}]);
+assert.equal(events.length,2);assert.equal(events[0].category,'mission');assert.equal(events[0].child,kid2.id);assert.equal(events[0].person,1);assert.equal(events[0].date,'2026-10-02');assert.equal(events[1].status,'done');assert.equal(events[1].person,-1);
+assert.ok(lib.inAgendaOf(events[0],'1')&&!lib.inAgendaOf(events[0],'0')&&lib.inAgendaOf(events[0],'child:'+kid2.id));
+assert.ok(lib.inAgendaOf(events[1],'0')&&lib.inAgendaOf(events[1],'1')&&lib.inAgendaOf(events[1],'-1'));
+assert.equal(s.appointments.some(a=>a.category==='mission'),false);
+assert.ok(app.includes('missionEvents(tasks)')&&app.includes('a?.taskId'));
 // Turning family mode off hides profiles without deleting them.
 householdMutation(s,{action:'family-mode',payload:{enabled:false}},0);assert.equal(s.familyMode,false);
-console.log('PASS: optional child profiles, shared edits, version checks, child links on appointments and expenses, tasks given to a parent, opt-in family mode (hidden links kept), agenda colours, cleanup on delete.');
+console.log('PASS: optional child profiles, shared edits, version checks, child links on appointments and expenses, tasks given to a parent, opt-in family mode (hidden links kept), agenda colours, cleanup on delete, needs folding « À savoir », dated missions in the agenda.');
