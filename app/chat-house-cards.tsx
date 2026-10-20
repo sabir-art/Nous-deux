@@ -3,22 +3,23 @@
 // et fournit l’instantané ; ce module ne fait que l’afficher ou le choisir.
 import {useEffect,useMemo,useState,type ReactNode} from 'react';
 import {Buddy,PlantBuddy,Sticker,foodEmoji} from '../design-system/runtime';
-import {ShoppingBasket,Receipt,Leaf,CheckCheck,CalendarDays,BookOpen,UtensilsCrossed,ArrowRight,ArrowLeft,Send,Paperclip,LockKeyhole,Heart,Plus} from './icons';
+import {ShoppingBasket,Receipt,Leaf,CheckCheck,CalendarDays,BookOpen,UtensilsCrossed,ArrowRight,ArrowLeft,Send,Paperclip,LockKeyhole,Heart,Plus,Mail} from './icons';
+import {InvitationChatCard} from './invitation-envelope';
 import {sweetNotes,sweetNoteTone} from '../lib/sweet-notes';
 import {money,today,type Entry,type Item,type Appointment} from '../lib/domain';
-import {plantCare,plantMood,plantQuips,careLabels,type Plant} from '../lib/life';
+import {plantCare,plantMood,plantQuips,careLabels,type Plant,type Idea} from '../lib/life';
 import {weekStart,weekLabel,shiftWeek} from '../lib/shopping';
 import {RichText} from './nd-emoji';
 import {apiFetch} from '../lib/api-client';
 import type {HousePage} from './use-house-navigation';
 import LifeDialog from './life-dialog';
 
-export type HouseCardKind='shopping'|'expense'|'plant'|'task'|'appointment'|'recipe'|'menu'|'mot';
+export type HouseCardKind='shopping'|'expense'|'plant'|'task'|'appointment'|'recipe'|'menu'|'mot'|'invitation';
 export type HouseCard={kind:HouseCardKind;ref:string;data:Record<string,any>;note?:string};
 export type HouseCardRef={kind:'shopping';weekStart?:string}|{kind:Exclude<HouseCardKind,'shopping'>;id:string};
 /** `create` opens the matching form (empty share list). */
-export type HouseOpenTarget={page:HousePage;weekStart?:string;date?:string;create?:'expense'|'task'|'appointment'|'shopping'|'plants'|'recipe'|'menu'};
-export type HouseShareData={items?:Item[];entries?:Entry[];plants?:Plant[];appointments?:Appointment[]};
+export type HouseOpenTarget={page:HousePage;weekStart?:string;date?:string;ideaId?:string;create?:'expense'|'task'|'appointment'|'shopping'|'plants'|'recipe'|'menu'|'ideas'};
+export type HouseShareData={items?:Item[];entries?:Entry[];plants?:Plant[];appointments?:Appointment[];ideas?:Idea[]};
 type Recipe={id:string;title:string;archived?:boolean;minutes?:number};
 type MealPlan={id:string;weekStart:string;slots:{day:number;meal:'lunch'|'dinner';recipeId:string}[]};
 
@@ -33,9 +34,10 @@ export const shareChoices:{kind:Exclude<HouseCardKind,'mot'>;label:string;hint:s
  {kind:'appointment',label:'Un rendez-vous partagé',hint:'Une date de notre agenda commun',icon:CalendarDays,tone:'lilas'},
  {kind:'recipe',label:'Une recette',hint:'Une idée pour le prochain repas',icon:BookOpen,tone:'rose'},
  {kind:'menu',label:'Un menu de la semaine',hint:'Nos repas déjà prévus',icon:UtensilsCrossed,tone:'rose'},
+ {kind:'invitation',label:'Une invitation',hint:'Une idée de sortie, dans son enveloppe',icon:Mail,tone:'rose'},
 ];
-export const openTarget=(card:HouseCard):HouseOpenTarget=>card.kind==='mot'?{page:'chat'}:card.kind==='shopping'?{page:'shopping',weekStart:card.ref}:card.kind==='expense'?{page:'expenses'}:card.kind==='plant'?{page:'plants'}:card.kind==='task'?{page:'tasks'}:card.kind==='appointment'?{page:'calendar',date:String(card.data.date||'')}:{page:'meals'};
-const openLabels:Record<HouseCardKind,string>={shopping:'Ouvrir les courses',expense:'Voir notre argent',plant:'Voir le jardin',task:'Voir nos missions',appointment:'Voir dans l’agenda',recipe:'Ouvrir le carnet',menu:'Voir nos menus',mot:''};
+export const openTarget=(card:HouseCard):HouseOpenTarget=>card.kind==='mot'?{page:'chat'}:card.kind==='invitation'?{page:'ideas',ideaId:card.ref}:card.kind==='shopping'?{page:'shopping',weekStart:card.ref}:card.kind==='expense'?{page:'expenses'}:card.kind==='plant'?{page:'plants'}:card.kind==='task'?{page:'tasks'}:card.kind==='appointment'?{page:'calendar',date:String(card.data.date||'')}:{page:'meals'};
+const openLabels:Record<HouseCardKind,string>={shopping:'Ouvrir les courses',expense:'Voir notre argent',plant:'Voir le jardin',task:'Voir nos missions',appointment:'Voir dans l’agenda',recipe:'Ouvrir le carnet',menu:'Voir nos menus',mot:'',invitation:'Ouvrir l’invitation'};
 
 function CardShell({card,tone,label,title,children,deco,onOpen}:{card:HouseCard;tone:string;label:string;title:ReactNode;children?:ReactNode;deco?:ReactNode;onOpen?:(t:HouseOpenTarget)=>void}){
  return <article className={`house-card house-card-${card.kind} nd-tone-${tone}`}>
@@ -50,7 +52,7 @@ function CardShell({card,tone,label,title,children,deco,onOpen}:{card:HouseCard;
 const plantSpecies=(s:string)=>/cactus|succulent/i.test(s)?'cactus':/monstera/i.test(s)?'monstera':/pousse|bouture/i.test(s)?'pousse':'feuille';
 const plantFace=(m:string)=>m==='droopy'?'sad':m==='ready'?'ok':m==='thirsty'?'thirsty':'happy';
 
-export function HouseCardMessage({card,names,onOpen}:{card:HouseCard;names:string[];onOpen?:(t:HouseOpenTarget)=>void}){
+export function HouseCardMessage({card,names,onOpen,mine,messageId}:{card:HouseCard;names:string[];onOpen?:(t:HouseOpenTarget)=>void;mine?:boolean;messageId?:string}){
  const d=card.data||{};
  switch(card.kind){
   case 'shopping':{const items:{title:string;quantity:string}[]=Array.isArray(d.items)?d.items:[];const more=Math.max(0,Number(d.toBuy||0)-items.length);
@@ -80,6 +82,8 @@ export function HouseCardMessage({card,names,onOpen}:{card:HouseCard;names:strin
   </CardShell>;
   // Petit mot doux : pas de page à ouvrir, juste le message et nos deux mascottes.
   case 'mot':return <SweetNoteCard card={card}/>;
+  // Invitation dans son enveloppe : elle s’ouvre une fois sous les yeux du partenaire.
+  case 'invitation':return <InvitationChatCard invite={{title:String(d.title||'Une invitation'),category:String(d.category||'outing'),owner:Number(d.owner),date:String(d.date||''),time:String(d.time||'')}} names={names} mine={mine} messageId={messageId} note={card.note} onOpen={onOpen?()=>onOpen(openTarget(card)):undefined}/>;
   case 'menu':{const slots:{day:number;meal:string;title:string}[]=Array.isArray(d.slots)?d.slots:[];
    return <CardShell card={card} tone="rose" label={'Menu · '+(d.weekStart?weekLabel(String(d.weekStart)):'semaine')} title={<>Notre menu <em>de la semaine</em></>} onOpen={onOpen}>
     <ul className="house-card-list">{slots.slice(0,6).map((s,n)=><li key={n}><span aria-hidden="true">{foodEmoji(s.title,'🍽️')}</span><span>{s.title}</span><small>{days[s.day]||''} {s.meal==='lunch'?'midi':'soir'}</small></li>)}</ul>
@@ -112,6 +116,7 @@ const empties:Partial<Record<HouseCardKind,Empty>>={
  appointment:{text:'Pas encore de rendez-vous partagé à venir. On prévoit un moment ensemble ?',action:'Ajouter un rendez-vous',target:{page:'calendar',create:'appointment'},tone:'lilas',shape:'dome',buddy:'beurre'},
  recipe:{text:'Aucune recette ne correspond. Et si on ajoutait la nôtre ?',action:'Ajouter ma recette',target:{page:'meals',create:'recipe'},tone:'rose',shape:'blob',buddy:'citron'},
  menu:{text:'Pas encore de menu de la semaine. On prévoit nos repas ensemble ?',action:'Préparer un menu',target:{page:'meals',create:'menu'},tone:'rose',shape:'pot',buddy:'beurre'},
+ invitation:{text:'Pas encore d’invitation entre nous. On propose un resto, une balade, une surprise ?',action:'Proposer une idée',target:{page:'ideas',create:'ideas'},tone:'rose',shape:'flower',buddy:'lavande'},
 };
 function ShareEmpty({empty,onGo}:{empty:Empty;onGo?:(t:HouseOpenTarget)=>void}){
  return <div className={'house-share-empty nd-tone-'+empty.tone}><Buddy shape={empty.shape} tone={empty.buddy} mood="happy" size={56}/><p>{empty.text}</p>{onGo&&<button type="button" className="primary" onClick={()=>onGo(empty.target)}><Plus size={18} aria-hidden="true"/>{empty.action}</button>}</div>;
@@ -133,6 +138,7 @@ export function HouseSharePicker({home,names,active,onClose,onSend,onFiles,onOpe
    case 'task':return items.filter(i=>i.kind==='task').sort((a,b)=>Number(a.done)-Number(b.done)||b.priority-a.priority).slice(0,30).map(t=>({id:t.id,title:t.title,meta:`${who(t.assignee,names)}${t.due?' · '+shortDate(t.due):''} · ${t.done?'Faite':'À faire'}`}));
    case 'appointment':return (home?.appointments||[]).filter(a=>a.visibility==='shared'&&!a.provisional&&(a.status==='to_book'||(a.endDate||a.date)>=now||a.recurrence&&a.recurrence!=='none')).sort((a,b)=>(a.date||'9').localeCompare(b.date||'9')).slice(0,30).map(a=>({id:a.id,title:a.title,meta:a.date?shortDate(a.date)+(a.time?' · '+a.time:''):'Date à fixer'}));
    case 'recipe':{const q=query.trim().toLocaleLowerCase('fr');return (recipes||[]).filter(r=>!q||r.title.toLocaleLowerCase('fr').includes(q)).slice(0,30).map(r=>({id:r.id,title:r.title,meta:r.minutes?`${r.minutes} min`:''}));}
+   case 'invitation':return [...(home?.ideas||[])].reverse().slice(0,30).map(i=>({id:i.id,title:i.title,meta:`${who(i.owner,names)} · ${i.status==='accepted'?'Deux oui !':i.status==='declined'?'Pas cette fois':'En attente'}${i.date?' · '+shortDate(i.date):''}`}));
    case 'menu':return [...(plans||[])].sort((a,b)=>b.weekStart.localeCompare(a.weekStart)).slice(0,12).map(p=>({id:p.id,title:'Semaine du '+weekLabel(p.weekStart),meta:`${p.slots.length} repas prévus`}));
   }
   return [];
