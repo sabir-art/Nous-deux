@@ -1,8 +1,10 @@
-# État de reprise — 15 octobre 2026
+# État de reprise — 20 octobre 2026
 
 Ce document est un état daté, pas un contrôle permanent de production. Vérifier le dépôt, les déploiements et les outils disponibles au début de chaque reprise.
 
 ## Situation vérifiée
+
+- 20 octobre 2026 : à la demande explicite de Laura, toutes les branches validées dans le mode essai (PR #9 à #23 et la quatrième série de retouches) sont réunies dans la PR #24 `claude/version-complete` pour être fusionnées dans `main`. Aucune migration SQL : les nouveautés sont des champs facultatifs de `nd_state`, les données existantes sont lues telles quelles. Ordre prévu : CI verte, redéploiement de `house-api` (`verify_jwt=false` conservé), fusion dans `main` (publication GitHub Pages), vérification du lien réel. Avant le redéploiement, la version 33 déployée était identique au code `house-api` de `main` du 15 octobre : retour arrière = redéployer ce code. Voir la ligne ajoutée après la mise en service pour l’état effectif.
 
 - Dépôt : `sabir-art/Nous-deux`, branche principale `main`.
 - Dernier commit de code vérifié avant cette documentation : `e1438f5d408a4809893dca17fed5cc805f42a2d6` (PR #6, photo d'appel ronde), publié avec succès le 10 octobre.
