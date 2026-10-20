@@ -18,7 +18,7 @@ export type HouseCardKind='shopping'|'expense'|'plant'|'task'|'appointment'|'rec
 export type HouseCard={kind:HouseCardKind;ref:string;data:Record<string,any>;note?:string};
 export type HouseCardRef={kind:'shopping';weekStart?:string}|{kind:Exclude<HouseCardKind,'shopping'>;id:string};
 /** `create` opens the matching form (empty share list). */
-export type HouseOpenTarget={page:HousePage;weekStart?:string;date?:string;ideaId?:string;create?:'expense'|'task'|'appointment'|'shopping'|'plants'|'recipe'|'menu'};
+export type HouseOpenTarget={page:HousePage;weekStart?:string;date?:string;ideaId?:string;create?:'expense'|'task'|'appointment'|'shopping'|'plants'|'recipe'|'menu'|'ideas'};
 export type HouseShareData={items?:Item[];entries?:Entry[];plants?:Plant[];appointments?:Appointment[];ideas?:Idea[]};
 type Recipe={id:string;title:string;archived?:boolean;minutes?:number};
 type MealPlan={id:string;weekStart:string;slots:{day:number;meal:'lunch'|'dinner';recipeId:string}[]};
@@ -116,6 +116,7 @@ const empties:Partial<Record<HouseCardKind,Empty>>={
  appointment:{text:'Pas encore de rendez-vous partagé à venir. On prévoit un moment ensemble ?',action:'Ajouter un rendez-vous',target:{page:'calendar',create:'appointment'},tone:'lilas',shape:'dome',buddy:'beurre'},
  recipe:{text:'Aucune recette ne correspond. Et si on ajoutait la nôtre ?',action:'Ajouter ma recette',target:{page:'meals',create:'recipe'},tone:'rose',shape:'blob',buddy:'citron'},
  menu:{text:'Pas encore de menu de la semaine. On prévoit nos repas ensemble ?',action:'Préparer un menu',target:{page:'meals',create:'menu'},tone:'rose',shape:'pot',buddy:'beurre'},
+ invitation:{text:'Pas encore d’invitation entre nous. On propose un resto, une balade, une surprise ?',action:'Proposer une idée',target:{page:'ideas',create:'ideas'},tone:'rose',shape:'flower',buddy:'lavande'},
 };
 function ShareEmpty({empty,onGo}:{empty:Empty;onGo?:(t:HouseOpenTarget)=>void}){
  return <div className={'house-share-empty nd-tone-'+empty.tone}><Buddy shape={empty.shape} tone={empty.buddy} mood="happy" size={56}/><p>{empty.text}</p>{onGo&&<button type="button" className="primary" onClick={()=>onGo(empty.target)}><Plus size={18} aria-hidden="true"/>{empty.action}</button>}</div>;
