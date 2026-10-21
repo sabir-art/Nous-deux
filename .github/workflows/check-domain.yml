@@ -1,0 +1,41 @@
+name: Vérifier le domaine et HTTPS
+on:
+  push:
+    branches: [site-vitrine]
+    paths: [.github/workflows/check-domain.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Vérifier DNS, certificat et réponse HTTP
+        shell: /usr/bin/python3 {0}
+        run: |
+          import socket, ssl, urllib.request, hashlib
+          for host in ("nousdeux-app.fr", "www.nousdeux-app.fr"):
+              print("\nDOMAINE:", host, flush=True)
+              try:
+                  ips = list(dict.fromkeys(x[4][0] for x in socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)))
+                  print("DNS:", ips, flush=True)
+              except Exception as e:
+                  print("DNS ERROR:", str(e), flush=True)
+                  continue
+              for ip in ips[:4]:
+                  try:
+                      with socket.create_connection((ip, 443), timeout=8) as conn:
+                          with ssl.create_default_context().wrap_socket(conn, server_hostname=host) as tls:
+                              cert = tls.getpeercert()
+                              print("TLS OK:", ip, tls.version(), cert, flush=True)
+                  except Exception as e:
+                      print("TLS ERROR:", ip, str(e), flush=True)
+              for scheme in ("http", "https"):
+                  try:
+                      req = urllib.request.Request(scheme + "://" + host + "/", headers={"User-Agent": "NousDeux-Domain-Check"})
+                      with urllib.request.urlopen(req, timeout=10) as response:
+                          data = response.read()
+                          print("WEB OK:", scheme, response.status, response.url, "bytes:", len(data), "sha256:", hashlib.sha256(data).hexdigest(), flush=True)
+                  except Exception as e:
+                      print("WEB ERROR:", scheme, str(e), flush=True)
