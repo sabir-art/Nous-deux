@@ -4,6 +4,8 @@ import {realpathSync} from 'node:fs';
 const {build}=createRequire(realpathSync('node_modules/wrangler/package.json'))('esbuild');
 const bundle=await build({entryPoints:['supabase/functions/house-api/model.ts'],bundle:true,platform:'node',format:'esm',write:false,plugins:[{name:'npm-prefix',setup(b){b.onResolve({filter:/^npm:zod@/},()=>({path:realpathSync('node_modules/zod/index.js')}));}}]});
 const {householdMutation,callMutation,deviceMutation}=await import('data:text/javascript;base64,'+Buffer.from(bundle.outputFiles[0].text).toString('base64'));
+const communication=await build({entryPoints:['supabase/functions/house-api/communication.ts'],bundle:true,platform:'node',format:'esm',write:false,plugins:[{name:'npm-prefix',setup(b){b.onResolve({filter:/^npm:zod@/},()=>({path:realpathSync('node_modules/zod/index.js')}));}}]});
+const {pushesPartner}=await import('data:text/javascript;base64,'+Buffer.from(communication.outputFiles[0].text).toString('base64'));
 const s={household:null,entries:[],items:[],appointments:[],activity:[],devices:[],call:null,sequence:0};
 householdMutation(s,{action:'household',payload:{first:'Alex',second:'Camille',name:'Test',budget:0,version:0}},0);
 const id=crypto.randomUUID();const entry={id,kind:'expense',title:'Courses',cents:12000,member:0,category:'Courses',date:'2026-10-09',note:'',version:0};
@@ -88,25 +90,25 @@ assert.equal(weekMonday('2027-01-01'),'2026-12-28');assert.equal(weekMonday('202
 assert.throws(()=>authorizeChat({member:0,version:2},1,2),e=>e.status===403);
 assert.throws(()=>authorizeChat({member:0,version:2},0,1),e=>e.status===409);
 assert.doesNotThrow(()=>authorizeChat({member:0,version:2},0,2));
-{// One push per shopping outing, sent when the member leaves the shopping page.
-const q=structuredClone(s);q.items=q.items.filter(i=>i.kind!=='shopping');q.shoppingPending={};const week='2026-10-12';
+{// Shopping never pushes by itself: « J'ai fini la liste » sends one notice, at most once every 2 hours per member.
+const q=structuredClone(s);q.items=q.items.filter(i=>i.kind!=='shopping');q.shoppingPending={0:{updated:true}};q.shoppingFinished={};const week=weekMonday(new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Paris'}).format(new Date()));
 const add=title=>householdMutation(q,{action:'item',payload:{id:crypto.randomUUID(),kind:'shopping',title,quantity:'',assignee:-1,due:'',priority:0,done:false,weekStart:week,version:0}},0);
-const done=actor=>householdMutation(q,{action:'shopping-done',payload:{}},actor);
-assert.equal(add('Pain'),null);assert.equal(add('Lait'),null);assert.equal(done(1),null);
-assert.equal(done(0)?.message,'a mis à jour la liste de courses.');assert.equal(done(0),null);
-const [pain,lait]=q.items.filter(i=>i.kind==='shopping');
-assert.equal(householdMutation(q,{action:'shopping-check',payload:{id:pain.id,version:pain.version,done:true}},1),null);
-assert.equal(done(1)?.message,'a coché des achats dans les courses.');
-assert.equal(householdMutation(q,{action:'shopping-check',payload:{id:lait.id,version:lait.version,done:true}},1),null);
-assert.equal(done(1)?.message,'a coché toute la liste de courses.');
-assert.equal(householdMutation(q,{action:'shopping-check',payload:{id:lait.id,version:lait.version,done:false}},1),null);
-assert.equal(done(1)?.message,'a coché des achats dans les courses.');}
+const finish=(actor,weekStart=week)=>householdMutation(q,{action:'shopping-finished',payload:{weekStart}},actor);
+assert.throws(()=>finish(0),e=>e.status===400,'nothing to buy yet');
+assert.equal(pushesPartner('item'),false);assert.equal(pushesPartner('shopping-check'),false);assert.equal(add('Pain')?.category,'shopping');add('Lait');
+assert.equal(householdMutation(q,{action:'shopping-done',payload:{}},0),null,'old pages: accepted, no push');assert.equal(q.shoppingPending[0],undefined);
+assert.throws(()=>finish(0,'2026-10-13'),e=>e.status===400,'a Monday is required');
+const note=finish(0);assert.equal(pushesPartner('shopping-finished'),true);assert.equal(note.category,'shopping');assert.equal(note.message,'a fini la liste de courses : 2 articles à acheter.');assert.equal(q.activity[0].message,note.message);
+assert.throws(()=>finish(0),e=>e.status===429,'anti-spam');assert.doesNotThrow(()=>finish(1),'each member has their own limit');
+q.shoppingFinished[0]=new Date(Date.now()-2*3600000-1000).toISOString();assert.equal(finish(0).category,'shopping');
+for(const action of ['item','entry','appointment','delete-appointment','task-check','plant','plant-care','template-apply','shopping-batch','shopping-check','shopping-done'])assert.equal(pushesPartner(action),false,action);
+for(const action of ['idea','idea-response'])assert.equal(pushesPartner(action),true,action);}
 {// A birthday says whose it is (family, friends…); other events never carry that field.
 const q=structuredClone(s);const b={id:crypto.randomUUID(),title:'Anniversaire de Sophie',category:'birthday',circle:'friends',person:-1,status:'scheduled',date:'2026-11-03',time:'',bookBy:'',location:'',note:'',visibility:'shared',recurrence:'yearly',version:0};
 householdMutation(q,{action:'appointment',payload:{...b,recurrence:'none'}},0);assert.equal(q.appointments.find(a=>a.id===b.id).circle,'friends');assert.equal(q.appointments.find(a=>a.id===b.id).recurrence,'yearly');
 householdMutation(q,{action:'appointment',payload:{...b,category:'party',version:1}},0);assert.equal(q.appointments.find(a=>a.id===b.id).circle,undefined);
 assert.throws(()=>householdMutation(q,{action:'appointment',payload:{...b,id:crypto.randomUUID(),circle:'collegues'}},0));}
-console.log('PASS: cross-member shopping checks, one shopping push per outing, buyer integrity, status bypasses, weekly template copies, retries and author-only chat changes.');
+console.log('PASS: cross-member shopping checks, one « J’ai fini la liste » push (anti-spam), sober partner pushes, buyer integrity, status bypasses, weekly template copies, retries and author-only chat changes.');
 {// A vet appointment names an existing pet; deleting the pet keeps the appointment without the link.
 const q=structuredClone(s);q.petsMode=true;const pid=crypto.randomUUID();
 householdMutation(q,{action:'pet',payload:{id:pid,version:0,name:'Biscuit',kind:'dog',breed:'',tone:'beurre',note:'',every:{food:1,walk:1,litter:0,groom:7,health:90},last:{food:'2026-10-01',walk:'2026-10-01',litter:'2026-10-01',groom:'2026-10-01',health:'2026-10-01'}}},0);
@@ -133,3 +135,10 @@ householdMutation(q,{action:'appointment',payload:{...c,version:2,category:'part
  householdMutation(r0,{action:'entry',payload:{...refund,about:'',forExpense:undefined,version:1}},1);const cleared=r0.entries.find(e=>e.id===refund.id);assert.equal(cleared.about,undefined);assert.equal(cleared.forExpense,undefined);
  assert.throws(()=>householdMutation(r0,{action:'entry',payload:{...refund,version:2}},0),e=>e.status===403,'only the author edits a refund');}
 console.log('PASS: cross-member shopping checks, buyer integrity, status bypasses, weekly template copies, retries and author-only chat changes.');
+{// The agenda reminders switch: a page cached before it keeps the device's own choice; the new page changes it.
+const id=crypto.randomUUID(),old={shopping:true,tasks:true,expenses:true,calendar:true,calls:true,ideas:true,plants:true,chat:true};
+const q={devices:[{deviceId:id,member:0,preferences:{...old,reminders:false},subscription:{}}]};
+deviceMutation(q,{action:'preferences',deviceId:id,member:0,preferences:old});assert.equal(q.devices[0].preferences.reminders,false);
+deviceMutation(q,{action:'preferences',deviceId:id,member:0,preferences:{...old,reminders:true}});assert.equal(q.devices[0].preferences.reminders,true);
+assert.throws(()=>deviceMutation(q,{action:'preferences',deviceId:id,member:0,preferences:{...old,reminders:'oui'}}));
+console.log('PASS: agenda reminder preference kept for pages cached before the switch.');}
