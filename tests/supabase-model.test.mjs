@@ -120,4 +120,16 @@ householdMutation(q,{action:'appointment',payload:c},0);const saved=q.appointmen
 assert.equal(saved.person,-1);assert.equal(saved.visibility,'shared');assert.equal(saved.recurrence,'yearly');assert.equal(saved.circle,undefined);
 householdMutation(q,{action:'appointment',payload:{...c,version:1,countdown:true}},0);assert.equal(q.appointments.find(a=>a.id===c.id).countdown,true);
 householdMutation(q,{action:'appointment',payload:{...c,version:2,category:'party',countdown:true}},0);assert.equal(q.appointments.find(a=>a.id===c.id).countdown,undefined);}
+// A refund may say what it pays back: a short text and/or one of our expenses, checked by the server.
+{const r0={household:null,entries:[],items:[],appointments:[],activity:[],devices:[],call:null,sequence:0};householdMutation(r0,{action:'household',payload:{first:'Alex',second:'Camille',name:'Test',budget:0,version:0}},0);
+ const plane={id:crypto.randomUUID(),kind:'expense',title:'Avion',cents:30000,member:0,category:'Transport',date:'2026-10-09',note:'',version:0};householdMutation(r0,{action:'entry',payload:{...plane,about:'ignoré',forExpense:plane.id}},0);
+ const savedPlane=r0.entries.find(e=>e.id===plane.id);assert.equal(savedPlane.about,undefined,'an expense keeps no refund subject');assert.equal(savedPlane.forExpense,undefined);
+ const refund={id:crypto.randomUUID(),kind:'settlement',title:'Remboursement',cents:15000,member:1,category:'Autre',date:'2026-10-10',note:'',about:'  la moitié de l’avion ',forExpense:plane.id,version:0};
+ householdMutation(r0,{action:'entry',payload:refund},1);const savedRefund=r0.entries.find(e=>e.id===refund.id);assert.equal(savedRefund.about,'la moitié de l’avion');assert.equal(savedRefund.forExpense,plane.id);assert.equal(savedRefund.cents,15000);
+ assert.throws(()=>householdMutation(r0,{action:'entry',payload:{...refund,id:crypto.randomUUID(),forExpense:crypto.randomUUID()}},1),e=>e.status===400,'an unknown expense is refused');
+ assert.throws(()=>householdMutation(r0,{action:'entry',payload:{...refund,id:crypto.randomUUID(),forExpense:refund.id}},1),e=>e.status===400,'a refund cannot point at another refund');
+ assert.throws(()=>householdMutation(r0,{action:'entry',payload:{...refund,id:crypto.randomUUID(),about:'x'.repeat(61)}},1),undefined,'the subject is bounded');
+ assert.throws(()=>householdMutation(r0,{action:'entry',payload:{...refund,id:crypto.randomUUID(),forExpense:'avion'}},1),undefined,'the link is an id');
+ householdMutation(r0,{action:'entry',payload:{...refund,about:'',forExpense:undefined,version:1}},1);const cleared=r0.entries.find(e=>e.id===refund.id);assert.equal(cleared.about,undefined);assert.equal(cleared.forExpense,undefined);
+ assert.throws(()=>householdMutation(r0,{action:'entry',payload:{...refund,version:2}},0),e=>e.status===403,'only the author edits a refund');}
 console.log('PASS: cross-member shopping checks, buyer integrity, status bypasses, weekly template copies, retries and author-only chat changes.');

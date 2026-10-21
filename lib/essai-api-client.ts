@@ -15,7 +15,7 @@ import {chatInput} from '../supabase/functions/house-api/validation.ts';
 import {buildChatCard,storeChatCard,dropChatCards,attachChatCards,stickerText,type ChatCardState} from '../supabase/functions/house-api/chat-cards.ts';
 
 export const APP_BASE=location.pathname.replace(/[^/]*$/,'');
-const STATE_KEY='nous-deux-essai-state-v14',MEMBER_KEY='nous-deux-essai-member',PHOTOS_KEY='nous-deux-essai-photos-v1',CHAT_KEY='nous-deux-essai-chat-v1';
+const STATE_KEY='nous-deux-essai-state-v15',MEMBER_KEY='nous-deux-essai-member',PHOTOS_KEY='nous-deux-essai-photos-v1',CHAT_KEY='nous-deux-essai-chat-v1';
 const unavailable='Pas disponible en mode essai.';
 
 const read=<T,>(key:string,fallback:()=>T):T=>{try{const raw=localStorage.getItem(key);if(raw)return JSON.parse(raw) as T;}catch{}return fallback();};
@@ -26,11 +26,11 @@ const member=()=>{const m=read<number>(MEMBER_KEY,()=>1);return m===0?0:1;};
 function seed():State{
  const today=parisDate(),monday=weekMonday(today),now=new Date().toISOString(),id=()=>crypto.randomUUID();
  const day=(offset:number)=>{const d=new Date(today+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+offset);return d.toISOString().slice(0,10);};
- const bSophie=id(),bMaman=id();
+ const bSophie=id(),bMaman=id(),train=id();
  const entry=(title:string,cents:number,who:number,category:string,offset:number,extra={})=>({id:id(),kind:'expense',title,cents,member:who,owner:who,category,date:day(offset),note:'',version:1,createdAt:now,...extra});
  const item=(title:string,quantity:string,who:number)=>({id:id(),kind:'shopping',title,quantity,assignee:-1,due:'',priority:0,done:false,note:'',photoId:null,weekStart:monday,purchasedBy:null,purchasedAt:null,owner:who,version:1,createdAt:now});
  return {household:{first:'Abdellah',second:'Laura',name:'Nous deux',budget:80000,categoryBudgets:{Courses:40000,Transport:3000,Sorties:12000},version:1},profiles:{},
-  entries:[entry('Courses de la semaine',6420,0,'Courses',-3),entry('Facture d’électricité',8900,1,'Factures',-6),entry('Billet de train',4250,1,'Transport',-1,{split:'full'}),entry('Loyer',85000,0,'Maison',-40,{recurrence:'monthly'})],
+  entries:[entry('Courses de la semaine',6420,0,'Courses',-3),entry('Facture d’électricité',8900,1,'Factures',-6),{...entry('Billet de train',4250,1,'Transport',-1,{split:'full'}),id:train},entry('Loyer',85000,0,'Maison',-40,{recurrence:'monthly'}),entry('Remboursement',2000,0,'Autre',0,{kind:'settlement',forExpense:train,about:'une partie du train'})],
   items:[item('Pain','1',0),item('Tomates','1 kg',1),{...item('Lait','2 bouteilles',0),priority:1}],familyMode:false,colors:{},
   appointments:[{id:bSophie,title:'Anniversaire de ma meilleure amie',category:'birthday',circle:'friends',person:-1,status:'scheduled',date:`${Number(day(9).slice(0,4))-30}${day(9).slice(4)}`,time:'',bookBy:'',location:'',note:'',visibility:'shared',recurrence:'yearly',endDate:'',repeatUntil:'',owner:1,version:1,createdAt:now},{id:bMaman,title:'Anniversaire de Maman',category:'birthday',circle:'close',person:-1,status:'scheduled',date:`${Number(day(26).slice(0,4))-58}${day(26).slice(4)}`,time:'',bookBy:'',location:'',note:'',visibility:'shared',recurrence:'yearly',endDate:'',repeatUntil:'',owner:0,version:1,createdAt:now},{id:id(),title:'Anniversaire d’Abdellah',category:'birthday',circle:'close',person:-1,status:'scheduled',date:`${Number(day(41).slice(0,4))-33}${day(41).slice(4)}`,time:'',bookBy:'',location:'',note:'',visibility:'shared',recurrence:'yearly',endDate:'',repeatUntil:'',owner:1,version:1,createdAt:now},{id:id(),title:'Notre mise en couple',category:'couple',countdown:true,person:-1,status:'scheduled',date:`${Number(day(12).slice(0,4))-5}${day(12).slice(4)}`,time:'',bookBy:'',location:'',note:'',visibility:'shared',recurrence:'yearly',endDate:'',repeatUntil:'',owner:0,version:1,createdAt:now},{id:id(),title:'Dîner chez nos amis',category:'party',person:-1,status:'scheduled',date:day(4),time:'20:00',bookBy:'',location:'',note:'',visibility:'shared',recurrence:'none',endDate:'',repeatUntil:'',owner:1,version:1,createdAt:now}],
   activity:[],devices:[],call:null,sequence:0,templates:[],ideas:[],plants:[],

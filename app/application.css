@@ -34,7 +34,7 @@ dialog{border:0;padding:0;position:fixed;inset:var(--dialog-top,0px) 0 auto;marg
 .plant-card{max-width:none}.plant-card>header span,.plant-card .plant-location,.plant-card .plant-care-row small,.plant-card>footer{color:var(--on-sapin)}.plant-card .care-icon,.plant-card>footer .text-link{color:var(--on-sapin)}.plant-card .plant-note,.plant-card .plant-history{color:var(--ink)}.plant-card .primary,.plant-card .plant-all-done{background:var(--buddy-citron);color:var(--pupil);box-shadow:none}.plant-card .plant-care-row{border-color:color-mix(in srgb,var(--on-sapin) 35%,transparent)}.plant-card .icon-button:focus-visible,.plant-card .text-link:focus-visible{outline-color:var(--on-sapin)}.budget-grid .nd-piggy,.budget-overview .nd-chart{max-width:none}.budget-grid .nd-piggy svg{max-width:280px;margin:auto}.budget-detail .nd-chart{width:100%}.ai-status{flex-wrap:wrap}.ai-status>span{flex:1;min-width:160px}.item-row.nd-todo{border:0;padding:var(--space-4) var(--space-5);margin-bottom:var(--space-3)}.purchase-check,.checkbox{border-color:var(--ink)}.nd-days{grid-template-columns:repeat(7,minmax(0,1fr))}.nd-day-num{max-width:100%}.nd-chart-table{overflow:auto;overscroll-behavior:contain}.nd-recipe-row-body{min-width:0}.nd-recipe-row-name{overflow-wrap:anywhere}
 /* FoodItem / TodoItem surfaces retain their own card shape inside a list. */
 .shopping-list,.list-panel{background:transparent;box-shadow:none;padding:0}.shopping-row.nd-food{margin-bottom:var(--space-3);border:0;padding:var(--space-3) var(--space-4)}.shopping-row>.purchase-check{order:3}.shopping-row>.icon-button,.shopping-row>.undo-purchase{order:4}.shopping-emoji{order:1}.shopping-description{order:2}.purchased-list .shopping-row{box-shadow:none;padding-left:0;padding-right:0}.match-dialog{text-align:center}.match-dialog .nd-match{width:100%;max-width:400px;margin:auto}.match-dialog p{display:flex;align-items:center;justify-content:center;gap:var(--space-2)}
-.nd-days{grid-template-columns:repeat(7,minmax(44px,1fr));overflow-x:auto;overscroll-behavior-x:contain;padding:var(--space-1)}.nd-day-num{min-width:44px}.month-grid-scroll{overflow-x:auto;overscroll-behavior-x:contain;padding:var(--space-1)}.month-grid-scroll .calendar-grid,.month-grid-scroll .calendar-weekdays{min-width:332px}.month-grid-scroll .calendar-day{min-width:44px}.nd-cat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nd-money-amount,.nd-piggy-amount,.nd-cat-pct{overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.nd-day-dots{overflow:hidden}
+.nd-days{grid-template-columns:repeat(7,minmax(44px,1fr));overflow-x:auto;overscroll-behavior-x:contain;padding:var(--space-1)}.nd-day-num{min-width:44px}.month-grid-scroll{padding:var(--space-1) 0;min-width:0;max-width:100%}.month-grid-scroll .calendar-grid,.month-grid-scroll .calendar-weekdays{min-width:0}.month-grid-scroll .calendar-day{min-width:0;padding-inline:0}.month-grid-scroll .calendar-day-number{max-width:100%;height:auto;aspect-ratio:1}.nd-cat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nd-money-amount,.nd-piggy-amount,.nd-cat-pct{overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.nd-day-dots{overflow:hidden}
 .calendar-options{background:var(--surface);border-radius:var(--radius-lg);padding:var(--space-3) var(--space-4)}.calendar-options .calendar-help{margin-top:var(--space-3)}
 
 /* Intrinsic widths must never enlarge the viewport, including Safari date inputs. */
@@ -298,7 +298,8 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .calendar-mobile-dots i[class*=reference-],.calendar-legend i[class*=reference-]{background:transparent;box-shadow:inset 0 0 0 2px var(--reference-tone)}
 .gifts-space{display:grid;gap:var(--space-4);min-width:0}.gifts-space .life-filters{margin:0}
 /* Idées cadeaux: white cards, a pastel tag per recipient, a single accent for the add button. */
-.gifts-intro{display:grid;gap:var(--space-2);justify-items:start}.gifts-intro p{margin:0;color:var(--ink-muted);font:400 15px/22px var(--font-sans)}.gifts-back{padding-inline:0!important;min-height:44px}
+.gifts-intro{display:grid;gap:var(--space-2);justify-items:start}.gifts-intro p{margin:0;color:var(--ink-muted);font:400 15px/22px var(--font-sans)}/* The back pill holds its arrow and label on one line, inside its own outline. */
+.gifts-back{display:inline-flex;align-items:center;gap:var(--space-1);white-space:nowrap;max-width:100%;min-height:44px;padding:var(--space-2) var(--space-4) var(--space-2) var(--space-3)!important}
 .gift-add{justify-content:center}
 .gift-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-3);grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))}
 .gift-card{min-width:0;display:flex;flex-direction:column;gap:var(--space-2);border-radius:var(--radius-lg);padding:var(--space-4);background:var(--surface);box-shadow:var(--shadow-card)}
@@ -308,6 +309,7 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .gift-tags{display:flex;flex-wrap:wrap;gap:var(--space-1);margin-bottom:2px}.gift-tags>span{display:inline-flex;align-items:center;gap:4px;border-radius:var(--radius-pill);padding:2px 10px;font:600 13px/20px var(--font-sans);background:var(--surface-sunken);color:var(--ink)}
 .gift-for.tone-lilas{background:var(--lilas)!important}.gift-for.tone-menthe{background:var(--menthe)!important}.gift-for.tone-beurre{background:var(--beurre)!important}.gift-for.tone-peche{background:var(--peche)!important}.gift-for.tone-citron{background:var(--citron)!important}
 .gift-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-2);border-top:1px solid var(--line);padding-top:var(--space-2)}.gift-actions>button{margin-left:auto}
+.gift-own-actions{display:flex;align-items:center;gap:var(--space-2);margin-left:auto}.gift-delete{color:var(--danger);height:44px;flex:none}
 .gift-done{min-height:44px;padding-block:8px}
 .gift-empty{display:grid;justify-items:center;gap:var(--space-2);text-align:center;color:var(--ink-muted)}.gift-empty p{margin:0}
 .gift-linked{display:flex;align-items:center;gap:var(--space-2);margin:var(--space-2) 0 0;padding:4px 4px 4px var(--space-3);border-radius:var(--radius-md,14px);background:var(--surface-sunken);font:500 14px/20px var(--font-sans)}.gift-linked span{flex:1;min-width:0}.gift-linked .icon-button{flex:none}
@@ -402,11 +404,12 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 /* Countdown cards rotate through four pastels so two moments side by side never look alike. */
 .countdown-card:nth-child(4n+1){background:var(--beurre)}.countdown-card:nth-child(4n+2){background:var(--menthe)}.countdown-card:nth-child(4n+3){background:var(--lilas)}.countdown-card:nth-child(4n+4){background:var(--rose)}
 .budget-overview .nd-split-labels{margin-top:var(--space-5);padding-inline:var(--space-2)}
-.holiday-picker{position:relative}
+/* The panel is anchored to the whole row of landmarks, not to the « + » chip: wherever that chip wraps, the panel stays on screen. */
+.holiday-filters>div{position:relative}.holiday-picker{position:static}
 .holiday-filter.holiday-add{background:var(--surface);border:2px dashed var(--line);gap:var(--space-1)}
 .holiday-filter.holiday-add[aria-expanded=true]{border-style:solid;border-color:var(--ink)}
 .holiday-add-chevron{transition:transform 160ms ease}.holiday-add[aria-expanded=true] .holiday-add-chevron{transform:rotate(180deg)}
-.holiday-panel{position:absolute;z-index:20;top:calc(100% + var(--space-2));right:0;width:min(320px,calc(100vw - 2 * var(--space-6)));background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-lift);padding:var(--space-4);display:grid;gap:var(--space-2)}
+.holiday-panel{position:absolute;z-index:20;top:calc(100% + var(--space-2));left:0;right:auto;width:min(420px,100%);box-sizing:border-box;background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-lift);padding:var(--space-4);display:grid;gap:var(--space-2)}
 .holiday-panel p{font:600 13px/18px var(--font-sans);color:var(--ink-muted);margin:var(--space-1) 0 0}
 .holiday-panel>div{display:flex;flex-wrap:wrap;gap:var(--space-2)}
 .holiday-panel small{font:400 12px/16px var(--font-sans);color:var(--ink-muted);margin-top:var(--space-1)}
@@ -701,3 +704,5 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .template-text>small{font:400 13px/18px var(--font-sans);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .templates-panel>.template-new{margin:var(--space-3) 0 0;display:inline-flex;align-items:center;gap:var(--space-2);min-height:44px}
 @media(min-width:760px){.template-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Noter un remboursement: what it pays back sits in the form's own rhythm. */
+.refund-subject{display:contents}
