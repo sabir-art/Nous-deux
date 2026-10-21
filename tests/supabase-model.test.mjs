@@ -11,6 +11,11 @@ householdMutation(s,{action:'entry',payload:entry},0);assert.equal(s.entries[0].
 assert.throws(()=>householdMutation(s,{action:'entry',payload:entry},0),e=>e.status===409);
 householdMutation(s,{action:'entry',payload:{...entry,cents:14000,version:1}},0);assert.equal(s.entries[0].cents,14000);
 assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,cents:-1}},0));
+const fullId=crypto.randomUUID();const full={...entry,id:fullId,split:'full'};const findFull=()=>s.entries.find(e=>e.id===fullId);
+householdMutation(s,{action:'entry',payload:full},0);assert.equal(findFull().split,'full');
+householdMutation(s,{action:'entry',payload:{...full,version:1,split:'half'}},0);assert.equal(findFull().split,undefined);
+assert.throws(()=>householdMutation(s,{action:'entry',payload:{...full,version:2,split:'all'}},0));
+const settleId=crypto.randomUUID();householdMutation(s,{action:'entry',payload:{...entry,id:settleId,kind:'settlement',title:'Remboursement',split:'full'}},0);assert.equal(s.entries.find(e=>e.id===settleId).split,undefined);
 const aid=crypto.randomUUID();const ap={id:aid,title:'Dentiste',category:'medical',person:0,status:'to_book',date:'',time:'',bookBy:'',location:'',note:'',version:0};householdMutation(s,{action:'appointment',payload:ap},1);householdMutation(s,{action:'appointment',payload:{...ap,status:'scheduled',date:'2026-10-20',time:'10:00',version:1}},1);assert.equal(s.appointments[0].status,'scheduled');
 const callId=crypto.randomUUID(),one=crypto.randomUUID(),two=crypto.randomUUID(),third=crypto.randomUUID(),offer='v=0\r\nm=audio 123 RTP/AVP 0\r\n';
 callMutation(s,{action:'start',id:callId,session:one,member:0,offer});assert.throws(()=>callMutation(s,{action:'start',id:crypto.randomUUID(),session:third,member:1,offer}),e=>e.status===409);
@@ -21,7 +26,20 @@ console.log('PASS: expense validation, stale writes, appointment planning, call 
 // Access control: visibility is shared, writes belong to the authenticated author.
 assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,version:2,member:1,owner:1}},1),e=>e.status===403);
 assert.throws(()=>householdMutation(s,{action:'delete-entry',payload:{id,version:2}},1),e=>e.status===403);
-assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,id:crypto.randomUUID(),version:0,member:1}},0),e=>e.status===403);
+// Either person may record what the other paid; the author alone can then change it.
+const forPartner=crypto.randomUUID();householdMutation(s,{action:'entry',payload:{...entry,id:forPartner,version:0,member:1,owner:1}},0);
+assert.equal(s.entries.find(e=>e.id===forPartner).member,1);assert.equal(s.entries.find(e=>e.id===forPartner).owner,0);
+assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,id:forPartner,version:1,member:1}},1),e=>e.status===403);
+const customId=crypto.randomUUID();householdMutation(s,{action:'entry',payload:{...entry,id:customId,version:0,split:'custom',owed:3000}},0);assert.equal(s.entries.find(e=>e.id===customId).owed,3000);
+assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,id:crypto.randomUUID(),version:0,split:'custom',owed:99999}},0));
+assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,id:crypto.randomUUID(),version:0,split:'custom'}},0));
+householdMutation(s,{action:'entry',payload:{...entry,id:customId,version:1,split:'half',owed:3000}},0);assert.equal(s.entries.find(e=>e.id===customId).owed,undefined);
+const rentId=crypto.randomUUID();householdMutation(s,{action:'entry',payload:{...entry,id:rentId,version:0,title:'Loyer',category:'Maison',recurrence:'monthly',repeatUntil:'2027-06-30'}},0);
+assert.equal(s.entries.find(e=>e.id===rentId).recurrence,'monthly');assert.equal(s.entries.find(e=>e.id===rentId).repeatUntil,'2027-06-30');
+householdMutation(s,{action:'entry',payload:{...entry,id:rentId,version:1,recurrence:'none',repeatUntil:'2027-06-30'}},0);assert.equal(s.entries.find(e=>e.id===rentId).recurrence,undefined);assert.equal(s.entries.find(e=>e.id===rentId).repeatUntil,undefined);
+assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,id:crypto.randomUUID(),version:0,recurrence:'custom'}},0));
+assert.throws(()=>householdMutation(s,{action:'entry',payload:{...entry,id:crypto.randomUUID(),version:0,recurrence:'monthly',repeatUntil:'2026-01-01'}},0));
+const settleRepeat=crypto.randomUUID();householdMutation(s,{action:'entry',payload:{...entry,id:settleRepeat,version:0,kind:'settlement',title:'Remboursement',recurrence:'monthly'}},0);assert.equal(s.entries.find(e=>e.id===settleRepeat).recurrence,undefined);
 const task={id:crypto.randomUUID(),kind:'task',title:'Test auteur',quantity:'',assignee:1,due:'',priority:0,done:false,version:0,owner:1};
 householdMutation(s,{action:'item',payload:task},0);assert.equal(s.items[0].owner,0);
 assert.throws(()=>householdMutation(s,{action:'item',payload:{...task,version:1,done:true}},1),e=>e.status===403);
@@ -55,6 +73,8 @@ householdMutation(s,{action:'item',payload:{...shop,version:2,done:true,purchase
 purchased=s.items.find(i=>i.id===shop.id);assert.equal(purchased.purchasedBy,1);
 householdMutation(s,{action:'shopping-check',payload:{id:shop.id,version:3,done:false}},1);assert.equal(purchased.purchasedBy,null);assert.equal(purchased.done,false);
 const templateId=crypto.randomUUID();householdMutation(s,{action:'template-create',payload:{id:templateId,title:'Les essentiels',weekStart:'2026-10-05'}},0);
+// A list type can also be written directly, without adding anything to the week.
+{const before=s.items.length,id=crypto.randomUUID();householdMutation(s,{action:'template-create',payload:{id,title:'Dimanche',items:[{title:'Pain'},{title:'Lait',quantity:'2 L'}]}},1);assert.equal(s.items.length,before);assert.deepEqual(s.templates.find(t=>t.id===id).items,[{title:'Pain',quantity:''},{title:'Lait',quantity:'2 L'}]);assert.throws(()=>householdMutation(s,{action:'template-create',payload:{id:crypto.randomUUID(),title:'Vide',items:[]}},1));assert.throws(()=>householdMutation(s,{action:'template-create',payload:{id:crypto.randomUUID(),title:'Les deux',weekStart:'2026-10-05',items:[{title:'Pain'}]}},1));s.templates=s.templates.filter(t=>t.id!==id);}
 assert.equal(s.templates[0].items[0].title,'Bananes');assert.equal(s.templates[0].owner,0);
 const operationId=crypto.randomUUID(),beforeApply=s.items.length;
 householdMutation(s,{action:'template-apply',payload:{id:templateId,operationId,weekStart:'2026-10-12',owner:0}},1);
@@ -68,4 +88,36 @@ assert.equal(weekMonday('2027-01-01'),'2026-12-28');assert.equal(weekMonday('202
 assert.throws(()=>authorizeChat({member:0,version:2},1,2),e=>e.status===403);
 assert.throws(()=>authorizeChat({member:0,version:2},0,1),e=>e.status===409);
 assert.doesNotThrow(()=>authorizeChat({member:0,version:2},0,2));
+{// One push per shopping outing, sent when the member leaves the shopping page.
+const q=structuredClone(s);q.items=q.items.filter(i=>i.kind!=='shopping');q.shoppingPending={};const week='2026-10-12';
+const add=title=>householdMutation(q,{action:'item',payload:{id:crypto.randomUUID(),kind:'shopping',title,quantity:'',assignee:-1,due:'',priority:0,done:false,weekStart:week,version:0}},0);
+const done=actor=>householdMutation(q,{action:'shopping-done',payload:{}},actor);
+assert.equal(add('Pain'),null);assert.equal(add('Lait'),null);assert.equal(done(1),null);
+assert.equal(done(0)?.message,'a mis à jour la liste de courses.');assert.equal(done(0),null);
+const [pain,lait]=q.items.filter(i=>i.kind==='shopping');
+assert.equal(householdMutation(q,{action:'shopping-check',payload:{id:pain.id,version:pain.version,done:true}},1),null);
+assert.equal(done(1)?.message,'a coché des achats dans les courses.');
+assert.equal(householdMutation(q,{action:'shopping-check',payload:{id:lait.id,version:lait.version,done:true}},1),null);
+assert.equal(done(1)?.message,'a coché toute la liste de courses.');
+assert.equal(householdMutation(q,{action:'shopping-check',payload:{id:lait.id,version:lait.version,done:false}},1),null);
+assert.equal(done(1)?.message,'a coché des achats dans les courses.');}
+{// A birthday says whose it is (family, friends…); other events never carry that field.
+const q=structuredClone(s);const b={id:crypto.randomUUID(),title:'Anniversaire de Sophie',category:'birthday',circle:'friends',person:-1,status:'scheduled',date:'2026-11-03',time:'',bookBy:'',location:'',note:'',visibility:'shared',recurrence:'yearly',version:0};
+householdMutation(q,{action:'appointment',payload:{...b,recurrence:'none'}},0);assert.equal(q.appointments.find(a=>a.id===b.id).circle,'friends');assert.equal(q.appointments.find(a=>a.id===b.id).recurrence,'yearly');
+householdMutation(q,{action:'appointment',payload:{...b,category:'party',version:1}},0);assert.equal(q.appointments.find(a=>a.id===b.id).circle,undefined);
+assert.throws(()=>householdMutation(q,{action:'appointment',payload:{...b,id:crypto.randomUUID(),circle:'collegues'}},0));}
+console.log('PASS: cross-member shopping checks, one shopping push per outing, buyer integrity, status bypasses, weekly template copies, retries and author-only chat changes.');
+{// A vet appointment names an existing pet; deleting the pet keeps the appointment without the link.
+const q=structuredClone(s);q.petsMode=true;const pid=crypto.randomUUID();
+householdMutation(q,{action:'pet',payload:{id:pid,version:0,name:'Biscuit',kind:'dog',breed:'',tone:'beurre',note:'',every:{food:1,walk:1,litter:0,groom:7,health:90},last:{food:'2026-10-01',walk:'2026-10-01',litter:'2026-10-01',groom:'2026-10-01',health:'2026-10-01'}}},0);
+const vet={id:crypto.randomUUID(),title:'Vétérinaire · Biscuit',category:'medical',pet:pid,person:-1,status:'scheduled',date:'2026-10-24',time:'10:00',bookBy:'',location:'',note:'',visibility:'shared',version:0};
+householdMutation(q,{action:'appointment',payload:vet},1);assert.equal(q.appointments.find(a=>a.id===vet.id).pet,pid);
+assert.throws(()=>householdMutation(q,{action:'appointment',payload:{...vet,id:crypto.randomUUID(),pet:crypto.randomUUID()}},1),e=>e.status===400);
+householdMutation(q,{action:'delete-pet',payload:{id:pid,version:1}},0);const kept=q.appointments.find(a=>a.id===vet.id);assert.equal(kept.pet,undefined);assert.equal(kept.version,2);}
+{// A couple date is always ours: shared, for both of us, back every year.
+const q=structuredClone(s);const c={id:crypto.randomUUID(),title:'Notre mariage',category:'couple',person:1,status:'scheduled',date:'2021-06-12',time:'',bookBy:'',location:'',note:'',visibility:'private',recurrence:'none',circle:'friends',version:0};
+householdMutation(q,{action:'appointment',payload:c},0);const saved=q.appointments.find(a=>a.id===c.id);
+assert.equal(saved.person,-1);assert.equal(saved.visibility,'shared');assert.equal(saved.recurrence,'yearly');assert.equal(saved.circle,undefined);
+householdMutation(q,{action:'appointment',payload:{...c,version:1,countdown:true}},0);assert.equal(q.appointments.find(a=>a.id===c.id).countdown,true);
+householdMutation(q,{action:'appointment',payload:{...c,version:2,category:'party',countdown:true}},0);assert.equal(q.appointments.find(a=>a.id===c.id).countdown,undefined);}
 console.log('PASS: cross-member shopping checks, buyer integrity, status bypasses, weekly template copies, retries and author-only chat changes.');

@@ -26,6 +26,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run check:web
       - run: node tests/supabase-model.test.mjs
+      - run: node tests/pets.test.mjs
+      - run: node tests/gifts.test.mjs
+      - run: node tests/children.test.mjs
       - run: node tests/daily-calls.test.mjs
       - run: node tests/calendar.test.mjs
       - run: node tests/invitation-calendar.test.mjs
@@ -33,14 +36,17 @@ jobs:
       - run: node tests/notification-photo.test.mjs
       - run: node tests/voices-places.test.mjs
       - run: node tests/chat-attachments.test.mjs
+      - run: node tests/chat-cards.test.mjs
       - run: node tests/chat-navigation-ui.test.mjs
       - run: node tests/life.test.mjs
       - run: node tests/meals.test.mjs
       - run: node tests/photos.test.mjs
       - run: node tests/interaction.test.mjs
       - run: node tests/recipe-discovery.test.mjs
+      - run: node tests/recipe-import.test.mjs
       - run: node tests/recipe-library.test.mjs
       - run: node tests/recipe-experience.test.mjs
+      - run: node tests/diets.test.mjs
       - run: node tests/ai-settings.test.mjs
       - run: node tests/accessibility.test.mjs
       - run: node tests/design-system.test.mjs
@@ -54,6 +60,7 @@ jobs:
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/browser-layout.test.mjs
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/daily-browser.test.mjs
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/chat-controls-browser.test.mjs
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/chat-share-browser.test.mjs
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/app-navigation-browser.test.mjs
       - run: pnpm run build:web
       - uses: actions/upload-pages-artifact@v3

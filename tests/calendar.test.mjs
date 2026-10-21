@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {calendarDays,shiftMonth,sortAppointments} from '../lib/calendar.ts';
+import {calendarDays,shiftMonth,sortAppointments,expandEntries} from '../lib/calendar.ts';
 assert.deepEqual([calendarDays('2026-02')[0],calendarDays('2026-02').at(-1)],['2026-01-26','2026-03-01']);
 assert.equal(calendarDays('2028-02').includes('2028-02-29'),true);
 assert.equal(calendarDays('2026-02').includes('2026-02-29'),false);
@@ -38,3 +38,12 @@ assert.deepEqual(occurrences([{...base,date:'2026-10-10',recurrence:'custom',int
 assert.deepEqual(occurrences([{...base,date:'2026-12-20',endDate:'2026-12-22',recurrence:'custom',intervalDays:15}],'2027-01-04','2027-01-04').map(a=>[a.date,a.endDate]),[['2027-01-04','2027-01-06']]);
 assert(occurrences([{...base,date:'2000-01-01',recurrence:'custom',intervalDays:27}],'2050-01-01','2050-12-31').length<15,'Distant series jump straight into the requested period');
 console.log('PASS: arbitrary day intervals, fixed times over DST, inclusive repeat limits, multi-day occurrences and distant anchors.');
+{const rent={id:'rent',kind:'expense',title:'Loyer',cents:80000,member:0,category:'Maison',date:'2026-01-31',note:'',version:1,createdAt:'',recurrence:'monthly'};
+const once={...rent,id:'once',recurrence:undefined,date:'2026-03-02'};
+const expanded=expandEntries([rent,once,{...rent,id:'future',date:'2026-12-01'}],'2026-04-15');
+assert.deepEqual(expanded.filter(e=>e.title==='Loyer'&&e.original?.id==='rent').map(e=>e.date),['2026-01-31','2026-02-28','2026-03-31']);
+assert.equal(expanded.find(e=>e.date==='2026-01-31').id,'rent');assert.equal(expanded.find(e=>e.date==='2026-02-28').id,'rent#2026-02-28');
+assert.equal(expanded.filter(e=>e.id==='once').length,1);assert.equal(expanded.filter(e=>e.id==='future').length,1);
+assert.deepEqual(expandEntries([{...rent,repeatUntil:'2026-02-28'}],'2026-12-31').map(e=>e.date),['2026-01-31','2026-02-28']);
+assert.deepEqual(expandEntries([{...rent,date:'2026-01-01',recurrence:'custom',intervalDays:10}],'2026-01-25').map(e=>e.date),['2026-01-01','2026-01-11','2026-01-21']);
+console.log('PASS: recurring expenses repeat up to today, clamp month ends, stop at their end date and keep their series.');}

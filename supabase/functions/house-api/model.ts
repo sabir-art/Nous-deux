@@ -1,19 +1,61 @@
+import {giftMutation} from './gifts.ts';
 import {synchronizeInvitation} from './invitation-agenda.ts';
 import {validDate,categories} from './domain.ts';
 import {z} from 'npm:zod@3.25.76';
 import {mealVote,type MealState} from './meals.ts';
+import {dietMutation,DietError,type DietState} from './diets.ts';
 import {parisDate,plantCare} from './life.ts';
+import {petMutation} from './pets.ts';
+import {childMutation,checkChild} from './children.ts';
 import {entryInput,itemInput,householdInput,deleteInput,appointmentInput,shoppingCheckInput,templateInput,templateApplyInput,ideaInput,ideaResponseInput,plantInput,plantCareInput} from './validation.ts';
 import {deviceInput,memberInput,preferenceInput,subscriptionInput,changeDescription} from './communication.ts';
 export class ApiError extends Error{constructor(public status:number,message:string){super(message);}}
-export type State=MealState&{favoritePlaces?:import('./places.ts').FavoritePlace[];shoppingBatches?:string[];profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];plantReminderDays?:Record<string,string>};
+export type State=MealState&DietState&{favoritePlaces?:import('./places.ts').FavoritePlace[];shoppingBatches?:string[];profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];pets?:import('./pets.ts').Pet[];gifts?:import('./gifts.ts').Gift[];children?:import('./children.ts').Child[];familyMode?:boolean;colors?:Record<string,string>;plantReminderDays?:Record<string,string>};
 const conflict=()=>{throw new ApiError(409,'Cet élément a changé sur un autre appareil. Fermez puis rouvrez le formulaire.');};
+// Only expenses carry a split or a repetition; 50/50 and 'none' stay implicit so older entries keep their shape.
+function entryExtras(v:{kind:string;child?:string;split?:string;owed?:number;recurrence?:string;intervalDays?:number;repeatUntil?:string}){
+ const expense=v.kind==='expense',repeat=expense&&v.recurrence&&v.recurrence!=='none'?v.recurrence:undefined;
+ return {child:expense?v.child:undefined,split:expense&&(v.split==='full'||v.split==='custom')?v.split:undefined,owed:expense&&v.split==='custom'?v.owed:undefined,recurrence:repeat,intervalDays:repeat==='custom'?v.intervalDays:undefined,repeatUntil:repeat&&v.repeatUntil?v.repeatUntil:undefined};
+}
+// Shopping changes are held per member and pushed once per outing: when that member leaves the shopping page
+// or closes the app, the client sends 'shopping-done' and a single notice sums up what happened.
+type ShoppingPending={updated:boolean;checked:boolean;week:string};
+function holdShopping(s:State,p:any,actor:number){
+ const item=p.action==='shopping-check'?s.items.find(i=>i.id===p.payload?.id):undefined;const old=s.shoppingPending?.[actor];
+ s.shoppingPending={...s.shoppingPending,[actor]:{updated:!!old?.updated||!item,checked:!!old?.checked||!!item,week:item?.weekStart||old?.week||''}};
+ return null;
+}
+function flushShopping(s:State,actor:number){
+ const pending=s.shoppingPending?.[actor];if(!pending)return null;delete s.shoppingPending![actor];
+ const week=s.items.filter(i=>i.kind==='shopping'&&i.weekStart===pending.week);
+ const message=pending.checked&&week.length&&week.every(i=>i.done)?'a coché toute la liste de courses.':pending.updated?'a mis à jour la liste de courses.':'a coché des achats dans les courses.';
+ return {category:'shopping' as const,message};
+}
 export function householdMutation(s:State,p:any,actor:number){
+ if(p.action==='shopping-done')return flushShopping(s,actor);
+ const note=householdChange(s,p,actor);return note?.category==='shopping'?holdShopping(s,p,actor):note;
+}
+function householdChange(s:State,p:any,actor:number){
  if(actor!==0&&actor!==1)throw new ApiError(403,'Compte personnel requis.');
  const {action,payload}=p;if(typeof action!=='string')throw new ApiError(400,'Action invalide.');const previous=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;const now=new Date().toISOString();
 
  if(['idea','idea-response','delete-idea','plant','plant-care','plant-care-all','delete-plant'].includes(action))return lifeMutation(s,action,payload,actor,now);
+ if(['child','delete-child','family-mode','agenda-color'].includes(action)){
+  const id=(payload as {id?:string})?.id;childMutation(s,action,payload,actor,now,parisDate());
+  // A deleted child's appointments and expenses stay, they just no longer name the child.
+  if(action==='delete-child')for(const x of [...s.appointments,...s.entries,...s.items])if(x.child===id){delete x.child;x.version++;}
+  return null;
+ }
+ if(action==='gifts-mode'||action==='gift'||action==='delete-gift')return giftMutation(s,action,payload,actor,now);
+ if(['pets-mode','pet','pet-care','pet-care-all','delete-pet'].includes(action)){
+  petMutation(s,action,payload,actor,now,parisDate());
+  // A vet appointment stays in the agenda when its pet's card is deleted; it just no longer names the pet.
+  if(action==='delete-pet')for(const a of s.appointments)if(a.pet===(payload as {id?:string})?.id){delete a.pet;a.version++;}
+  return null;
+ }
  if(action==='meal-vote'){mealVote(s,payload,actor);return null;}
+ if(action==='diet'){try{dietMutation(s,payload,actor);}catch(e){if(e instanceof DietError)throw new ApiError(e.status,e.message);throw e;}return null;}
+ if(action==='diet'){try{dietMutation(s,payload,actor);}catch(e){if(e instanceof DietError)throw new ApiError(e.status,e.message);throw e;}return null;}
  if(action==='profile-photo'){
   const id=payload?.photoId;if(id!==null&&(typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)))throw new ApiError(400,'Photo invalide.');
   s.profiles??={};s.profiles[actor]=id;return null;
@@ -30,11 +72,19 @@ export function householdMutation(s:State,p:any,actor:number){
   if(item.done!==v.done)Object.assign(item,{done:v.done,purchasedBy:v.done?actor:null,purchasedAt:v.done?now:null,version:item.version+1});
   return {category:'shopping',message:v.done?'a coché un achat dans les courses.':'a remis un article à acheter.'};
  }
+ // A task can be ticked by its author or by the parent it was given to; everything else stays author-only.
+ if(action==='task-check'){
+  const v=shoppingCheckInput.parse(payload),item=s.items.find(i=>i.id===v.id&&i.kind==='task');
+  if(!item||item.version!==v.version)conflict();
+  if(item.owner!==actor&&item.assignee!==actor)throw new ApiError(403,'Seules la personne qui a noté cette mission et celle à qui elle est confiée peuvent la cocher.');
+  if(item.done!==v.done)Object.assign(item,{done:v.done,version:item.version+1});
+  return v.done?{category:'tasks',message:'a terminé une mission.'}:null;
+ }
  if(action==='template-create'){
-  const v=templateInput.parse(payload);if(weekMonday(v.weekStart)!==v.weekStart)throw new ApiError(400,'Choisissez une semaine.');
+  const v=templateInput.parse(payload);if(v.weekStart&&weekMonday(v.weekStart)!==v.weekStart)throw new ApiError(400,'Choisissez une semaine.');
   s.templates??=[];if(s.templates.some(t=>t.id===v.id))return null;
   if(s.templates.length>=50)throw new ApiError(400,'Vous pouvez conserver 50 listes types. Supprimez-en une pour continuer.');
-  const items=s.items.filter(i=>i.kind==='shopping'&&i.weekStart===v.weekStart).map(i=>({title:i.title,quantity:i.quantity}));
+  const items=v.items?v.items.map(i=>({title:i.title,quantity:i.quantity})):s.items.filter(i=>i.kind==='shopping'&&i.weekStart===v.weekStart).map(i=>({title:i.title,quantity:i.quantity}));
   if(!items.length||items.length>200)throw new ApiError(400,'La semaine doit contenir entre 1 et 200 articles.');
   s.templates.push({id:v.id,title:v.title,items,owner:actor,createdAt:now});return null;
  }
@@ -57,9 +107,8 @@ export function householdMutation(s:State,p:any,actor:number){
   const list=action.includes('appointment')?'appointments':action.includes('entry')?'entries':action==='item'||action==='delete-item'?'items':null;
   if(!list)throw new ApiError(400,'Action inconnue.');
   const existing=s[list].find(x=>x.id===payload?.id);if(list==='appointments'&&existing?.sourceIdeaId)throw new ApiError(403,'Ce rendez-vous vient d’une invitation acceptée. Modifiez ou annulez l’invitation depuis Nos idées.');if(existing&&existing.owner!==actor)throw new ApiError(403,'Seul l’auteur peut modifier ou supprimer cet élément.');
-  if(list==='entries'&&!action.startsWith('delete-')&&payload?.member!==actor)throw new ApiError(403,'Enregistrez uniquement vos propres paiements.');
   if(action.startsWith('delete-')){const v=deleteInput.parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0||s[list][i].version!==v.version)conflict();s[list].splice(i,1);}
-  else{const v=(list==='entries'?entryInput:list==='items'?itemInput:appointmentInput).parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0&&v.version!==0||i>=0&&s[list][i].version!==v.version)conflict();if(list==='items'&&existing&&existing.kind!==v.kind)throw new ApiError(400,'Le type de liste ne peut pas changer.');if(list==='items'&&v.kind==='shopping'&&((existing&&v.done!==existing.done)||(!existing&&v.done)))throw new ApiError(400,'Utilisez la case achat pour cocher un article.');const value={...v,...(list==='items'&&v.kind==='shopping'?{note:v.note??existing?.note??'',photoId:v.photoId===undefined?existing?.photoId??null:v.photoId,weekStart:weekMonday(v.weekStart||existing?.weekStart||parisToday()),purchasedBy:existing?.purchasedBy??null,purchasedAt:existing?.purchasedAt??null}:{}),owner:actor,version:v.version+1,createdAt:i<0?now:s[list][i].createdAt};if(i<0)s[list].push(value);else s[list][i]=value;}
+  else{const v=(list==='entries'?entryInput:list==='items'?itemInput:appointmentInput).parse(payload);checkChild(s,(v as {child?:string}).child);if((v as any).category==='birthday'&&(v as any).circle==='kid'&&!(v as any).child)throw new ApiError(400,'Choisissez l’enfant dont c’est l’ami.');if((v as {pet?:string}).pet!==undefined&&!(s.pets||[]).some(p=>p.id===(v as {pet?:string}).pet))throw new ApiError(400,'Ce compagnon n’existe plus dans votre espace.');const i=s[list].findIndex(x=>x.id===v.id);if(i<0&&v.version!==0||i>=0&&s[list][i].version!==v.version)conflict();if(list==='items'&&existing&&existing.kind!==v.kind)throw new ApiError(400,'Le type de liste ne peut pas changer.');if(list==='items'&&v.kind==='shopping'&&((existing&&v.done!==existing.done)||(!existing&&v.done)))throw new ApiError(400,'Utilisez la case achat pour cocher un article.');const value={...v,...(list==='entries'?entryExtras(v as any):{}),...(list==='appointments'?((v as any).category==='birthday'?{countdown:undefined,recurrence:'yearly',intervalDays:undefined,endDate:'',repeatUntil:''}:(v as any).category==='couple'?{circle:undefined,person:-1,visibility:'shared',status:'scheduled',recurrence:'yearly',intervalDays:undefined,endDate:'',repeatUntil:''}:{circle:undefined,countdown:undefined}):{}),...(list==='items'&&v.kind==='shopping'?{child:undefined,note:v.note??existing?.note??'',photoId:v.photoId===undefined?existing?.photoId??null:v.photoId,weekStart:weekMonday(v.weekStart||existing?.weekStart||parisToday()),purchasedBy:existing?.purchasedBy??null,purchasedAt:existing?.purchasedAt??null}:{}),owner:actor,version:v.version+1,createdAt:i<0?now:s[list][i].createdAt};if(i<0)s[list].push(value);else s[list][i]=value;}
  }
  // Private changes never enter the shared activity feed or trigger partner push.
  const current=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;

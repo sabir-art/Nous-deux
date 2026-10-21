@@ -7,10 +7,16 @@ import {validAIKey,verifyAIKey,AISettingsError} from './ai-settings.ts';
 import {recipeMutation,RecipeError} from './recipe-library.ts';
 import {recipeTitles} from './recipe-ids.ts';
 import {claimDiscovery,finishDiscovery,discoveryProjection,discoverRecipes,DiscoveryError} from './recipe-discovery.ts';
+import {importFromImage,importFromUrl,checkImportUrl,validImportImage,ImportError,importMessages} from './recipe-import.ts';
 import {mealProjection,mealVote,mealDraw,MealError} from './meals.ts';
+import {dietProjection} from './diets.ts';
 import {parisDate} from './life.ts';
 import {chatInput,chatCursorInput,photoInput} from './validation.ts';
+import {buildChatCard,storeChatCard,dropChatCards,attachChatCards,stickerText,type ChatCardState} from './chat-cards.ts';
 import {buildPushPayload} from 'npm:@block65/webcrypto-web-push@2.0.0';
+import {ChildError} from './children.ts';
+import {visibleGifts,GiftError} from './gifts.ts';
+import {PetError} from './pets.ts';
 import {claimPlantReminders,visibleAppointments,ApiError,householdMutation,callMutation,deviceMutation,type State} from './model.ts';
 import {defaultPreferences,deviceInput,allowedPushEndpoint} from './communication.ts';
 const ORIGIN='https://sabir-art.github.io',BASE='/Nous-deux/';
@@ -24,6 +30,7 @@ const secret=()=>{const keys=Deno.env.get('SUPABASE_SECRET_KEYS');return keys?JS
 async function db(path:string,method='GET',body?:unknown,prefer='return=representation'){const key=secret();if(!key)throw new Error('Missing server configuration');const r=await fetch(Deno.env.get('SUPABASE_URL')+'/rest/v1/'+path,{method,headers:{apikey:key,...(key.startsWith('eyJ')?{Authorization:'Bearer '+key}:{}),'Content-Type':'application/json',Prefer:prefer},...(body===undefined?{}:{body:JSON.stringify(body)})});if(!r.ok)throw new Error('Database request failed');const text=await r.text();return text?JSON.parse(text):null;}
 async function state(){const rows=await db('nd_state?id=eq.1&select=version,data');if(!rows[0])throw new Error('Household missing');return rows[0] as {version:number;data:State};}
 async function mutate<T>(fn:(s:State)=>T){for(let i=0;i<4;i++){const snapshot=await state();const result=fn(snapshot.data);const rows=await db('nd_state?id=eq.1&version=eq.'+snapshot.version,'PATCH',{data:snapshot.data,version:snapshot.version+1});if(rows.length)return {result,data:snapshot.data};}throw new ApiError(409,'Modification simultanée. Réessayez.');}
+async function chatCards(){const rows=await db('nd_state?id=eq.1&select=chatCards:data->chatCards');return rows?.[0]?.chatCards as ChatCardState['chatCards']|null;}
 async function config(){return (await db('nd_config?id=eq.1&select=data'))[0].data;}
 async function send(device:any,data:any){if(!allowedPushEndpoint(device.subscription.endpoint))return false;const keys=(await config()).vapid;const payload=await buildPushPayload({data:JSON.stringify({...data,url:data.callId?BASE+'?view=calls&call='+data.callId:BASE+'?view='+(data.category||'settings')}),options:{ttl:data.category==='calls'?90:3600}},device.subscription,{...keys,subject:ORIGIN+BASE});const r=await fetch(device.subscription.endpoint,{...payload,redirect:'manual',signal:AbortSignal.timeout(5000)});if(r.status===404||r.status===410)await mutate(s=>{s.devices=s.devices.filter(d=>d.deviceId!==device.deviceId);});return r.ok;}
 async function notify(s:State,actor:number,category:string,message:string,originDevice=''){await Promise.allSettled(s.devices.filter(d=>d.member!==actor&&d.deviceId!==originDevice&&({...defaultPreferences,...d.preferences})[category]).map(d=>send(d,{title:category==='ideas'?'💌 Une invitation pour nous deux':'À deux',body:category==='ideas'?'✨ '+message+' 💛':message,category,tag:category==='calls'?'adeux-call':undefined})));}
@@ -46,7 +53,7 @@ export async function handler(req:Request):Promise<Response>{
  if(!['GET','POST'].includes(req.method))return json({error:'Méthode non autorisée.'},405);
  try{
  const url=new URL(req.url),route=url.searchParams.get('route')||'',token=req.headers.get('x-house-session')||'';
- let p:any={};if(req.method==='POST'&&!['voice-upload','attachment-upload'].includes(route)){if(!req.headers.get('content-type')?.includes('application/json'))return json({error:'Format invalide.'},415);const raw=await req.text();if(raw.length>(route==='photos'?361000:36000))return json({error:'Contenu trop long.'},413);p=JSON.parse(raw);}
+ let p:any={};if(req.method==='POST'&&!['voice-upload','attachment-upload'].includes(route)){if(!req.headers.get('content-type')?.includes('application/json'))return json({error:'Format invalide.'},415);const raw=await req.text();if(raw.length>(route==='photos'?361000:route==='recipe-import'?1450000:36000))return json({error:'Contenu trop long.'},413);p=JSON.parse(raw);}
  if(route==='notification-photo'){if(req.method!=='GET')return json({error:'Méthode non autorisée.'},405);return await serveNotificationPhoto(url,secret(),db,async()=>(await state()).data,cors);}
  if(route==='plant-reminders'){
   if(req.method!=='POST')return json({error:'Méthode non autorisée.'},405);
@@ -113,13 +120,27 @@ export async function handler(req:Request):Promise<Response>{
   }
   const {data}=await state(),configured=!!await aiKey(),discovery=discoveryProjection(data,configured);if(req.method==='GET'&&configured&&discovery.enabled&&Date.now()>=discovery.nextAttemptAt)backgroundDiscovery();return json({recipes:[...(data.generatedRecipes||[]),...(data.personalRecipes||[])],favorites:data.recipeFavorites?.[actor]||[],plans:data.mealPlans||[],menus:data.mealPlanTemplates||[],member:actor,discovery});
  }
+ if(route==='recipe-import'){
+  // Returns a draft only; saving goes through recipe-save and its ownership checks.
+  if(req.method!=='POST')return json({error:'Méthode non autorisée.'},405);
+  try{
+   if(p.kind==='url')checkImportUrl(p.url);else if(p.kind==='image'){if(!validImportImage(p.data))throw new ImportError('image');}else throw new ApiError(400,'Choisissez une photo ou un lien.');
+   const key=await aiKey();if(p.kind==='image'&&!key)throw new ImportError('unconfigured');
+   const hour=await db('rpc/nd_rate_hit','POST',{rate_key:'recipe-import:'+actor+':'+Math.floor(Date.now()/3600000),expiry:Date.now()+7200000});
+   const day=await db('rpc/nd_rate_hit','POST',{rate_key:'recipe-import-day:'+actor+':'+Math.floor(Date.now()/86400000),expiry:Date.now()+172800000});
+   if(hour>10||day>30)throw new ImportError('rate');
+   const result=p.kind==='image'?{recipe:await importFromImage(p.data,key,aiModel()),method:'ai'}:await importFromUrl(p.url,{key,model:aiModel()});
+   return json({draft:result.recipe,method:result.method});
+  }catch(e){if(e instanceof ImportError){const [status,error]=importMessages[e.code];return json({error,code:e.code},status);}throw e;}
+ }
  if(route==='meals'){
 
   if(req.method==='GET'){const {data}=await state();return json(mealProjection(data,actor));}
   const {data}=await mutate(s=>p.action==='draw'?mealDraw(s,p,actor):mealVote(s,p,actor));return json(mealProjection(data,actor));
  }
  if(route==='household'){
-  if(req.method==='GET'){const {data:s}=await state();return json({member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[]});}
+  // giftsMode stays true for pages cached before gift ideas moved to the agenda's birthdays; the old per-person switch is ignored.
+  if(req.method==='GET'){const {data:s}=await state();return json({member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[],pets:s.pets||[],petsMode:!!s.petsMode,gifts:visibleGifts(s,actor),giftsMode:true,children:s.children||[],shoppingPending:!!s.shoppingPending?.[actor],familyMode:!!s.familyMode,colors:s.colors||{},diets:dietProjection(s)});}
   if(['item','profile-photo'].includes(p.action)&&p.payload?.photoId){const photoId=deviceInput.parse(p.payload.photoId);const photos=await db('nd_photos?id=eq.'+photoId+'&select=owner');if(!photos.length||photos[0].owner!==actor)throw new ApiError(403,'Vous ne pouvez joindre que votre propre photo.');}
   const {result,data}=await mutate(s=>householdMutation(s,p,actor));if(result)try{await notify(data,actor,result.category,'Votre moitié '+result.message,req.headers.get('x-adeux-device')||'');}catch{}return json({ok:true});
  }
@@ -146,7 +167,9 @@ export async function handler(req:Request):Promise<Response>{
   if(req.method==='GET'){
    const before=url.searchParams.get('before');const cursor=before?chatCursorInput.parse({before,beforeId:url.searchParams.get('beforeId')}):null;
    const ids=(url.searchParams.get('ids')||'').split(',').filter(Boolean);if(ids.length>120)throw new ApiError(400,'Trop de messages à actualiser.');ids.forEach(id=>deviceInput.parse(id));
-   return json(await db('rpc/nd_chat_read','POST',{p_actor:actor,p_before:cursor?.before||null,p_before_id:cursor?.beforeId||null,p_ids:ids}));
+   // Card and sticker payloads live beside the household state; only visible messages receive them.
+   const [cards,page]=await Promise.all([chatCards(),db('rpc/nd_chat_read','POST',{p_actor:actor,p_before:cursor?.before||null,p_before_id:cursor?.beforeId||null,p_ids:ids})]);
+   return json({...page,messages:attachChatCards(page?.messages||[],cards)});
   }
   const v=chatInput.parse(p);
   if(v.action==='send'){
@@ -154,12 +177,21 @@ export async function handler(req:Request):Promise<Response>{
    const previous=(await db('nd_messages?id=eq.'+v.id+'&select=id,member'))[0];if(previous){if(previous.member!==actor)throw new ApiError(403,'Ce message appartient à votre moitié.');return json({ok:true});}
    let voice:any=null;if(v.voiceId){voice=(await db('nd_voices?id=eq.'+v.voiceId))[0];if(!voice?.ready||voice.owner!==actor)throw new ApiError(403,'Vous pouvez envoyer uniquement vos propres enregistrements.');if((await db('nd_messages?voice_id=eq.'+v.voiceId+'&select=id&limit=1')).length)throw new ApiError(409,'Ce vocal a déjà été envoyé.');}
    let attachment:any=null;if(v.attachmentId){attachment=(await db('nd_attachments?id=eq.'+v.attachmentId))[0];if(!attachment?.ready||attachment.owner!==actor)throw new ApiError(403,'Vous pouvez envoyer uniquement vos propres fichiers.');if((await db('nd_messages?attachment_id=eq.'+v.attachmentId+'&select=id&limit=1')).length)throw new ApiError(409,'Ce fichier a déjà été envoyé.');}
-   const inserted=await db('nd_messages?on_conflict=id','POST',{id:v.id,member:actor,text:v.text||'',...(voice?{voice_id:voice.id,voice_duration:voice.duration_ms}:{}),...(attachment?{attachment_id:attachment.id,attachment_name:attachment.name,attachment_mime:attachment.mime,attachment_bytes:attachment.bytes}:{})},'resolution=ignore-duplicates,return=representation');
-   if(inserted?.length){const task=(async()=>{const {data:s}=await state();const icon=await notificationPhotoURL(s,actor,Deno.env.get('SUPABASE_URL')!,secret());await Promise.allSettled(s.devices.filter(d=>d.member!==actor&&({...defaultPreferences,...d.preferences}).chat).map(d=>send(d,{title:actor===0?s.household.first:s.household.second,body:voice?'🎙️ Un message vocal':attachment?'📎 Un fichier dans votre discussion':'💬 Un nouveau message',category:'chat',icon,tag:'nousdeux-chat-'+v.id})));})();if(typeof EdgeRuntime!=='undefined')EdgeRuntime.waitUntil(task.catch(()=>{}));else await task.catch(()=>{});}
+   // A shared card is validated against the sender's own rights before the message exists.
+   let shared:{summary:string;push:string;note?:string}|null=null;
+   if(v.card||v.sticker){const now=new Date().toISOString();const {result}=await mutate(s=>{
+    if(v.sticker){storeChatCard(s as ChatCardState,v.id!,{member:actor,kind:'sticker',ref:v.sticker,at:now});return {summary:stickerText(v.sticker),push:'💞 Un sticker de Nous deux'};}
+    const card=buildChatCard(s,v.card!,actor,parisDate(),v.text||'');storeChatCard(s as ChatCardState,v.id!,{member:actor,kind:v.card!.kind,ref:card.ref,data:card.data,...(v.text&&!card.ownText?{note:v.text}:{}),at:now});return {...card,note:card.ownText?'':v.text||''};
+   });shared=result;}
+   const inserted=await db('nd_messages?on_conflict=id','POST',{id:v.id,member:actor,text:shared?(shared.summary+(shared.note?'\n'+shared.note:'')).slice(0,2000):v.text||'',...(voice?{voice_id:voice.id,voice_duration:voice.duration_ms}:{}),...(attachment?{attachment_id:attachment.id,attachment_name:attachment.name,attachment_mime:attachment.mime,attachment_bytes:attachment.bytes}:{})},'resolution=ignore-duplicates,return=representation');
+   if(inserted?.length){const task=(async()=>{const {data:s}=await state();const icon=await notificationPhotoURL(s,actor,Deno.env.get('SUPABASE_URL')!,secret());await Promise.allSettled(s.devices.filter(d=>d.member!==actor&&({...defaultPreferences,...d.preferences}).chat).map(d=>send(d,{title:actor===0?s.household.first:s.household.second,body:shared?shared.push:voice?'🎙️ Un message vocal':attachment?'📎 Un fichier dans votre discussion':'💬 Un nouveau message',category:'chat',icon,tag:'nousdeux-chat-'+v.id})));})();if(typeof EdgeRuntime!=='undefined')EdgeRuntime.waitUntil(task.catch(()=>{}));else await task.catch(()=>{});}
    return json({ok:true});
   }
+  if(v.action==='edit'&&(await chatCards())?.[v.id!])throw new ApiError(400,'Ce message ne peut pas être modifié.');
   const result=await db('rpc/nd_chat_change','POST',{p_actor:actor,p_action:v.action,p_id:v.id||null,p_version:v.version||null,p_text:v.text||null,p_scope:v.scope});
   if(!result.ok)throw new ApiError(result.status||400,result.error||'Action impossible.');
+  // A message erased for both also forgets its card snapshot (own messages only, like the RPC).
+  if(v.scope==='everyone'&&(v.action==='clear'||v.action==='delete')){const cards=await chatCards();const mine=(id:string,r:{member:number})=>r.member===actor&&(v.action==='clear'||id===v.id);if(cards&&Object.entries(cards).some(([id,r])=>mine(id,r)))await mutate(s=>dropChatCards(s as ChatCardState,mine));}
   // The transaction has already revoked attachment access. Physical cleanup can retry later.
   const cleanup=Promise.allSettled((result.cleanup||[]).flatMap((file:any)=>[
    ...(file.voiceId?[deleteVoice(file.voiceId,actor,db,Deno.env.get('SUPABASE_URL')!,secret())]:[]),
@@ -189,6 +221,6 @@ export async function handler(req:Request):Promise<Response>{
   await mutate(s=>{const d=s.devices.find(d=>d.deviceId===p.deviceId);if(d&&d.member!==actor)throw new ApiError(403,'Cet appareil appartient à un autre compte.');deviceMutation(s,{...p,member:actor});});return json({ok:true});
  }
  return json({error:'Route inconnue.'},404);
- }catch(e){if(e instanceof DailyError||e instanceof AttachmentError||e instanceof PlaceError||e instanceof VoiceError||e instanceof ApiError||e instanceof MealError||e instanceof RecipeError||e instanceof AISettingsError)return json({error:e.message},e.status);if(e instanceof SyntaxError||e&&typeof e==='object'&&'issues'in e)return json({error:'Vérifiez les champs du formulaire.'},400);return json({error:'Service temporairement indisponible. Réessayez.'},503);}
+ }catch(e){if(e instanceof DailyError||e instanceof AttachmentError||e instanceof PlaceError||e instanceof VoiceError||e instanceof ApiError||e instanceof MealError||e instanceof RecipeError||e instanceof AISettingsError||e instanceof PetError||e instanceof GiftError||e instanceof ChildError)return json({error:e.message},e.status);if(e instanceof SyntaxError||e&&typeof e==='object'&&'issues'in e)return json({error:'Vérifiez les champs du formulaire.'},400);return json({error:'Service temporairement indisponible. Réessayez.'},503);}
 }
 Deno.serve(handler);

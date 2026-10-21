@@ -73,9 +73,9 @@ input::-webkit-date-and-time-value{text-align:left;min-width:0}
 .invitation-meta{justify-content:center;gap:var(--space-2)}.invitation-meta>span{padding:var(--space-2) var(--space-3);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink)}
 .invitation-reply{width:100%;text-align:left}.invitation-reply summary{justify-content:center;background:var(--surface-sunken);border-radius:var(--radius-pill);padding:var(--space-2) var(--space-4)}.invitation-response{width:100%;gap:var(--space-3)}.invitation-response .primary{background:var(--heart);color:var(--on-heart)}.invitation-response button{width:100%;min-height:48px}.invitation-arrival .invitation-paper>.text-link{width:100%;margin:0}
 @keyframes invitation-open{from{transform:translateY(12px) rotate(-2deg);opacity:0}to{transform:translateY(0);opacity:1}}
-.calendar-page>.nd-hero{max-width:none}.calendar-panel{background:var(--canvas)}.calendar-day-panel{border-top:6px solid var(--rose)}.booking-panel{border-top:6px solid var(--beurre)}.calendar-options{background:var(--surface-sunken)}
+.calendar-page>.nd-hero{max-width:none}.calendar-panel{background:var(--canvas)}.calendar-day-panel{border-top:6px solid var(--rose)}.booking-panel{border-top:6px solid var(--beurre)}.calendar-options{background:var(--beurre)}
 .holiday-filters>div{display:flex;flex-wrap:wrap;gap:var(--space-2)}.holiday-filter{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-4);min-height:44px;border-radius:var(--radius-pill);font:600 14px/18px var(--font-sans);border:2px solid transparent;color:var(--ink)}.holiday-filter[aria-pressed=false]{background:var(--surface);border-color:var(--line)}.holiday-filter[aria-pressed=true]{border-color:var(--ink)}
-.reference-islam{--reference-tone:var(--menthe);background:var(--menthe)}.reference-christian{--reference-tone:var(--beurre);background:var(--beurre)}.reference-france{--reference-tone:var(--lilas);background:var(--lilas)}.reference-culture{--reference-tone:var(--peche);background:var(--peche)}
+.reference-islam{--reference-tone:var(--menthe);background:var(--menthe)}.reference-christian{--reference-tone:var(--beurre);background:var(--beurre)}.reference-france{--reference-tone:var(--lilas);background:var(--lilas)}.reference-culture{--reference-tone:var(--citron);background:var(--citron)}
 .event-open[class*=reference-]:not(.reference-none){background:transparent}
 @media(prefers-reduced-motion:reduce){.invitation-ticket{animation:none}}
 /* Real recipes and reusable weekly menus. */
@@ -245,3 +245,426 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}details[op
 .call-audio-options{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:8px;border-radius:20px;background:var(--surface);color:var(--ink)}.call-audio-options button{min-height:44px;border-radius:16px;padding:10px 14px}.call-audio-options button[aria-pressed=true]{background:var(--lavande)}.call-audio-help{font-size:13px;line-height:18px;text-align:center;margin:0}
 .call-audio-control{position:relative;display:flex;flex-direction:column;align-items:center}.call-audio-control>.call-audio-options{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%);width:240px;max-width:70vw;box-shadow:var(--shadow-lift);z-index:3}.call-audio-control>.call-audio-help{position:absolute;bottom:calc(100% + 12px);width:220px;background:var(--surface);color:var(--ink);padding:12px;border-radius:16px}
 .chat-view .chat-header{padding-top:calc(12px + env(safe-area-inset-top,0px))}
+.split-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.split-options button{justify-content:center;text-align:center;white-space:nowrap;padding:var(--space-2) var(--space-3);line-height:18px}
+/* Children (optional family profiles): each child keeps one pastel colour across the agenda, the budget and their space */
+.child-tone-menthe{--child:var(--buddy-menthe)}.child-tone-beurre{--child:var(--buddy-beurre)}.child-tone-rose{--child:var(--buddy-rose)}.child-tone-lilas{--child:var(--buddy-lilas)}.child-tone-peche{--child:var(--buddy-peche)}.child-tone-lavande{--child:var(--buddy-lavande)}.child-tone-neutre{--child:var(--surface-sunken)}.child-tone-citron{--child:var(--buddy-citron)}.child-tone-ciel{--child:var(--buddy-ciel)}.child-tone-corail{--child:var(--buddy-corail)}.child-tone-sable{--child:var(--buddy-sable)}.child-tone-perle{--child:var(--buddy-perle)}
+i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--child);color:var(--pupil)}
+.child-pill i{display:inline-block;width:10px;height:10px;border-radius:var(--radius-pill);background:var(--child);margin-right:var(--space-2)}
+.tone-swatches{display:flex;flex-wrap:wrap;gap:var(--space-2)}.tone-swatch{min-height:44px;padding:0 var(--space-4);border-radius:var(--radius-pill);color:var(--pupil);font:600 15px/20px var(--font-sans);border:2px solid transparent;background:var(--child)}.tone-swatch[aria-pressed=true]{border-color:var(--pupil)}
+.family-space,.child-space{display:grid;gap:var(--space-4);min-width:0}.family-space .life-filters{margin:0}
+.child-card{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3);padding:var(--space-5);border-radius:var(--radius-lg);background:var(--child);color:var(--pupil)}.child-card h2{margin:0;overflow-wrap:anywhere}.child-card p{margin:var(--space-1) 0 0}.child-card .icon-button{color:var(--pupil)}
+.child-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:var(--space-3);align-items:start}
+.child-section{display:grid;gap:var(--space-3);min-width:0}.child-section h3{margin:0}.child-section .section-title{margin:0}.child-section>.text-link{justify-self:start}
+.child-info{display:grid;gap:var(--space-3);margin:0}.child-info dt{font:600 13px/18px var(--font-sans);color:var(--ink-muted)}.child-info dd{margin:2px 0 0;white-space:pre-line;overflow-wrap:anywhere}.child-text{margin:0;white-space:pre-line;overflow-wrap:anywhere}
+.child-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-2)}.child-list button{display:flex;gap:var(--space-3);align-items:center;width:100%;min-height:44px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:var(--surface-sunken);color:var(--ink);text-align:left}.child-list span{display:grid;min-width:0}.child-list small{color:var(--ink-muted)}
+.renewal-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-2)}.renewal-list li{display:flex;align-items:center;gap:var(--space-2);min-height:44px}.renewal-list li>span{flex:1;display:grid;min-width:0}.renewal-list small{color:var(--ink-muted)}
+.renewal-status{min-height:44px;padding:0 var(--space-3);border-radius:var(--radius-pill);font:600 14px/18px var(--font-sans);background:var(--surface-sunken);color:var(--ink)}.renewal-soon .renewal-status{background:var(--buddy-beurre);color:var(--pupil)}.renewal-now .renewal-status{background:var(--buddy-rose);color:var(--pupil)}
+.renewal-form{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title title" "size add";gap:var(--space-3) var(--space-2);align-items:end}.renewal-form label{display:flex;flex-direction:column;gap:var(--space-2);min-width:0;font:600 14px/18px var(--font-sans)}.renewal-form .renewal-title{grid-area:title}.renewal-form .renewal-size{grid-area:size}.renewal-form>button{grid-area:add;min-height:48px;white-space:nowrap;padding-inline:var(--space-4)}
+.child-renewals{container-type:inline-size}@container (min-width:500px){.renewal-form{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto;grid-template-areas:"title size add"}}@container (max-width:260px){.renewal-form{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "size" "add"}}
+.renewal-list li{flex-wrap:wrap;row-gap:var(--space-1)}.renewal-list li>span:first-child{flex:1 1 120px}.renewal-list li>.renewal-actions{display:flex;flex:none;align-items:center;gap:var(--space-1);margin-left:auto}
+/* A label and its « · facultatif » stay on one line instead of two stacked flex items. */
+.field-label{display:block}.field-label .optional{font-weight:400}
+/* Kinds of a child's appointments: a pastel dot and pill on top of the child's own colour, which stays the event's main colour. */
+.kid-kind-sante{--kind:var(--buddy-corail)}.kid-kind-ecole{--kind:var(--buddy-ciel)}.kid-kind-activite{--kind:var(--buddy-menthe)}.kid-kind-autre{--kind:var(--buddy-sable)}
+.kid-kind{display:inline-flex;align-items:center;gap:6px;flex:none;font:600 12px/16px var(--font-sans);font-style:normal;padding:3px 9px 3px 7px;border-radius:var(--radius-pill);background:var(--surface);color:var(--ink);border:1px solid var(--line);white-space:nowrap}.kid-kind::before{content:'';width:9px;height:9px;border-radius:50%;background:var(--kind);box-shadow:0 0 0 1px color-mix(in srgb,var(--kind) 55%,var(--ink) 45%)}
+.event-open .kid-kind{margin-right:var(--space-1)}
+.calendar-event-chip[class*=kid-kind-]{box-shadow:inset 4px 0 0 color-mix(in srgb,var(--kind) 70%,var(--ink) 30%)}
+.child-appointments button{background:color-mix(in srgb,var(--child) 26%,var(--surface))}.child-appointments button>span:nth-child(2){flex:1}
+.kid-kind-icon{display:inline-grid;place-items:center;flex:none;width:32px;height:32px;border-radius:var(--radius-pill);background:var(--kind,var(--child));color:var(--pupil);box-shadow:0 0 0 1.5px var(--surface)}
+.child-needs-form{display:grid;gap:var(--space-2)}.child-needs-form .helper-copy{margin:0}.child-needs-actions{display:flex;justify-content:flex-end;gap:var(--space-2);flex-wrap:wrap}.child-needs-actions button{min-height:44px}
+.child-section .section-title .text-link{display:inline-flex;align-items:center;gap:var(--space-1);min-height:44px}
+/* Missions with a date in the agenda: a round tick, crossed out once done. */
+.mission-title{display:inline-flex;align-items:center;gap:var(--space-2)}.mission-check{flex:none;display:inline-grid;place-items:center;width:20px;height:20px;border-radius:var(--radius-pill);border:2px solid currentColor;opacity:.75}.mission-check.done{background:var(--ink);color:var(--on-ink);border-color:var(--ink);opacity:1}
+.mission-event.appointment-done .mission-title>span:last-child,.calendar-event-chip.mission-chip.calendar-event-done{text-decoration:line-through}
+.calendar-event-chip.mission-chip{border:1.5px dashed color-mix(in srgb,var(--ink) 35%,transparent)}
+.child-cost{margin:0;font:700 28px/34px var(--font-sans)}
+.category-icon.cat-6{background:var(--menthe)}
+
+/* Extra agenda pastels so children and parents never share a colour (chosen in Notre espace / a child's profile). */
+:root,[data-theme=light]{--ciel:#bfe2fb;--corail:#ffb9ad;--sable:#eadcc5;--perle:#dcdee6;--buddy-ciel:#bfe2fb;--buddy-corail:#ffb9ad;--buddy-sable:#eadcc5;--buddy-perle:#dcdee6}
+[data-theme=dark]{--ciel:#1c3a55;--corail:#55261f;--sable:#3e3527;--perle:#34353d}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--ciel:#1c3a55;--corail:#55261f;--sable:#3e3527;--perle:#34353d}}
+.nd-tone-ciel{background:var(--ciel)}.nd-tone-corail{background:var(--corail)}.nd-tone-sable{background:var(--sable)}.nd-tone-perle{background:var(--perle)}
+.event-open.who-a .nd-event-card{background:var(--partner-a)}.event-open.who-b .nd-event-card{background:var(--partner-b)}
+.item-child{display:inline-flex;align-items:center;gap:var(--space-1)}.item-child i{width:8px;height:8px;border-radius:var(--radius-pill);background:var(--child)}
+.child-agenda-link{align-self:flex-start}.agenda-colour{margin-top:var(--space-4)}.child-tasks li{display:flex;align-items:center;gap:var(--space-2)}.child-tasks li>button:last-child{flex:1;width:auto;min-width:0}.child-tasks .checkbox{flex:none;width:44px;padding:0;background:var(--surface);border-radius:var(--radius-pill)}
+.holiday-filter.birthday-filter[aria-pressed=true]{background:var(--heart-soft)}
+.birthday-list{display:flex;flex-direction:column;gap:var(--space-3)}.birthday-list ul{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-2)}.birthday-list li button{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:52px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:var(--surface-sunken);color:var(--ink);text-align:left}.birthday-list li span:nth-child(2){display:grid;flex:1;min-width:0}.birthday-list small{color:var(--ink-muted)}.birthday-list em{font-style:normal;font-weight:600;white-space:nowrap}.birthday-cake{font-size:22px}
+.gift-recipients{flex-wrap:wrap}.gift-recipients button{flex:1 1 auto;justify-content:center;white-space:nowrap}
+.birthday-list em{font-family:var(--font-sans)}
+/* Calendar landmarks (holidays) are outlined, never filled, so they can't be mistaken for an event someone added, whatever its person colour. */
+.event-open[class*=reference-]:not(.reference-none) .nd-event-card{background:var(--surface);border:2px dashed var(--reference-tone);padding:calc(var(--space-5) - 2px)}
+.calendar-event-chip[class*=reference-]{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--reference-tone)}
+.calendar-mobile-dots i[class*=reference-],.calendar-legend i[class*=reference-]{background:transparent;box-shadow:inset 0 0 0 2px var(--reference-tone)}
+.gifts-space{display:grid;gap:var(--space-4);min-width:0}.gifts-space .life-filters{margin:0}
+/* Idées cadeaux: white cards, a pastel tag per recipient, a single accent for the add button. */
+.gifts-intro{display:grid;gap:var(--space-2);justify-items:start}.gifts-intro p{margin:0;color:var(--ink-muted);font:400 15px/22px var(--font-sans)}.gifts-back{padding-inline:0!important;min-height:44px}
+.gift-add{justify-content:center}
+.gift-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-3);grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))}
+.gift-card{min-width:0;display:flex;flex-direction:column;gap:var(--space-2);border-radius:var(--radius-lg);padding:var(--space-4);background:var(--surface);box-shadow:var(--shadow-card)}
+.gift-card.bought{opacity:.72}.gift-card.bought strong{text-decoration:line-through}
+.gift-open{display:flex;flex-direction:column;align-items:flex-start;gap:var(--space-1);text-align:left;background:none;border:0;padding:0;color:var(--ink);min-height:44px;min-width:0;width:100%;font:inherit;cursor:pointer}.gift-open:disabled{cursor:default;opacity:1}
+.gift-open strong{font:600 17px/23px var(--font-sans);overflow-wrap:anywhere}.gift-note{overflow-wrap:anywhere;color:var(--ink);font:400 15px/21px var(--font-sans)}.gift-open small{color:var(--ink-muted);font:400 13px/18px var(--font-sans)}
+.gift-tags{display:flex;flex-wrap:wrap;gap:var(--space-1);margin-bottom:2px}.gift-tags>span{display:inline-flex;align-items:center;gap:4px;border-radius:var(--radius-pill);padding:2px 10px;font:600 13px/20px var(--font-sans);background:var(--surface-sunken);color:var(--ink)}
+.gift-for.tone-lilas{background:var(--lilas)!important}.gift-for.tone-menthe{background:var(--menthe)!important}.gift-for.tone-beurre{background:var(--beurre)!important}.gift-for.tone-peche{background:var(--peche)!important}.gift-for.tone-citron{background:var(--citron)!important}
+.gift-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-2);border-top:1px solid var(--line);padding-top:var(--space-2)}.gift-actions>button{margin-left:auto}
+.gift-done{min-height:44px;padding-block:8px}
+.gift-empty{display:grid;justify-items:center;gap:var(--space-2);text-align:center;color:var(--ink-muted)}.gift-empty p{margin:0}
+.gift-linked{display:flex;align-items:center;gap:var(--space-2);margin:var(--space-2) 0 0;padding:4px 4px 4px var(--space-3);border-radius:var(--radius-md,14px);background:var(--surface-sunken);font:500 14px/20px var(--font-sans)}.gift-linked span{flex:1;min-width:0}.gift-linked .icon-button{flex:none}
+.gift-secret-choice{display:grid;gap:4px}.gift-secret-question{display:flex;align-items:center;gap:var(--space-2);margin:0;font:600 16px/22px var(--font-sans)}.gift-secret-choice .helper-copy{margin:0}
+.gift-actions-row{display:flex;gap:var(--space-2);align-items:center}.gift-actions-row .gift-save{flex:1 1 0;min-width:0;justify-content:center}.gift-save[value=secret]{order:1}.gift-save[value=shared]{order:2}.gift-actions-row .delete-button{order:0;flex:none}
+.person-gifts-body{display:grid;gap:var(--space-3)}.person-gifts-body .text-link{justify-self:center}
+/* In the agenda: the gift ideas sit with each birthday, the whole list one tap away. */
+.gift-shortcut{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:56px;padding:var(--space-2) var(--space-3);border:0;border-radius:var(--radius-lg);background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;box-shadow:var(--shadow-card);font:inherit}
+.gift-shortcut-icon{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--beurre)}.gift-shortcut-text{display:grid;flex:1;min-width:0}.gift-shortcut-text strong{font:600 16px/22px var(--font-sans)}.gift-shortcut-text small{font:400 13px/18px var(--font-sans);color:var(--ink-muted)}
+.birthday-item{display:flex;align-items:stretch;min-width:0;border-radius:var(--radius-lg);background:var(--surface);box-shadow:var(--shadow-card)}.birthday-list li.birthday-item .date-card{flex:1;min-width:0;box-shadow:none;background:transparent}
+.birthday-list li .birthday-gift{flex:none;position:relative;display:grid;place-items:center;width:52px;min-height:44px;margin:var(--space-2) var(--space-2) var(--space-2) 0;padding:0;border:0;border-left:1px solid var(--line);background:none;color:var(--ink-muted);cursor:pointer;border-radius:0 var(--radius-md,14px) var(--radius-md,14px) 0}
+.birthday-gift.has-ideas{color:var(--ink)}.birthday-gift b{position:absolute;top:2px;right:6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--beurre);color:var(--ink);font:700 11px/18px var(--font-sans)}
+.gift-recipients button{justify-content:center}
+/* Pet mascots (app/pet-buddy.tsx), same palette and motion rules as the plant mascots */
+.pet-hit{display:inline-flex;justify-content:center}.pet-buddy{display:block;overflow:visible;touch-action:pan-y}
+.pet-buddy .f-beurre{--pet:var(--buddy-beurre)}.pet-buddy .f-peche{--pet:var(--buddy-peche)}.pet-buddy .f-lavande{--pet:var(--buddy-lavande)}.pet-buddy .f-rose{--pet:var(--buddy-rose)}.pet-buddy .f-menthe{--pet:var(--buddy-menthe)}.pet-buddy .f-lilas{--pet:var(--buddy-lilas)}
+.pet-buddy [class*=f-]{fill:var(--pet)}.pet-buddy .pet-tail{fill:none;stroke:var(--pet);stroke-width:11;stroke-linecap:round}
+.pet-buddy .pet-ear{stroke:var(--pet);stroke-width:6;stroke-linejoin:round}.pet-buddy .pet-inner-ear{fill:var(--buddy-rose)}
+.pet-buddy .pet-paw,.pet-buddy .pet-snout{fill:var(--eye)}.pet-buddy .pet-paw{opacity:.9}
+.pet-buddy .pet-shade,.pet-buddy .pet-patch{fill:var(--pupil);opacity:.13}.pet-buddy .pet-shadow{fill:var(--pupil);opacity:.12}
+.pet-buddy .pet-stripe{fill:none;stroke:var(--pupil);stroke-width:3;stroke-linecap:round;opacity:.18}
+.pet-buddy .pet-whisker{fill:none;stroke:var(--pupil);stroke-width:2;stroke-linecap:round;opacity:.45}
+.pet-buddy .pet-line{fill:none;stroke:var(--pupil);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.pet-buddy .pet-nose{fill:var(--pupil)}.pet-buddy .pet-tongue{fill:var(--heart);opacity:.75}
+.pet-buddy .eye,.pet-buddy .glint{fill:var(--eye)}.pet-buddy .pupil{fill:var(--pupil)}.pet-buddy .heart-eye,.pet-buddy .pl-hearts path{fill:var(--heart)}.pet-buddy .cheek{fill:var(--heart);opacity:.3}.pet-buddy .pet-tear{fill:var(--water);animation:pl-tear 1.6s ease-in 2 both}
+.pet-buddy .pet-pupil{transition:transform 120ms ease-out}.pet-buddy .pet-look{animation:pet-look 2.2s ease-in-out .3s 2}
+.pet-buddy .pl-hearts path{transform-box:fill-box;animation:pl-float 1.4s ease-out 1 both}
+.pet-buddy .pet-tail{transform-box:view-box;transform-origin:88px 106px;animation:pet-wag .4s ease-in-out 6 alternate}.pet-cat .pet-tail{transform-origin:86px 112px;animation:pet-swish 1.2s ease-in-out 3 alternate}
+.pet-buddy.mood-sad .pet-tail,.pet-buddy.mood-want .pet-tail{animation:none}.pet-buddy .pet-ears.droop{transform:translateY(4px)}
+.pet-buddy .pet-body{transform-box:view-box;transform-origin:60px 126px}.pet-buddy.poked .pet-body,.pet-buddy.mood-love .pet-body{animation:pl-bounce .7s cubic-bezier(.3,1.6,.5,1) 1}
+@keyframes pet-look{0%,100%{transform:translate(0,0)}20%,35%{transform:translate(-3.5px,0)}55%,70%{transform:translate(3.5px,-1px)}85%{transform:translate(0,2px)}}
+@keyframes pet-wag{from{transform:rotate(-10deg)}to{transform:rotate(12deg)}}
+@keyframes pet-swish{from{transform:rotate(-6deg)}to{transform:rotate(8deg)}}
+@media (prefers-reduced-motion:reduce){.pet-buddy *{animation:none!important;transition:none!important}}
+.pets-space{display:grid;gap:var(--space-4);min-width:0}.pets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:var(--space-3)}
+.pet-card{min-width:0;display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-5);border-radius:var(--radius-lg);background:var(--surface);box-shadow:var(--shadow-card)}
+.pet-card>header{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-2)}.pet-card>header span{color:var(--ink-muted);font:600 14px/20px var(--font-sans)}.pet-card>header h2{margin:0;overflow-wrap:anywhere}
+.pet-visual{position:relative;display:flex;flex-direction:column;align-items:center;gap:var(--space-2);padding:var(--space-3);border-radius:var(--radius-lg)}
+.pet-visual{background:var(--surface-sunken)}
+.pet-tag{position:absolute;right:var(--space-3);bottom:var(--space-3)}
+.pet-card>footer{display:flex;justify-content:space-between;align-items:center;gap:var(--space-2);color:var(--ink-muted);font-size:14px}
+.pet-card .plant-care-row .care-icon{font-size:20px}
+.pet-duo{display:flex;justify-content:center;gap:var(--space-3)}.pet-preview{display:flex;justify-content:center}
+.pet-tones{display:flex;flex-wrap:wrap;gap:var(--space-2)}.pet-swatch{min-height:44px;padding:0 var(--space-4);border-radius:var(--radius-pill);color:var(--pupil);font:600 15px/20px var(--font-sans);border:2px solid transparent}
+.pet-swatch.pet-tone-beurre{background:var(--buddy-beurre)}.pet-swatch.pet-tone-peche{background:var(--buddy-peche)}.pet-swatch.pet-tone-lavande{background:var(--buddy-lavande)}.pet-swatch.pet-tone-rose{background:var(--buddy-rose)}.pet-swatch.pet-tone-menthe{background:var(--buddy-menthe)}.pet-swatch.pet-tone-lilas{background:var(--buddy-lilas)}
+.pet-swatch[aria-pressed=true]{border-color:var(--pupil)}
+.pet-intervals{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,180px),1fr));gap:var(--space-3)}
+.birthday-circles{flex-wrap:wrap}.birthday-circles button{flex:1 1 auto;justify-content:center;white-space:nowrap}
+.agenda-of{margin:0 0 calc(var(--space-2) * -1);font:600 14px/18px var(--font-sans);color:var(--ink-muted)}
+.due-presets{margin-top:calc(var(--space-2) * -1)}
+.pet-appointments{display:grid;gap:var(--space-2)}.pet-appointments .text-link{justify-self:start;display:inline-flex;align-items:center;gap:var(--space-2)}.pet-appointment{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:44px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:var(--surface-sunken);color:var(--ink);text-align:left}.pet-appointment span{display:grid;min-width:0}.pet-appointment small{color:var(--ink-muted)}
+.holiday-filter.couple-filter[aria-pressed=true]{background:var(--heart-soft)}
+.couple-dates small{display:block}
+/* Priority groceries come first in the list, flagged in words, not only by colour. */
+.shopping-priority{display:inline-flex;align-items:center;gap:4px;align-self:flex-start;padding:2px 8px;border-radius:var(--radius-pill);background:var(--heart-soft);color:var(--ink);font:600 12px/16px var(--font-sans)}
+/* In-page date picker (app/date-field.tsx) */
+.date-field{position:relative;display:block;width:100%;min-width:0}
+.date-trigger{text-align:left;cursor:pointer}.date-trigger:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.date-picker{position:absolute;z-index:30;top:calc(100% + var(--space-2));left:0;display:grid;gap:var(--space-2);width:min(320px,calc(100vw - 32px));padding:var(--space-3);border-radius:var(--radius-lg);background:var(--surface);box-shadow:var(--shadow-card),0 0 0 1.5px var(--line);color:var(--ink);font:400 15px/20px var(--font-sans)}
+.date-picker-head{display:grid;grid-template-columns:44px minmax(0,1fr) auto 44px;gap:var(--space-1);align-items:center}
+.date-picker-head select{min-height:44px;min-width:0;padding:0 var(--space-2);border:1.5px solid var(--line);border-radius:var(--radius-md);background:var(--surface);color:var(--ink);font:600 15px/20px var(--font-sans);text-transform:capitalize}
+.date-picker-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
+.date-picker-weekday{text-align:center;color:var(--ink-muted);font:600 12px/24px var(--font-sans)}
+.date-picker-grid button{min-height:42px;min-width:0;padding:0;border:0;border-radius:var(--radius-pill);background:transparent;color:var(--ink);font:500 15px/20px var(--font-sans);cursor:pointer}
+.date-picker-grid button.is-today{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.date-picker-grid button[aria-pressed=true]{background:var(--ink);color:var(--surface)}
+.date-picker-grid button:disabled{opacity:.3;cursor:default}
+.date-picker-grid button:focus-visible,.date-picker-head select:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.date-picker-foot{display:flex;justify-content:space-between;gap:var(--space-2)}.date-picker-foot:empty{display:none}
+/* Pets keep their own colour on the home page: a neutral card, never the mint plant card (a mint pet vanished on it). */
+.home-pets .plant-parade>button{background:var(--surface);box-shadow:var(--shadow-card)}
+/* Extra calendar landmarks: their own pastels, kept apart from the partners', « nous deux » and the other landmarks. */
+:root{--fete-juive:#c6e3f7;--fete-monde:#f3dcc0;--fete-pays:#dcd8d0}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--fete-juive:#1d3a4d;--fete-monde:#4a3720;--fete-pays:#3a3833}}
+[data-theme=dark]{--fete-juive:#1d3a4d;--fete-monde:#4a3720;--fete-pays:#3a3833}
+.reference-jewish{--reference-tone:var(--fete-juive);background:var(--fete-juive)}.reference-world{--reference-tone:var(--fete-monde);background:var(--fete-monde)}.reference-abroad{--reference-tone:var(--fete-pays);background:var(--fete-pays)}
+
+
+/* Birthdays and « Notre histoire »: coloured panels and little calendar leaves, readable at a glance. */
+.date-panel{display:flex;flex-direction:column;gap:var(--space-3)}.birthday-panel{background:var(--heart-soft)}.couple-panel{background:var(--lilas)}
+.date-panel .life-filters>button:not(.selected){background:var(--surface)}
+.date-panel .life-filters{scrollbar-width:none;margin-inline:calc(-1 * var(--space-5));padding-inline:var(--space-5);scroll-padding-inline:var(--space-5)}.date-panel .life-filters::-webkit-scrollbar{display:none}
+.birthday-list li .date-card{background:var(--surface)}.birthday-panel .date-card em{background:var(--heart-soft);color:var(--ink)}
+.date-cards{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-2);grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))}
+.date-card{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:64px;padding:var(--space-3);border-radius:var(--radius-lg);border:0;background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;box-shadow:var(--shadow-card)}
+.date-leaf{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;width:52px;height:52px;border-radius:var(--radius-md);background:var(--leaf,var(--rose));color:var(--ink)}
+.date-leaf b{font:700 20px/22px var(--font-sans)}.date-leaf small{font:600 12px/14px var(--font-sans);text-transform:uppercase;letter-spacing:.02em}
+.date-card.tone-rose{--leaf:var(--rose)}.date-card.tone-beurre{--leaf:var(--beurre)}.date-card.tone-menthe{--leaf:var(--menthe)}.date-card.tone-citron{--leaf:var(--citron)}.date-card.tone-lilas{--leaf:var(--lilas)}.date-card.tone-peche{--leaf:var(--peche)}
+.date-card-text{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.date-card-text strong{font:600 16px/22px var(--font-sans);overflow-wrap:anywhere}.date-card-text small{font:400 14px/19px var(--font-sans);color:var(--ink-muted)}
+.date-card em{flex:none;font:600 14px/18px var(--font-sans);font-style:normal;padding:4px var(--space-3);border-radius:var(--radius-pill);background:var(--surface-sunken);white-space:nowrap}
+/* Countdown cards rotate through four pastels so two moments side by side never look alike. */
+.countdown-card:nth-child(4n+1){background:var(--beurre)}.countdown-card:nth-child(4n+2){background:var(--menthe)}.countdown-card:nth-child(4n+3){background:var(--lilas)}.countdown-card:nth-child(4n+4){background:var(--rose)}
+.budget-overview .nd-split-labels{margin-top:var(--space-5);padding-inline:var(--space-2)}
+.holiday-picker{position:relative}
+.holiday-filter.holiday-add{background:var(--surface);border:2px dashed var(--line);gap:var(--space-1)}
+.holiday-filter.holiday-add[aria-expanded=true]{border-style:solid;border-color:var(--ink)}
+.holiday-add-chevron{transition:transform 160ms ease}.holiday-add[aria-expanded=true] .holiday-add-chevron{transform:rotate(180deg)}
+.holiday-panel{position:absolute;z-index:20;top:calc(100% + var(--space-2));right:0;width:min(320px,calc(100vw - 2 * var(--space-6)));background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-lift);padding:var(--space-4);display:grid;gap:var(--space-2)}
+.holiday-panel p{font:600 13px/18px var(--font-sans);color:var(--ink-muted);margin:var(--space-1) 0 0}
+.holiday-panel>div{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.holiday-panel small{font:400 12px/16px var(--font-sans);color:var(--ink-muted);margin-top:var(--space-1)}
+.holiday-option{min-height:44px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-pill);font:600 14px/18px var(--font-sans);color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.holiday-add-chevron{transition:none}}
+.split-fieldset{display:grid;gap:var(--space-4)}.split-fieldset legend{margin-bottom:var(--space-3)}.split-fieldset>label{gap:var(--space-3)}.split-solo{margin:0}
+.gauge-wrap{display:contents}
+/* Nothing left this month: a very pale start of arc, so the gauge never looks broken. The figure still reads 0 %. */
+.gauge-empty .nd-gauge-track{stroke:color-mix(in srgb,var(--rose) 22%,var(--surface))}.gauge-empty .nd-gauge-fill{stroke:color-mix(in srgb,var(--rose) 50%,var(--surface))!important;stroke-dashoffset:130px!important}
+.template-new{margin-bottom:var(--space-4)}.template-draft{display:grid;gap:var(--space-4);margin-bottom:var(--space-5)}.template-draft-actions{display:flex;gap:var(--space-3);flex-wrap:wrap;justify-content:flex-end}
+.house-wheel .wheel-change{justify-self:center;margin:12px auto 0;display:flex}.wheel-picker{display:grid;gap:12px;margin-top:12px;padding:var(--space-4);border-radius:var(--radius-lg);background:color-mix(in srgb,var(--lilas) 22%,var(--surface))}.wheel-picker fieldset{border:0;margin:0;padding:0;display:grid;gap:8px}.wheel-picker legend{font-weight:700;margin-bottom:6px}.wheel-chips{display:flex;flex-wrap:wrap;gap:8px}.wheel-chip{min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:15px;cursor:pointer}.wheel-chip.selected{background:var(--ink);border-color:var(--ink);color:var(--surface)}.wheel-chip:disabled{opacity:.6;cursor:default}.wheel-chip:focus-visible{outline:3px solid var(--marque);outline-offset:2px}
+.event-open.day-tone-0 .nd-event-card{background:color-mix(in srgb,var(--menthe) 45%,var(--surface))}
+.event-open.day-tone-1 .nd-event-card{background:color-mix(in srgb,var(--beurre) 50%,var(--surface))}
+.event-open.day-tone-2 .nd-event-card{background:color-mix(in srgb,var(--lilas) 40%,var(--surface))}
+.event-open.day-tone-3 .nd-event-card{background:color-mix(in srgb,var(--citron) 30%,var(--surface))}
+.kids-tile{display:contents}.kids-tile .nd-tile{background:var(--citron)}
+/* Home tiles beyond the design-system tones: sky blue for shopping, so it never matches the garden. */
+.shopping-tile{display:contents;--tile-ciel:#bfe2fb}.shopping-tile .nd-tile{background:var(--tile-ciel)}
+[data-theme=dark] .shopping-tile{--tile-ciel:#1c3a55}@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .shopping-tile{--tile-ciel:#1c3a55}}
+/* Pets tile in coral, so it never matches the ideas tile (beurre). */
+.pets-tile{display:contents;--tile-corail:#ffb9ad}.pets-tile .nd-tile{background:var(--tile-corail)}
+[data-theme=dark] .pets-tile{--tile-corail:#55261f}@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .pets-tile{--tile-corail:#55261f}}
+/* Recipe import: three short entries, wrapped on small screens, 48px targets. */
+.recipe-import{background:var(--rose);border-radius:var(--radius-lg);padding:var(--space-5);display:flex;flex-direction:column;gap:var(--space-3);margin-bottom:var(--space-5);min-width:0}.recipe-import h3{display:flex;align-items:center;gap:var(--space-2);margin:0;font:700 18px/24px var(--font-sans)}.recipe-import p,.recipe-import small{color:var(--ink);line-height:20px;margin:0}.recipe-import-actions{display:flex;flex-wrap:wrap;gap:var(--space-2);min-width:0}.recipe-import-actions>.secondary,.recipe-import-actions>.photo-upload{flex:1 1 150px;justify-content:center;min-height:48px;width:auto}.recipe-import .photo-upload.is-disabled{opacity:.6;pointer-events:none}.recipe-import-link{display:flex;flex-direction:column;gap:var(--space-2)}.recipe-import-link label{display:flex;flex-direction:column;gap:var(--space-2);font:600 14px/18px var(--font-sans)}.recipe-import-link>button{align-self:flex-start;min-height:48px}.recipe-import .ai-status,.recipe-import .form-error{margin:0}.recipe-import-done{margin:0 0 var(--space-3)}.recipe-source{align-items:start}
+/* Discussion connectée : stickers du couple et cartes partagées depuis la maison. */
+.couple-sticker{position:relative;display:inline-block;vertical-align:top;line-height:0;transform:rotate(var(--sticker-tilt,0deg));animation:couple-sticker-pop 320ms cubic-bezier(.2,1.4,.4,1) both}
+.couple-sticker.still,.couple-sticker.still *{animation:none!important}
+@keyframes couple-sticker-pop{from{transform:rotate(var(--sticker-tilt,0deg)) scale(.6);opacity:0}to{transform:rotate(var(--sticker-tilt,0deg)) scale(1);opacity:1}}
+.cs-stage{position:absolute;left:0;top:0;width:200px;height:168px;transform-origin:0 0;pointer-events:none}
+.cs-scene{position:absolute;inset:0;transform:scale(1.14);transform-origin:100px 166px}
+.cs-layer{position:absolute;inset:0;width:200px;height:168px;overflow:visible}
+.cs-actor{position:absolute;display:block;line-height:0;transform-origin:50% 100%}
+.cs-actor>svg,.cs-actor .nd-plantb-wrap,.cs-actor .nd-plantb-wrap>div{display:block;width:100%;height:100%}
+.cs-actor .nd-plantb{width:100%;height:100%}
+.cs-actor .travel-buddy{position:static;display:block;width:100%;height:100%;transform:none}
+.couple-sticker .moment-pupils{animation-iteration-count:1}
+.cs-word{position:absolute;left:0;right:0;top:0;display:flex;justify-content:center;line-height:normal}
+.cs-word .nd-sticker{font-size:22px;line-height:26px;box-shadow:0 2px 0 rgba(29,26,35,.14),inset 0 0 0 2px var(--pupil)}
+.cs-word-long .nd-sticker{font-size:18px;line-height:24px;padding-inline:var(--space-3)}
+.couple-sticker .cs-tear,.couple-sticker .cs-water{fill:var(--water)}
+.couple-sticker .cs-heart{fill:var(--marque)}
+.couple-sticker .cs-sparkle{fill:var(--buddy-citron);stroke:var(--pupil);stroke-width:1.5}
+.couple-sticker :is(.cs-zzz,.cs-question){font:800 20px/1 var(--font-sans);fill:var(--pupil)}.couple-sticker .cs-question{font-size:34px}
+.couple-sticker .cs-moon{fill:var(--buddy-beurre);stroke:var(--pupil);stroke-width:1.5}
+.couple-sticker .cs-sun{fill:var(--buddy-beurre);stroke:var(--pupil);stroke-width:2}
+.couple-sticker :is(.cs-cup,.cs-plate,.cs-cloud,.cs-plane,.cs-popcorn){fill:var(--eye);stroke:var(--pupil);stroke-width:2.5;stroke-linejoin:round}
+.couple-sticker :is(.cs-stroke,.cs-steam,.cs-dash,.cs-scribble,.cs-ray,.cs-dotted,.cs-red-stroke,.cs-leaf-stroke){fill:none;stroke-linecap:round;stroke-linejoin:round}
+.couple-sticker :is(.cs-stroke,.cs-ray){stroke:var(--pupil);stroke-width:2.5}
+.couple-sticker .cs-steam{stroke:var(--pupil);stroke-width:2;opacity:.55}
+.couple-sticker .cs-dash{stroke:var(--pupil);stroke-width:4;opacity:.6}
+.couple-sticker .cs-scribble{stroke:var(--pupil);stroke-width:3}
+.couple-sticker .cs-dotted{stroke:var(--pupil);stroke-width:3;stroke-dasharray:2 7;opacity:.7}
+.couple-sticker .cs-food{fill:var(--buddy-peche)}.couple-sticker .cs-red{fill:var(--marque)}.couple-sticker .cs-leaf{fill:var(--leaf)}
+.couple-sticker .cs-leaf-stroke{stroke:var(--leaf-deep);stroke-width:3}
+.couple-sticker .cs-carrot{fill:var(--buddy-peche);stroke:var(--pupil);stroke-width:1.5;stroke-linejoin:round}
+.couple-sticker .cs-can{fill:var(--buddy-lilas);stroke:var(--pupil);stroke-width:2.5;stroke-linejoin:round}
+.couple-sticker .cs-red-stroke{stroke:var(--marque);stroke-width:3}
+.couple-sticker .cs-cream{fill:var(--buddy-beurre);stroke:var(--pupil);stroke-width:1.5}
+.couple-sticker .cs-bowl{fill:var(--buddy-lavande);stroke:var(--pupil);stroke-width:2.5;stroke-linejoin:round}.couple-sticker .cs-bowl-in{fill:var(--eye);stroke:var(--pupil);stroke-width:2.5}
+.couple-sticker .cs-paw{fill:var(--pupil);opacity:.35}
+.cs-pet .f-beurre{--pet:var(--buddy-beurre)}.cs-pet .f-peche{--pet:var(--buddy-peche)}.cs-pet .f-lavande{--pet:var(--buddy-lavande)}.cs-pet .f-rose{--pet:var(--buddy-rose)}.cs-pet .f-menthe{--pet:var(--buddy-menthe)}.cs-pet .f-lilas{--pet:var(--buddy-lilas)}.cs-pet .f-citron{--pet:var(--buddy-citron)}
+.cs-pet [class*=f-]{fill:var(--pet)}
+.cs-pet .pet-tail{fill:none;stroke:var(--pet);stroke-width:11;stroke-linecap:round}
+.cs-pet .pet-ear{stroke:var(--pet);stroke-width:6;stroke-linejoin:round}
+.cs-pet .pet-inner-ear{fill:var(--buddy-rose)}
+.cs-pet .pet-paw,.cs-pet .pet-snout{fill:var(--eye)}
+.cs-pet .pet-shade,.cs-pet .pet-patch{fill:var(--pupil);opacity:.13}
+.cs-pet .pet-stripe{fill:none;stroke:var(--pupil);stroke-width:3;stroke-linecap:round;opacity:.18}
+.cs-pet .pet-whisker{fill:none;stroke:var(--pupil);stroke-width:2;stroke-linecap:round;opacity:.45}
+.cs-pet .pet-line{fill:none;stroke:var(--pupil);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.cs-pet .pet-nose,.cs-pet .pupil{fill:var(--pupil)}
+.cs-pet .pet-tongue{fill:var(--heart);opacity:.75}
+.cs-pet .eye,.cs-pet .glint{fill:var(--eye)}
+.cs-pet .heart-eye{fill:var(--heart)}
+.cs-pet .cheek{fill:var(--heart);opacity:.3}
+.chat-emoji-picker header{flex-wrap:wrap}
+.chat-emoji-tabs{display:flex;gap:var(--space-1);padding:var(--space-1);border-radius:var(--radius-pill);background:var(--surface-sunken);order:3;flex:1 0 100%}.chat-emoji-tabs button{flex:1}.chat-emoji-picker header>.icon-button{margin-inline-start:auto}
+.chat-emoji-tabs button{min-height:44px;padding:0 var(--space-4);border-radius:var(--radius-pill);font:600 14px/1 var(--font-sans);background:transparent;color:var(--ink);white-space:nowrap}
+.chat-emoji-tabs button[aria-pressed=true]{background:var(--ink);color:var(--on-ink)}
+.chat-emoji-picker:has(.chat-sticker-grid){max-height:min(380px,45dvh)}
+.chat-sticker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:var(--space-2);margin-top:var(--space-2)}
+.chat-sticker-grid button{min-height:88px;padding:var(--space-1);border-radius:var(--radius-lg);background:transparent;display:grid;place-items:center}
+.chat-sticker-grid button:hover,.chat-sticker-grid button:focus-visible{background:var(--rose)}
+.chat-sticker-grid button:disabled{opacity:.5}
+.chat-message.chat-sticker-bubble.nd-bubble,.chat-message.chat-card-bubble.nd-bubble{background:transparent;color:var(--ink);padding:0;box-shadow:none}
+.chat-message.chat-sticker-bubble.nd-bubble{max-width:min(190px,70%)}
+.chat-message.chat-card-bubble.nd-bubble{width:min(330px,88%);max-width:min(330px,88%)}
+.chat-sticker-bubble footer,.chat-card-bubble footer{width:fit-content;margin-inline-start:auto;padding:0 var(--space-2);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink-muted)}
+.chat-message.nd-bubble-them.chat-sticker-bubble footer,.chat-message.nd-bubble-them.chat-card-bubble footer{margin-inline-start:0}
+.house-card{position:relative;display:grid;gap:var(--space-2);padding:var(--space-5);border-radius:var(--radius-lg);color:var(--ink);overflow:hidden;font:500 15px/1.4 var(--font-sans);text-align:start;min-width:0}
+.house-card.nd-tone-sapin{color:var(--on-sapin)}
+.house-card-label{justify-self:start;padding:var(--space-1) var(--space-3);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink);font:600 12px/16px var(--font-sans)}
+.house-card-title{margin:0;font:700 20px/1.2 var(--font-sans);overflow-wrap:anywhere;padding-inline-end:56px}
+.house-card-title em{font-family:var(--font-sans);font-style:normal;font-weight:600}
+.house-card-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-1)}
+.house-card-list li{display:flex;align-items:center;gap:var(--space-2);min-width:0;padding:var(--space-1) var(--space-3);border-radius:var(--radius-md);background:var(--surface);color:var(--ink)}
+.house-card-list li span:nth-child(2){flex:1;min-width:0;overflow-wrap:anywhere}
+.house-card-list small,.house-card-meta{font:500 13px/18px var(--font-sans)}
+.house-card-meta{margin:0}
+.house-card-amount{margin:0;font:800 30px/1.1 var(--font-sans);font-variant-numeric:tabular-nums}
+.house-card-note{margin:0;font:500 15px/22px var(--font-sans);overflow-wrap:anywhere}
+.house-card-deco{position:absolute;top:var(--space-3);right:var(--space-3);pointer-events:none;line-height:0}
+.house-card-deco .nd-buddy{position:static}
+.house-card-plant-row{display:flex;align-items:center;gap:var(--space-3);min-width:0}
+.house-card-plant-row p{flex:1;margin:0;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:var(--surface);color:var(--ink);font:500 14px/20px var(--font-sans);min-width:0;overflow-wrap:break-word}
+.house-card-plant-row>:first-child{flex:none}
+.house-card-when{display:flex;align-items:center;gap:var(--space-3)}
+.house-card-day{display:grid;place-items:center;min-width:52px;padding:var(--space-2);border-radius:var(--radius-md);background:var(--surface);color:var(--ink)}
+.house-card-day b{font:800 22px/1 var(--font-sans)}.house-card-day small{font:600 12px/16px var(--font-sans)}
+.house-card-open{justify-self:start;display:inline-flex;align-items:center;gap:var(--space-2);min-height:44px;padding:0 var(--space-4);border-radius:var(--radius-pill);background:var(--ink);color:var(--on-ink);font:600 14px/1 var(--font-sans)}
+.house-card.nd-tone-sapin .house-card-open{background:var(--on-sapin);color:var(--sapin)}
+.house-share-dialog .dialog-inner{gap:var(--space-3)}
+.house-share-files,.house-share-grid button,.house-share-options button{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:56px;padding:var(--space-3) var(--space-4);border-radius:var(--radius-lg);text-align:start;color:var(--ink)}
+.house-share-files{background:var(--surface-sunken)}
+.house-share-files span,.house-share-grid span{display:grid;gap:2px;min-width:0}
+.house-share-options button{display:grid;gap:2px;justify-items:start}
+.house-share-files small,.house-share-grid small{font:500 13px/18px var(--font-sans);color:var(--ink)}
+.house-share-heading{margin:var(--space-2) 0 0;font:700 16px/1.3 var(--font-sans)}
+.house-share-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:var(--space-2)}
+.house-share-grid svg{flex:none}
+.house-share-options{display:grid;gap:var(--space-2);max-height:min(320px,42dvh);overflow-y:auto;overscroll-behavior:contain}
+.house-share-options button{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line)}
+.house-share-options small{font:500 13px/18px var(--font-sans);color:var(--ink-muted)}
+.house-share-options button[aria-checked=true]{background:var(--action-soft);box-shadow:inset 0 0 0 2px var(--action)}
+.house-share-note,.house-share-search{display:grid;gap:var(--space-1)}
+.house-share-back{display:inline-flex;align-items:center;gap:var(--space-2);min-height:44px}
+.house-share-dialog .house-card{max-width:360px}
+@media(prefers-reduced-motion:reduce){.couple-sticker{animation:none}}
+/* Filter rows scroll sideways without a visible scrollbar: the cut-off next pill shows there is more. */
+.life-filters{scrollbar-width:none}.life-filters::-webkit-scrollbar{display:none}
+.wheel-custom{display:flex;gap:8px;margin-top:8px}.wheel-custom input{flex:1;min-width:0;min-height:44px}.wheel-custom button{min-height:44px;white-space:nowrap}
+/* Weekly menu editor: each day is a soft card with its title inside, a pale colour per day so the week reads at a glance. */
+.menu-editor-days,.menu-editor-days>fieldset{min-width:0;margin:0;border:0}
+.menu-editor-days{padding:0}
+.menu-editor-days>fieldset{display:grid;gap:var(--space-3)}
+.menu-editor-days>fieldset>legend{float:left;width:100%;padding:0;margin:0 0 var(--space-3);font:700 17px/22px var(--font-sans);color:var(--ink)}
+.menu-editor-days>fieldset>legend+*{clear:both}
+.menu-editor-days .form-grid{min-width:0}
+.menu-editor-days>fieldset:nth-child(7n+1){background:color-mix(in srgb,var(--menthe) 40%,var(--surface))}
+.menu-editor-days>fieldset:nth-child(7n+2){background:color-mix(in srgb,var(--beurre) 45%,var(--surface))}
+.menu-editor-days>fieldset:nth-child(7n+3){background:color-mix(in srgb,var(--lilas) 40%,var(--surface))}
+.menu-editor-days>fieldset:nth-child(7n+4){background:color-mix(in srgb,var(--peche) 40%,var(--surface))}
+.menu-editor-days>fieldset:nth-child(7n+5){background:color-mix(in srgb,var(--lavande) 40%,var(--surface))}
+.menu-editor-days>fieldset:nth-child(7n+6){background:color-mix(in srgb,var(--citron) 30%,var(--surface))}
+.menu-editor-days>fieldset:nth-child(7n+7){background:color-mix(in srgb,var(--rose) 35%,var(--surface))}
+.menu-days>section:nth-child(7n+1){background:color-mix(in srgb,var(--menthe) 40%,var(--surface))}
+.menu-days>section:nth-child(7n+2){background:color-mix(in srgb,var(--beurre) 45%,var(--surface))}
+.menu-days>section:nth-child(7n+3){background:color-mix(in srgb,var(--lilas) 40%,var(--surface))}
+.menu-days>section:nth-child(7n+4){background:color-mix(in srgb,var(--peche) 40%,var(--surface))}
+.menu-days>section:nth-child(7n+5){background:color-mix(in srgb,var(--lavande) 40%,var(--surface))}
+.menu-days>section:nth-child(7n+6){background:color-mix(in srgb,var(--citron) 30%,var(--surface))}
+.menu-days>section:nth-child(7n+7){background:color-mix(in srgb,var(--rose) 35%,var(--surface))}
+.recipe-import{background:var(--rose);border-radius:var(--radius-lg);padding:var(--space-5);display:flex;flex-direction:column;gap:var(--space-3);margin-bottom:var(--space-5);min-width:0}.recipe-import h3{display:flex;align-items:center;gap:var(--space-2);margin:0;font:700 18px/24px var(--font-sans)}.recipe-import p,.recipe-import small{color:var(--ink);line-height:20px;margin:0}.recipe-import-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2);min-width:0}.recipe-import-actions>.secondary,.recipe-import-actions>.photo-upload{display:flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:48px;width:100%;min-width:0;padding-inline:var(--space-3);white-space:nowrap}.recipe-import .photo-upload.is-disabled{opacity:.6;pointer-events:none}.recipe-import-link{display:flex;flex-direction:column;gap:var(--space-2)}.recipe-import-link label{display:flex;flex-direction:column;gap:var(--space-2);font:600 14px/18px var(--font-sans)}.recipe-import-link>button{align-self:flex-start;min-height:48px}.recipe-import .ai-status,.recipe-import .form-error{margin:0}.recipe-import-done{margin:0 0 var(--space-3)}.recipe-source{align-items:start}
+.diet-choices{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--space-3)}.diet-choices legend{font:600 14px/18px var(--font-sans);padding:0;margin-bottom:var(--space-3)}.diet-chips{display:flex;flex-wrap:wrap;gap:var(--space-2);min-width:0}.diet-chips>button{font:600 14px/18px var(--font-sans);min-height:44px;max-width:100%;display:inline-flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-4);background:var(--surface);color:var(--ink);border-radius:var(--radius-pill);box-shadow:inset 0 0 0 1.5px var(--line);text-align:left;overflow-wrap:anywhere;transition:background-color 180ms ease,color 180ms ease}.diet-chips>.selected{background:var(--ink);color:var(--on-ink);box-shadow:none}.diet-chips>button:focus-visible{outline:3px solid var(--action);outline-offset:2px}.diet-partner{display:flex;flex-direction:column;gap:var(--space-1);padding:var(--space-4);background:var(--surface-sunken);border-radius:var(--radius-md);overflow-wrap:anywhere}.diet-warnings{background:var(--beurre);color:var(--ink);padding:var(--space-4);border-radius:var(--radius-md);display:flex;flex-direction:column;gap:var(--space-2);overflow-wrap:anywhere}.diet-warnings h3{font:700 16px/22px var(--font-sans)}.diet-warnings ul{margin:0;padding-left:var(--space-5);display:flex;flex-direction:column;gap:var(--space-1)}.diet-warnings small{font:500 13px/18px var(--font-sans)}
+@media (prefers-reduced-motion:reduce){.diet-chips>button{transition:none}}
+/* 20 octobre : « Ce que je mange » — titres de champ au même niveau, « (facultatif) » sur la ligne du libellé, espacements réguliers */
+.diet-settings>.form{gap:var(--space-6);margin-top:var(--space-2)}.diet-settings .diet-choices legend,.diet-settings .diet-field-title{display:block;font:600 16px/22px var(--font-sans);color:var(--ink);padding:0;margin:0 0 var(--space-3)}.diet-settings .diet-field{gap:0}.diet-settings .diet-field .optional{font:400 14px/22px var(--font-sans);color:var(--ink-muted)}.diet-settings .diet-field small{display:block;margin-top:var(--space-2);font-size:13px;line-height:18px}.diet-settings>.diet-partner{margin-top:var(--space-2)}
+.house-share-sweet{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:56px;padding:var(--space-3) var(--space-4);border-radius:var(--radius-lg);text-align:start;color:var(--ink)}
+.house-share-sweet span{display:grid;gap:2px;min-width:0}.house-share-sweet small{font:500 13px/18px var(--font-sans);color:var(--ink)}.house-share-sweet svg{flex:none}
+.house-share-sweet-list button{display:block;width:100%;text-align:start;color:var(--ink);box-shadow:none;font:600 16px/22px var(--font-sans)}
+.house-share-sweet-list button.nd-tone-rose{background:var(--rose)}.house-share-sweet-list button.nd-tone-lilas{background:var(--lilas)}.house-share-sweet-list button.nd-tone-menthe{background:var(--menthe)}.house-share-sweet-list button.nd-tone-beurre{background:var(--beurre)}.house-share-sweet-list button.nd-tone-peche{background:var(--peche)}.house-share-sweet-list button.nd-tone-lavande{background:var(--lavande)}.house-share-sweet-list button.nd-tone-citron{background:var(--citron)}
+.house-share-sweet-list button[aria-checked=true]{box-shadow:inset 0 0 0 3px var(--ink)}
+.house-share-add-note{justify-self:start;align-self:flex-start}.house-share-add-note .optional{font-size:14px}
+.house-share-dialog .chat-upload-actions{position:sticky;bottom:0;z-index:1;padding-block:var(--space-3) var(--space-1);background:var(--surface)}
+/* Petit mot doux : une petite enveloppe aux coins très arrondis, rabat en V et sceau en cœur. */
+.house-card-mot{border-radius:var(--radius-xl);padding:68px var(--space-5) calc(var(--space-5) + 34px);justify-items:center;text-align:center;box-shadow:inset 0 0 0 1.5px rgba(29,26,35,.12)}
+.mot-flap{position:absolute;inset:0 0 auto;width:100%;height:60px;pointer-events:none}
+.mot-flap-fill{fill:rgba(255,255,255,.38)}
+.mot-flap-line{fill:none;stroke:rgba(29,26,35,.32);stroke-width:1.5;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.mot-seal{position:absolute;top:40px;left:50%;width:34px;height:34px;margin-inline-start:-17px;display:grid;place-items:center;border-radius:50%;background:var(--surface);box-shadow:0 2px 0 rgba(29,26,35,.12)}
+.mot-seal svg{width:18px;height:18px;fill:var(--marque)}
+.house-card-mot .house-card-label{justify-self:center;margin-top:var(--space-2)}
+.mot-text{margin:0;font:700 19px/26px var(--font-sans);overflow-wrap:anywhere;text-wrap:balance}
+.house-card-mot .house-card-note{font-size:15px}
+.house-card-mot .house-card-deco{top:auto;bottom:var(--space-3);right:var(--space-4);display:flex;align-items:center;padding:2px 8px;border-radius:var(--radius-pill);background:var(--surface)}
+.house-card-mot .house-card-deco .nd-buddy+.nd-buddy{margin-inline-start:-8px}
+@media(prefers-reduced-motion:reduce){.couple-sticker,.couple-sticker *{animation:none!important}}
+
+/* Retouches du 20 octobre : rythme des cartes, stickers resserrés, typo Figtree, aucun débordement horizontal. */
+.chat-messages{overflow-x:hidden}
+.chat-message.chat-card-bubble footer{margin-top:var(--space-2)}
+.chat-message.chat-card-bubble footer>button,.chat-message.chat-sticker-bubble footer>button{min-height:36px;min-width:36px}
+/* Stickers : l’heure se range à côté du dessin, pas dessous, pour que deux stickers se suivent de près. */
+.chat-message.chat-sticker-bubble.nd-bubble{position:relative;padding-inline:12px}
+.chat-message.chat-sticker-bubble footer{position:absolute;bottom:0;margin:0;inset-inline-end:calc(100% - 8px);width:max-content;white-space:nowrap}
+.chat-message.nd-bubble-them.chat-sticker-bubble footer{inset-inline:calc(100% - 8px) auto}
+.chat-messages>div:has(>.chat-card-bubble){margin-block:var(--space-2)}
+
+.chat-message.chat-sticker-bubble .couple-sticker{display:block}
+.house-card{gap:var(--space-3)}
+.house-card-label{font:600 13px/16px var(--font-sans)}
+.house-card-title{font:700 20px/26px var(--font-sans)}
+.house-card-meta{font:500 13px/18px var(--font-sans)}
+.house-card-deco .nd-sticker,.cs-word .nd-sticker{font-family:var(--font-sans);font-style:normal;font-weight:800;letter-spacing:-.01em;font-variation-settings:normal}
+.cs-word .nd-sticker{font-size:20px;line-height:26px}.cs-word-long .nd-sticker{font-size:17px;line-height:22px}
+.house-share-weeks{display:flex;gap:var(--space-2);overflow-x:auto;scrollbar-width:none;padding-block:2px;margin-inline:-2px;padding-inline:2px}.house-share-weeks::-webkit-scrollbar{display:none}
+.house-share-weeks button{flex:none;display:grid;gap:2px;justify-items:start;min-height:52px;padding:var(--space-2) var(--space-4);border-radius:var(--radius-md);background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line);text-align:start}
+.house-share-weeks strong{font:600 14px/18px var(--font-sans)}.house-share-weeks small{font:500 12px/16px var(--font-sans);color:var(--ink-muted)}
+.house-share-weeks button[aria-checked=true]{background:var(--action-soft);box-shadow:inset 0 0 0 2px var(--action)}
+.house-share-or{margin:var(--space-1) 0 0;font:600 14px/18px var(--font-sans);color:var(--ink-muted)}
+.house-share-empty{display:grid;justify-items:center;gap:var(--space-3);padding:var(--space-5);border-radius:var(--radius-lg);text-align:center;color:var(--ink)}
+.house-share-empty .nd-buddy{position:static}
+.house-share-empty p{margin:0;font:500 16px/22px var(--font-sans);max-width:30ch}
+.house-share-empty .primary{display:inline-flex;align-items:center;gap:var(--space-2);min-height:48px}
+/* Nos émojis : dessinés dans la ligne de texte, un peu plus grands qu’une lettre. */
+.nd-emoji{display:inline-block;width:1.35em;height:1.35em;vertical-align:-.3em;line-height:0}
+.nd-emoji svg{width:100%;height:100%;overflow:visible}
+.nd-emoji .ne-out{stroke:var(--pupil);stroke-width:1.6;stroke-linejoin:round}
+.nd-emoji .ne-line{fill:none;stroke:var(--pupil);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.nd-emoji .ne-thin{stroke-width:1.1}.nd-emoji .ne-steam{opacity:.55}.nd-emoji .ne-ray{stroke:var(--pupil)}
+.nd-emoji .ne-eye,.nd-emoji .f-eye{fill:var(--eye)}.nd-emoji .ne-pupil{fill:var(--pupil)}
+.nd-emoji .f-lavande{fill:var(--buddy-lavande)}.nd-emoji .f-peche{fill:var(--buddy-peche)}.nd-emoji .f-rose{fill:var(--buddy-rose)}.nd-emoji .f-beurre{fill:var(--buddy-beurre)}.nd-emoji .f-menthe{fill:var(--buddy-menthe)}.nd-emoji .f-lilas{fill:var(--buddy-lilas)}.nd-emoji .f-citron{fill:var(--buddy-citron)}.nd-emoji .f-leaf{fill:var(--leaf)}.nd-emoji .f-heart{fill:var(--marque)}
+.chat-message p.chat-emoji-only{font-size:40px;line-height:48px}
+.chat-emoji-heading{margin:var(--space-2) 0 var(--space-1);font:600 13px/16px var(--font-sans);color:var(--ink-muted)}.chat-emoji-sections>.chat-emoji-heading:first-child{margin-top:0}
+.chat-nd-emoji-grid .nd-emoji{width:30px;height:30px;vertical-align:middle}
+.chat-nd-preview{display:flex;align-items:center;gap:var(--space-2);margin:0 0 var(--space-2);padding:var(--space-1) var(--space-3);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink);font:500 15px/22px var(--font-sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.chat-nd-preview>span:first-child{font:600 12px/16px var(--font-sans);color:var(--ink-muted)}
+/* 20 octobre : teintes beaucoup plus pâles ; un fin contour de la même famille garde les jours différenciés. */
+.event-open.day-tone-0 .nd-event-card{background:color-mix(in srgb,var(--menthe) 20%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--menthe) 65%,var(--surface))}
+.event-open.day-tone-1 .nd-event-card{background:color-mix(in srgb,var(--beurre) 22%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--beurre) 75%,var(--surface))}
+.event-open.day-tone-2 .nd-event-card{background:color-mix(in srgb,var(--lilas) 18%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--lilas) 65%,var(--surface))}
+.event-open.day-tone-3 .nd-event-card{background:color-mix(in srgb,var(--citron) 14%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--citron) 55%,var(--surface))}
+
+/* 20 octobre : états vides harmonisés, filtres du carnet plus légers, suppression d’un article */
+.empty-state{gap:var(--space-3)}
+.empty-state>.empty-art{display:grid;place-items:center;max-width:132px}
+.empty-state>h2,.empty-state>h3{font:700 18px/24px var(--font-sans);text-wrap:balance;margin:0}
+.empty-state>p{text-wrap:pretty;margin:0}
+.empty-state>.empty-start{margin-top:var(--space-1);white-space:normal;text-align:center;max-width:100%}
+.quick-added{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);min-width:0}
+.quick-added>span{font:600 13px/18px var(--font-sans);color:var(--ink-muted)}
+.quick-added>button{display:inline-flex;align-items:center;gap:var(--space-2);min-height:44px;max-width:100%;padding:var(--space-2) var(--space-3) var(--space-2) var(--space-4);border-radius:var(--radius-pill);background:var(--surface-sunken);font:600 14px/18px var(--font-sans);color:var(--ink);overflow-wrap:anywhere;text-align:left}
+.recipe-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-2);align-items:center;min-width:0}
+.recipe-search-row .search-field input{min-width:0;width:100%}
+.origin-select{position:relative;display:inline-flex;align-items:center;min-width:0}
+.origin-select select{appearance:none;-webkit-appearance:none;min-height:44px;max-width:42vw;padding:0 38px 0 var(--space-4);border:0;border-radius:var(--radius-pill);background:var(--surface-sunken);font:600 16px/20px var(--font-sans);color:var(--ink);text-overflow:ellipsis;width:auto}
+.origin-select>svg{position:absolute;right:var(--space-3);pointer-events:none;color:var(--ink)}
+.origin-select.active select{background:var(--ink);color:var(--on-ink)}
+.origin-select.active>svg{color:var(--on-ink)}
+.filter-chips{display:flex;flex-wrap:wrap;gap:var(--space-2);min-width:0;padding:var(--space-1) 0}
+.filter-chips>button{position:relative;display:inline-flex;align-items:center;min-height:36px;padding:var(--space-1) var(--space-3);border-radius:var(--radius-pill);background:var(--surface-sunken);font:600 14px/18px var(--font-sans);color:var(--ink);white-space:nowrap;transition:background-color 180ms ease,color 180ms ease}
+.filter-chips>button::after{content:'';position:absolute;inset:-4px 0}
+.filter-chips>button.selected{background:var(--ink);color:var(--on-ink)}
+@media (prefers-reduced-motion:reduce){.filter-chips>button{transition:none}}
+.recipe-search-row .search-field{min-height:44px;padding:0 var(--space-2) 0 var(--space-4);border-radius:var(--radius-pill);background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line);color:var(--ink-muted)}
+.recipe-search-row .search-field:focus-within{box-shadow:inset 0 0 0 2px var(--focus)}
+.recipe-search-row .search-field input[type=search]{border:0;background:transparent;box-shadow:none;outline:none;padding:0;min-height:42px;border-radius:0;font:400 16px/22px var(--font-sans);color:var(--ink)}
+.swipe-stage{overflow:visible}
+.swipe-card[data-choice=yes]{box-shadow:var(--shadow-lift),0 0 0 3px color-mix(in srgb,var(--heart) 55%,transparent)}
+.swipe-card[data-choice=no]{box-shadow:var(--shadow-lift),0 0 0 3px var(--line)}
+/* « Le menu qui nous met d’accord » : respirations régulières sur téléphone */
+.meal-match-intro{gap:var(--space-2);margin-top:var(--space-2);min-width:0}
+.meal-match-intro>h2{font:700 22px/28px var(--font-sans);margin:0;text-wrap:balance}
+.meal-match-intro>p{font:400 15px/22px var(--font-sans);margin:0;text-wrap:pretty}
+.meal-match-intro>small{align-self:flex-start;max-width:100%;padding:var(--space-1) var(--space-3);border-radius:var(--radius-pill);background:var(--heart-soft);font:600 13px/18px var(--font-sans);color:var(--ink);overflow-wrap:anywhere}
+.meal-match-intro>.nd-match{margin-bottom:var(--space-2)}
+.meals-space>.recipe-grid{margin-top:var(--space-1)}
+.match-empty{padding:var(--space-6) var(--space-5)}
+.match-empty .empty-art{width:80px;height:80px;border-radius:var(--radius-pill);background:var(--heart-soft)}
+.match-empty .meal-empty{font-size:40px}
+@media (max-width:420px){.recipe-tile>div:last-child{padding:var(--space-4) var(--space-5) var(--space-5)}.meal-match-intro>.nd-match{max-width:100%}}

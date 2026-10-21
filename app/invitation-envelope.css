@@ -1,0 +1,82 @@
+/* Invitation en lettre-cœur pliée en enveloppe (app/invitation-envelope.tsx).
+   Toutes les mesures sont en cqw : le dessin garde ses proportions de 260 à 340 px. */
+.inv-env{container-type:inline-size;width:100%;max-width:340px;margin-inline:auto;
+ --env-rose:var(--rose);--env-deep:color-mix(in srgb,var(--rose) 70%,var(--heart));--env-light:color-mix(in srgb,var(--rose) 45%,var(--surface));--env-line:color-mix(in srgb,var(--heart) 45%,var(--rose))}
+.inv-env-body{position:relative;height:62.5cqw;margin-top:3cqw;perspective:900px}
+.inv-env.is-open .inv-env-body,.inv-env.reserve .inv-env-body{margin-top:49cqw}
+.inv-env-back,.inv-env-pocket{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.inv-env-back{z-index:0}.inv-env-back rect{fill:var(--env-deep)}
+.inv-env-pocket{z-index:3;filter:drop-shadow(0 -1px 0 color-mix(in srgb,var(--heart) 18%,transparent))}
+.inv-env-pocket path{fill:var(--env-rose);stroke:var(--env-line);stroke-width:1.5;stroke-linejoin:round}
+.inv-env-pocket .inv-env-tab{fill:none;stroke-width:3;stroke-linecap:round}
+.inv-env-flap{position:absolute;top:0;left:0;width:100%;height:38cqw;z-index:4;transform-origin:50% 0;transform:rotateX(0deg)}
+.inv-env-flap svg{display:block;width:100%;height:100%;overflow:visible}
+.inv-env-flap path{fill:var(--env-light);stroke:var(--env-line);stroke-width:1.5;stroke-linejoin:round}
+.inv-env-seal{position:absolute;left:50%;top:26cqw;width:max(36px,12cqw);aspect-ratio:1;display:grid;place-items:center;border-radius:50%;background:var(--heart);color:var(--on-heart);box-shadow:0 2px 0 color-mix(in srgb,var(--heart) 60%,var(--ink));transform:translateX(-50%)}
+.inv-env-seal svg{fill:currentColor}
+.inv-env-letter{position:absolute;left:7cqw;top:3cqw;width:86cqw;height:58cqw;z-index:2;transform:translateY(0);visibility:hidden}
+.inv-env-paper{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.inv-env-paper path{fill:var(--surface);stroke:var(--env-line);stroke-width:1.5}
+.inv-env-mascot{position:absolute;top:-8cqw;width:17cqw;opacity:0}.inv-env-mascot svg{display:block;width:100%;height:auto}
+.inv-env-mascot.left{left:3cqw;transform:rotate(-9deg)}.inv-env-mascot.right{right:3cqw;transform:rotate(9deg)}
+.inv-env-text{position:absolute;top:11.5cqw;left:5cqw;right:5cqw;display:flex;flex-direction:column;align-items:center;gap:1.5cqw;text-align:center;color:var(--ink)}
+.inv-env-from{font:600 clamp(12px,4cqw,15px)/1.25 var(--font-sans);color:var(--ink-muted)}
+.inv-env-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;font:800 clamp(17px,6.6cqw,26px)/1.12 var(--font-sans);letter-spacing:-.01em}
+@container (max-width:299px){.inv-env-title{-webkit-line-clamp:1}}
+.inv-env-title span{font-weight:400}
+.inv-env-date{padding:1.2cqw 3.4cqw;border-radius:var(--radius-pill);background:var(--heart-soft);font:600 clamp(12px,3.9cqw,14px)/1.25 var(--font-sans);color:var(--ink)}
+.inv-env-address{position:absolute;left:0;right:0;bottom:3.5cqw;z-index:5;display:flex;flex-direction:column;align-items:center;margin:0;color:var(--ink);text-align:center;pointer-events:none}
+.inv-env-address span{font:600 clamp(11px,3.6cqw,13px)/1.2 var(--font-sans)}
+.inv-env-address b{font:800 clamp(14px,5cqw,18px)/1.2 var(--font-sans)}
+/* Lettre sortie : rabat ouvert derrière la lettre, mascottes visibles. */
+.inv-env.is-open .inv-env-letter{visibility:visible;transform:translateY(-42cqw)}
+.inv-env.is-open .inv-env-mascot{opacity:1}
+.inv-env.is-open .inv-env-flap{transform:rotateX(180deg);z-index:1}
+.inv-env.is-open .inv-env-seal{opacity:0}
+/* Découverte : le sceau saute, le rabat s'ouvre, la lettre monte. */
+.inv-env.is-opening .inv-env-seal{animation:inv-seal-out 1.5s ease-out both}
+.inv-env.is-opening .inv-env-flap{animation:inv-flap-open 1.5s ease-in-out both}
+.inv-env.is-opening .inv-env-letter{animation:inv-letter-rise 1.5s cubic-bezier(.3,.7,.3,1) both}
+.inv-env.is-opening .inv-env-mascot{animation:inv-mascot-in 1.5s ease-out both}
+.inv-env.is-opening:not(.reserve) .inv-env-body{animation:inv-make-room 1.5s cubic-bezier(.3,.7,.3,1) both}
+/* Envoi : la lettre descend, le rabat se referme, le sceau se pose. */
+.inv-env.is-closing .inv-env-letter{animation:inv-letter-fold 1.4s ease-in both}
+.inv-env.is-closing .inv-env-mascot{animation:inv-mascot-out 1.4s ease-in both}
+.inv-env.is-closing .inv-env-flap{animation:inv-flap-close 1.4s ease-in-out both}
+.inv-env.is-closing .inv-env-seal{animation:inv-seal-in 1.4s ease-out both}
+.inv-env.is-closing .inv-env-body{animation:inv-hop 1.4s ease-in-out both}
+.inv-env.is-closing:not(.reserve) .inv-env-body{animation:inv-hop 1.4s ease-in-out both,inv-give-room 1.4s ease-in both}
+@keyframes inv-seal-out{0%{opacity:1;transform:translateX(-50%) scale(1)}8%{opacity:1;transform:translateX(-50%) scale(1.18)}18%,100%{opacity:0;transform:translateX(-50%) scale(.3)}}
+@keyframes inv-flap-open{0%,12%{transform:rotateX(0deg);z-index:4}29%{transform:rotateX(90deg);z-index:4}30%{z-index:1}46%,100%{transform:rotateX(180deg);z-index:1}}
+@keyframes inv-letter-rise{0%,38%{visibility:visible;transform:translateY(0)}80%{transform:translateY(-45cqw)}100%{visibility:visible;transform:translateY(-42cqw)}}
+@keyframes inv-mascot-in{0%,62%{opacity:0;scale:.4}86%{opacity:1;scale:1.12}100%{opacity:1;scale:1}}
+@keyframes inv-make-room{0%,36%{margin-top:3cqw}80%,100%{margin-top:49cqw}}
+@keyframes inv-letter-fold{0%{visibility:visible;transform:translateY(-42cqw)}10%{transform:translateY(-45cqw)}44%{transform:translateY(0)}99%{visibility:visible}100%{visibility:hidden;transform:translateY(0)}}
+@keyframes inv-mascot-out{0%{opacity:1}22%,100%{opacity:0}}
+@keyframes inv-flap-close{0%,42%{transform:rotateX(180deg);z-index:1}58%{transform:rotateX(90deg);z-index:1}59%{z-index:4}74%,100%{transform:rotateX(0deg);z-index:4}}
+@keyframes inv-seal-in{0%,72%{opacity:0;transform:translateX(-50%) scale(.3)}82%{opacity:1;transform:translateX(-50%) scale(1.22)}90%,100%{opacity:1;transform:translateX(-50%) scale(1)}}
+@keyframes inv-hop{0%,84%{transform:none}92%{transform:translateY(-2.5cqw) rotate(-2.5deg)}100%{transform:none}}
+@keyframes inv-give-room{0%{margin-top:49cqw}10%{margin-top:49cqw}46%,100%{margin-top:3cqw}}
+
+/* Fenêtre « Une invitation pour vous » et « Notre invitation ». */
+.invitation-ticket.envelope-ticket{background:color-mix(in srgb,var(--rose) 28%,var(--surface));padding:var(--space-5) var(--space-4)}
+.envelope-ticket .inv-env{margin-bottom:var(--space-2)}
+.envelope-ticket .invitation-description{max-width:34ch;margin:0}
+.envelope-ticket .celebration-toggle{order:10;align-self:center;margin:0}
+
+/* Après l'envoi d'une invitation. */
+.inv-sent{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:var(--space-4);background:color-mix(in srgb,var(--ink) 38%,transparent);animation:inv-fade 180ms ease-out both}
+.inv-sent-card{width:min(360px,100%);display:grid;gap:var(--space-4);padding:var(--space-6) var(--space-4) var(--space-5);border-radius:var(--radius-xl);background:color-mix(in srgb,var(--rose) 28%,var(--surface));box-shadow:var(--shadow-lift);text-align:center}
+.inv-sent-caption{display:flex;align-items:center;justify-content:center;gap:var(--space-2);margin:0;font:700 17px/1.3 var(--font-sans);color:var(--ink)}
+.inv-sent-caption svg{color:var(--heart);fill:currentColor}
+@keyframes inv-fade{from{opacity:0}to{opacity:1}}
+
+/* Carte « invitation » de la discussion. */
+.house-card-invitation{background:color-mix(in srgb,var(--rose) 30%,var(--surface));gap:var(--space-3);padding:var(--space-4)}
+.house-card-invitation .inv-env{max-width:300px}
+.inv-env-open{display:block;width:100%;padding:var(--space-1) 0;border-radius:var(--radius-md);background:none;cursor:pointer}
+.inv-env-open:active{transform:scale(.97)}
+.inv-env-hint{margin:0;text-align:center;font:600 13px/18px var(--font-sans);color:var(--ink-muted)}
+.house-card-invitation .house-card-note{font:500 15px/1.4 var(--font-sans);font-style:normal}
+
+@media(prefers-reduced-motion:reduce){.inv-env *,.inv-env-body,.inv-sent{animation:none!important}.inv-env-open:active{transform:none}}
