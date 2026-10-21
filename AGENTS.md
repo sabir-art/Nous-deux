@@ -35,6 +35,16 @@ Lire également [README.md](README.md) avant une intervention.
 - Un correctif ou retour arrière doit passer par GitHub ; pour annuler une
   publication, préférer un revert puis un push.
 
+## Apparence de la vitrine
+
+- Le thème clair est une exigence produit permanente, quel que soit le réglage
+  système ou l'heure. Conserver `data-theme="light"` sur `html` dès le chargement,
+  ainsi que la métadonnée et la déclaration CSS `color-scheme: only light`.
+- Ne pas activer les palettes sombres selon `prefers-color-scheme`, un stockage
+  local ou un changement automatique. Préserver les couleurs du design validé.
+- Cette règle ne concerne pas le thème de l'application sur `main` et ne doit
+  pas désactiver la préférence d'accessibilité `prefers-reduced-motion`.
+
 ## SFTP et sécurité
 
 - Destination IONOS : `/nousdeux-vitrine`, compte SFTP dédié, port 22.

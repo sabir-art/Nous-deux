@@ -35,6 +35,16 @@ python3 -m http.server 8000
 Ouvrir ensuite http://localhost:8000 et vérifier les vues concernées,
 notamment sur mobile.
 
+## Apparence : thème clair fixe
+
+La vitrine conserve sa palette claire, indépendamment de l'heure et du mode
+clair/sombre du téléphone ou de l'ordinateur. L'élément `html` porte
+`data-theme="light"` dès le chargement ; la déclaration CSS et la métadonnée
+`color-scheme: only light` demandent aussi au navigateur de conserver ce rendu.
+Les anciennes règles sombres du design system restent inactives dans la vitrine.
+Ne pas ajouter de synchronisation avec `prefers-color-scheme` pour ce site.
+La préférence d'accessibilité `prefers-reduced-motion` reste respectée.
+
 ## Hébergement IONOS et domaine
 
 | Élément | Configuration |

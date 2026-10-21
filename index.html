@@ -1,7 +1,9 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" data-theme="light">
 <head>
 <meta charset="utf-8">
+<!-- La vitrine conserve son thème clair, même si le système utilise le mode sombre. -->
+<meta name="color-scheme" content="only light">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Nous deux, l'app du quotidien à deux : courses, repas, agenda, budget et petits mots, sur iPhone et Android.">
 <title>Nous deux</title>
@@ -11,6 +13,7 @@
 /* Design system Nous deux (tokens + composants), repris tel quel */
 /* Nous deux, tokens */
 :root,[data-theme="light"] {
+  color-scheme: only light;
   --canvas: #f6f3ef;
   --surface: #ffffff;
   --surface-sunken: #efebe6;
