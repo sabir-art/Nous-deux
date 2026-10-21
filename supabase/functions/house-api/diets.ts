@@ -1,10 +1,12 @@
 import {z} from 'npm:zod@3.25.76';
 // Keep in sync with lib/diets.ts (checked by tests/diets.test.mjs).
-export const dietKeys=['sans-porc','vegetarien','vegetalien','sans-gluten','sans-lactose','sans-oeufs','sans-fruits-a-coque','sans-poisson','halal','casher'] as const;
+export const dietKeys=['de-tout','sans-porc','vegetarien','vegetalien','sans-gluten','sans-lactose','sans-oeufs','sans-fruits-a-coque','sans-poisson','halal','casher'] as const;
+// « Je mange de tout » says so explicitly; it excludes every other diet (allergies stay possible).
+export const EATS_EVERYTHING='de-tout';
 export type MemberDiet={diets:string[];allergies:string;version:number;updatedAt:string};
 export type DietState={diets?:Record<string,MemberDiet>};
 export class DietError extends Error{constructor(public status:number,message:string){super(message);}}
-export const dietInput=z.object({member:z.number().int().min(0).max(1).optional(),diets:z.array(z.enum(dietKeys)).max(dietKeys.length).refine(v=>new Set(v).size===v.length,'Régime en double.'),allergies:z.string().trim().max(300),version:z.number().int().min(0)});
+export const dietInput=z.object({member:z.number().int().min(0).max(1).optional(),diets:z.array(z.enum(dietKeys)).max(dietKeys.length).refine(v=>new Set(v).size===v.length,'Régime en double.').refine(v=>!v.includes(EATS_EVERYTHING)||v.length===1,'« Je mange de tout » ne se combine pas avec un autre régime.'),allergies:z.string().trim().max(300),version:z.number().int().min(0)});
 // Each person edits only their own diet; the actor always comes from the server session.
 export function dietMutation(s:DietState,p:unknown,actor:number){
  if(actor!==0&&actor!==1)throw new DietError(403,'Compte personnel requis.');

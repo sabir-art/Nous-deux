@@ -1,6 +1,7 @@
 import type {Recipe} from './recipes';
 // Keep the keys in sync with supabase/functions/house-api/diets.ts.
 export const diets=[
+ {key:'de-tout',label:'Je mange de tout'},
  {key:'sans-porc',label:'Sans porc'},
  {key:'vegetarien',label:'Végétarien'},
  {key:'vegetalien',label:'Végétalien'},
@@ -12,6 +13,8 @@ export const diets=[
  {key:'halal',label:'Halal'},
  {key:'casher',label:'Casher'},
 ] as const;
+// « Je mange de tout » is exclusive: choosing it clears the other diets, and the reverse.
+export const EATS_EVERYTHING='de-tout';
 export type DietKey=typeof diets[number]['key'];
 export type MemberDiet={diets:string[];allergies:string;version:number;updatedAt?:string};
 export type Diets=Record<string,MemberDiet|undefined>;
@@ -67,7 +70,7 @@ export function recipeIssues(r:Recipe,members:Diets):DietIssue[]{
  return issues;
 }
 export const compatibleWithUs=(r:Recipe,members:Diets)=>!recipeIssues(r,members).some(i=>i.hard);
-export const hasDiets=(members:Diets)=>[0,1].some(m=>!!members[m]&&(members[m]!.diets.length>0||allergyTerms(members[m]!.allergies||'').length>0));
+export const hasDiets=(members:Diets)=>[0,1].some(m=>!!members[m]&&(members[m]!.diets.some(k=>k!==EATS_EVERYTHING)||allergyTerms(members[m]!.allergies||'').length>0));
 export function issueSentence(issue:DietIssue,names:string[]){
  const who=names[issue.member]||'L’un de vous';const what=issue.words.slice(0,3).join(', ');
  if(!issue.hard)return `${who} : ${issue.reason}.`;

@@ -19,6 +19,10 @@ assert.equal(s.diets[1].allergies,'kiwi, céleri');
 householdMutation(s,{action:'diet',payload:{diets:['sans-porc'],allergies:'',version:0}},0);assert.deepEqual(s.diets[0].diets,['sans-porc'],'without member, the session actor is used');assert.deepEqual(s.diets[1].diets,['vegetarien','sans-gluten']);
 for(const bad of [{diets:['carnivore'],allergies:'',version:1},{diets:['halal','halal'],allergies:'',version:1},{diets:[],allergies:'x'.repeat(301),version:1},{diets:dietKeys.concat('halal'),allergies:'',version:1},{diets:[],allergies:'',version:-1},{diets:'halal',allergies:'',version:1}])assert.throws(()=>householdMutation(s,{action:'diet',payload:bad},0),undefined,JSON.stringify(bad).slice(0,60));
 householdMutation(s,{action:'diet',payload:{diets:[],allergies:'  '+'a'.repeat(300)+'  ',version:1}},0);assert.equal(s.diets[0].allergies.length,300);
+// « Je mange de tout » is accepted alone, never with another diet; it does not switch on the « Pour nous deux » sorting.
+assert.throws(()=>householdMutation(s,{action:'diet',payload:{diets:['de-tout','halal'],allergies:'',version:2}},0),undefined,'eats everything is exclusive');
+householdMutation(s,{action:'diet',payload:{diets:['de-tout'],allergies:'',version:2}},0);assert.deepEqual(s.diets[0].diets,['de-tout']);
+householdMutation(s,{action:'diet',payload:{diets:[],allergies:'',version:3}},0);assert.deepEqual(s.diets[0].diets,[]);
 assert.throws(()=>householdMutation(s,{action:'diet',payload:{diets:[],allergies:'',version:0}},2),e=>e.status===403);
 assert.deepEqual(Object.keys(dietProjection(s)),['0','1']);assert.deepEqual(dietProjection({}),{});
 const index=readFileSync('supabase/functions/house-api/index.ts','utf8');assert.match(index,/diets:dietProjection\(s\)/,'the household projection exposes both diets');
@@ -48,6 +52,7 @@ assert.ok(!lib.compatibleWithUs(recipe(['2 kiwis','Sucre']),both));
 const issues=lib.recipeIssues(recipe(['Pain de mie']),both);assert.equal(issues.length,1);assert.equal(issues[0].member,1);
 assert.equal(lib.issueSentence(issues[0],['Alex','Camille']),'Contient peut-être pain, à éviter pour Camille (sans gluten).');
 assert.equal(lib.issueSentence(lib.recipeIssues(recipe(['2 kiwis']),both)[0],['Alex','Camille']),'Contient peut-être kiwi : allergie de Camille.');
+assert.ok(!lib.hasDiets({0:{diets:['de-tout'],allergies:'',version:1}}),'eating everything sorts nothing');assert.ok(lib.compatibleWithUs(recipe(['Lardons']),who('de-tout')));
 assert.ok(!lib.hasDiets({}));assert.ok(!lib.hasDiets({0:{diets:[],allergies:'aucune',version:1}}));assert.ok(lib.hasDiets(both));
 // Built-in recipes are all pork-free and some remain for each single diet.
 for(const d of lib.diets){const ok=recipes.filter(r=>lib.compatibleWithUs(r,who(d.key)));assert.ok(ok.length>=10,d.key+' keeps choices');}
@@ -55,7 +60,7 @@ assert.equal(recipes.filter(r=>!lib.compatibleWithUs(r,who('sans-porc'))).length
 
 // UI wiring: own section in settings, the « Pour nous deux » toggle and the gentle warning.
 const settings=readFileSync('app/diet-settings.tsx','utf8'),meals=readFileSync('app/house-meals.tsx','utf8'),detail=readFileSync('app/recipe-detail.tsx','utf8');
-assert.match(settings,/Ce que je mange/);assert.match(settings,/aria-pressed=\{selected\.includes/);assert.match(settings,/maxLength=\{allergiesMax\}/);
+assert.match(settings,/Ce que je mange/);assert.match(settings,/key===EATS_EVERYTHING\?\[key\]/,'choosing « Je mange de tout » clears the other diets');assert.match(settings,/aria-pressed=\{selected\.includes/);assert.match(settings,/maxLength=\{allergiesMax\}/);
 assert.match(meals,/fits\(r\)\)\.sort/,'the swipe queue skips incompatible recipes when the toggle is on');assert.match(meals,/TogetherToggle/);
 assert.match(detail,/Sans porc garanti pour/);assert.match(detail,/issueSentence/);
 console.log('PASS: own-diet validation, versions and retries, keyword compatibility, allergies and diet UI wiring.');

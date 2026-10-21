@@ -27,9 +27,11 @@ const sortGifts=(list:Gift[])=>[...list].sort((a,b)=>Number(a.bought)-Number(b.b
 
 function GiftCards({gifts,active,names,kids,busy,showFor=true,onEdit,save}:{gifts:Gift[];active:number;names:string[];kids:Kid[];busy:boolean;showFor?:boolean;onEdit:(g:Gift)=>void;save:Save}){
  const toggle=(g:Gift)=>save('gift',{...g,bought:!g.bought},g.bought?'Idée remise dans la liste.':'Offert ! Bien joué.');
+ // Only the author sees the bin; house-api checks it again (and a partner's secret stays unknown: 404).
+ const remove=(g:Gift)=>{if(window.confirm(`Supprimer l’idée « ${g.title} » ?`))void save('delete-gift',{id:g.id,version:g.version},'Idée supprimée.');};
  return <ul className="gift-list">{gifts.map(g=>{const mine=g.owner===active;return <li key={g.id} className={`gift-card${g.bought?' bought':''}`}>
   <button className="gift-open" onClick={()=>onEdit(g)} disabled={!mine} aria-label={mine?`Modifier ${g.title}`:undefined}>{(showFor||g.secret||g.bought)&&<span className="gift-tags">{showFor&&<span className={'gift-for tone-'+toneOf(whoOf(g))}>{forWhom(g,names,kids)}</span>}{g.secret&&<span className="gift-secret"><LockKeyhole size={14} aria-hidden="true"/>Secret</span>}{g.bought&&<span className="gift-bought">Offert</span>}</span>}<strong>{g.title}</strong>{g.note&&<span className="gift-note">{g.note}</span>}<small>{g.price!==null?money(g.price)+' · ':''}Noté par {mine?'toi':names[g.owner]}{g.secret?' · visible par toi seulement':''}</small></button>
-  {(g.link||mine)&&<div className="gift-actions">{g.link&&<a className="text-link" href={g.link} target="_blank" rel="noopener noreferrer">Voir le lien <ArrowUpRight size={15} aria-hidden="true"/></a>}{mine&&<button className="secondary gift-done" disabled={busy} onClick={()=>void toggle(g)} aria-pressed={g.bought}><Check size={17} aria-hidden="true"/>{g.bought?'Offert':'C’est offert'}</button>}</div>}
+  {(g.link||mine)&&<div className="gift-actions">{g.link&&<a className="text-link" href={g.link} target="_blank" rel="noopener noreferrer">Voir le lien <ArrowUpRight size={15} aria-hidden="true"/></a>}{mine&&<span className="gift-own-actions"><button className="icon-button gift-delete" disabled={busy} onClick={()=>remove(g)} aria-label={`Supprimer ${g.title}`} title="Supprimer"><Trash2 size={18} aria-hidden="true"/></button><button className="secondary gift-done" disabled={busy} onClick={()=>void toggle(g)} aria-pressed={g.bought}><Check size={17} aria-hidden="true"/>{g.bought?'Offert':'C’est offert'}</button></span>}</div>}
  </li>;})}</ul>;
 }
 

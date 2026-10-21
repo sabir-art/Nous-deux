@@ -67,4 +67,6 @@ assert.ok(app.includes('<PersonGifts ')&&calendar.includes('className="gift-shor
 assert.ok(page.includes("const preset:GiftPreset|undefined=filter==='all'?undefined:{who:filter};")&&/<button className="primary wide gift-add"/.test(page));
 // Saving asks again whether the idea stays secret, putting the current choice first.
 assert.ok(page.includes('On la garde secrète ?')&&page.includes("name=\"secret\" value={value}"));
+// Each author has a bin on their own idea cards (with a confirmation); the server keeps the author-only check.
+assert.ok(page.includes("save('delete-gift',{id:g.id,version:g.version},'Idée supprimée.')")&&page.includes('className="icon-button gift-delete"')&&/window\.confirm\(`Supprimer l’idée/.test(page));
 console.log('gifts ok');
