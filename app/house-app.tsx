@@ -80,13 +80,8 @@ export default function HouseApp(){
  const mealVotes=useMealVotes(active,data?.meals);
  const contentRef=useRef<HTMLElement>(null);
  usePageSwipe(contentRef,tab,setTab);
- // Shopping pushes wait until this member leaves the shopping page (or closes the app), then go out as one notice.
- const shoppingPending=useRef(false);shoppingPending.current=!!data?.shoppingPending;const shoppingAway=tab!=='shopping'&&!quickShopping;
- const flushShopping=useCallback(()=>{if(!shoppingPending.current)return;shoppingPending.current=false;void apiFetch('/api/household',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','x-adeux-device':deviceId()},body:JSON.stringify({action:'shopping-done',payload:{}})}).catch(()=>{});},[]);
  // The agenda reopens on the birthdays only when coming back from the gift ideas.
  useEffect(()=>{if(tab!=='calendar'&&tab!=='gifts')setCalendarCategory('all');},[tab]);
- useEffect(()=>{if(shoppingAway&&data?.shoppingPending)flushShopping();},[shoppingAway,data?.shoppingPending,flushShopping]);
- useEffect(()=>{const leave=()=>{if(document.visibilityState==='hidden')flushShopping();};document.addEventListener('visibilitychange',leave);addEventListener('pagehide',flushShopping);return()=>{document.removeEventListener('visibilitychange',leave);removeEventListener('pagehide',flushShopping);};},[flushShopping]);
  useEffect(()=>{if(tab!=='calendar')setCalendarPerson('all');if(tab!=='family')setFamilyFocus('');if(data&&!data.familyMode){if(tab==='family')setTab('settings');setTaskFilter(f=>f.startsWith('child:')?'all':f);}},[tab,data]);
  useEffect(()=>{if(tab==='pets'&&data&&!data.petsMode)setTab('settings');},[tab,data]);
  useEffect(()=>{const node=contentRef.current;node?.closest('.workspace')?.scrollTo({top:0,behavior:'instant'});if(node&&!matchMedia('(prefers-reduced-motion: reduce)').matches)node.animate([{opacity:.6,transform:`translateX(${direction.current*24}px)`},{opacity:1,transform:'translateX(0)'}],{duration:170,easing:'ease-out'});document.title=(nav.find(n=>n.id===tab)?.label||'Notre maison')+' · Nous deux';},[tab]);

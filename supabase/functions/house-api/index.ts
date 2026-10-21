@@ -18,7 +18,8 @@ import {ChildError} from './children.ts';
 import {visibleGifts,GiftError} from './gifts.ts';
 import {PetError} from './pets.ts';
 import {claimPlantReminders,visibleAppointments,ApiError,householdMutation,callMutation,deviceMutation,type State} from './model.ts';
-import {defaultPreferences,deviceInput,allowedPushEndpoint} from './communication.ts';
+import {defaultPreferences,deviceInput,allowedPushEndpoint,pushesPartner} from './communication.ts';
+import {claimReminders,releaseReminders,type Reminder} from './reminders.ts';
 const ORIGIN='https://sabir-art.github.io',BASE='/Nous-deux/';
 const enc=new TextEncoder();
 const hash=async(s:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(s))),b=>b.toString(16).padStart(2,'0')).join('');
@@ -32,8 +33,8 @@ async function state(){const rows=await db('nd_state?id=eq.1&select=version,data
 async function mutate<T>(fn:(s:State)=>T){for(let i=0;i<4;i++){const snapshot=await state();const result=fn(snapshot.data);const rows=await db('nd_state?id=eq.1&version=eq.'+snapshot.version,'PATCH',{data:snapshot.data,version:snapshot.version+1});if(rows.length)return {result,data:snapshot.data};}throw new ApiError(409,'Modification simultanée. Réessayez.');}
 async function chatCards(){const rows=await db('nd_state?id=eq.1&select=chatCards:data->chatCards');return rows?.[0]?.chatCards as ChatCardState['chatCards']|null;}
 async function config(){return (await db('nd_config?id=eq.1&select=data'))[0].data;}
-async function send(device:any,data:any){if(!allowedPushEndpoint(device.subscription.endpoint))return false;const keys=(await config()).vapid;const payload=await buildPushPayload({data:JSON.stringify({...data,url:data.callId?BASE+'?view=calls&call='+data.callId:BASE+'?view='+(data.category||'settings')}),options:{ttl:data.category==='calls'?90:3600}},device.subscription,{...keys,subject:ORIGIN+BASE});const r=await fetch(device.subscription.endpoint,{...payload,redirect:'manual',signal:AbortSignal.timeout(5000)});if(r.status===404||r.status===410)await mutate(s=>{s.devices=s.devices.filter(d=>d.deviceId!==device.deviceId);});return r.ok;}
-async function notify(s:State,actor:number,category:string,message:string,originDevice=''){await Promise.allSettled(s.devices.filter(d=>d.member!==actor&&d.deviceId!==originDevice&&({...defaultPreferences,...d.preferences})[category]).map(d=>send(d,{title:category==='ideas'?'💌 Une invitation pour nous deux':'À deux',body:category==='ideas'?'✨ '+message+' 💛':message,category,tag:category==='calls'?'adeux-call':undefined})));}
+async function send(device:any,data:any){if(!allowedPushEndpoint(device.subscription.endpoint))return false;const keys=(await config()).vapid;const payload=await buildPushPayload({data:JSON.stringify({...data,url:data.callId?BASE+'?view=calls&call='+data.callId:BASE+'?view='+(data.view||data.category||'settings')}),options:{ttl:data.category==='calls'?90:3600}},device.subscription,{...keys,subject:ORIGIN+BASE});const r=await fetch(device.subscription.endpoint,{...payload,redirect:'manual',signal:AbortSignal.timeout(5000)});if(r.status===404||r.status===410)await mutate(s=>{s.devices=s.devices.filter(d=>d.deviceId!==device.deviceId);});return r.ok;}
+async function notify(s:State,actor:number,category:string,message:string,originDevice=''){await Promise.allSettled(s.devices.filter(d=>d.member!==actor&&d.deviceId!==originDevice&&({...defaultPreferences,...d.preferences})[category]).map(d=>send(d,{title:category==='ideas'?'💌 Une invitation pour nous deux':category==='shopping'?'🛒 La liste de courses est prête':'À deux',body:category==='ideas'?'✨ '+message+' 💛':message,category,tag:category==='calls'?'adeux-call':category==='shopping'?'nousdeux-shopping-finished':undefined})));}
 const aiKey=async()=>{const stored=await db('rpc/nd_openai_key_get','POST',{});return typeof stored==='string'&&validAIKey(stored)?stored:Deno.env.get('OPENAI_API_KEY')||'';};
 const aiModel=()=>Deno.env.get('OPENAI_RECIPE_MODEL')||'gpt-5.4-mini';
 async function runDiscovery(){
@@ -59,13 +60,22 @@ export async function handler(req:Request):Promise<Response>{
   if(req.method!=='POST')return json({error:'Méthode non autorisée.'},405);
   const credential=req.headers.get('x-plant-reminder')||'';if(!/^[a-f0-9]{64}$/.test(credential))return json({error:'Accès réservé au planificateur.'},401);
   const cfg=await config();if(!cfg.plantReminderHash||!equal(await hash(credential),cfg.plantReminderHash))return json({error:'Accès réservé au planificateur.'},401);
-  const now=new Date(),hour=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hour:'2-digit',hour12:false}).format(now);if(hour!=='09')return json({ok:true,skipped:true});
-  backgroundDiscovery();
-  const day=parisDate(now);const {result}=await mutate(s=>claimPlantReminders(s,day));
-  const results=await Promise.allSettled(result.map(async({device,count})=>{
+  // The same scheduler run (every 30 minutes) also sends agenda and mission reminders: no other cron is needed.
+  const now=new Date(),hour=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hour:'2-digit',hour12:false}).format(now),plantsHour=hour==='09';
+  // Nothing due: no write, the household state stays untouched.
+  const {data:snapshot}=await state();if(!plantsHour&&!claimReminders(structuredClone(snapshot),now).length)return json({ok:true,skipped:true});
+  if(plantsHour)backgroundDiscovery();
+  const day=parisDate(now);const {result}=await mutate(s=>({plants:plantsHour?claimPlantReminders(s,day):[],reminders:claimReminders(s,now)}));
+  const plantPush=async({device,count}:{device:any;count:number})=>{
    try{const ok=await send(device,{title:'Le petit jardin 🌱',body:count===1?'Une plante réclame son petit spa. Vérifiez ses soins du jour !':`${count} plantes attendent leurs soins. La réunion des feuilles a commencé !`,category:'plants',tag:'adeux-plants'});if(ok)return true;}catch{}
    await mutate(s=>{if(s.plantReminderDays?.[device.deviceId]===day)delete s.plantReminderDays[device.deviceId];});return false;
-  }));return json({ok:true,attempted:result.length,sent:results.filter(r=>r.status==='fulfilled'&&r.value).length});
+  };
+  const reminderPush=async(r:Reminder)=>{
+   try{if(await send(r.device,{title:r.title,body:r.body,category:r.category,view:r.view,tag:r.tag}))return true;}catch{}
+   await mutate(s=>releaseReminders(s,r.keys));return false;
+  };
+  const results=await Promise.allSettled([...result.plants.map(plantPush),...result.reminders.map(reminderPush)]);
+  return json({ok:true,attempted:results.length,sent:results.filter(r=>r.status==='fulfilled'&&r.value).length});
  }
  if(route==='access'){
   const selected=Number(url.searchParams.get('member')??p.member);if(selected!==0&&selected!==1)return json({error:'Choisissez votre compte.'},400);const access=(await db('nd_members?member=eq.'+selected))[0];if(!access)return json({error:'Configuration en cours.'},503);
@@ -140,9 +150,10 @@ export async function handler(req:Request):Promise<Response>{
  }
  if(route==='household'){
   // giftsMode stays true for pages cached before gift ideas moved to the agenda's birthdays; the old per-person switch is ignored.
-  if(req.method==='GET'){const {data:s}=await state();return json({member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[],pets:s.pets||[],petsMode:!!s.petsMode,gifts:visibleGifts(s,actor),giftsMode:true,children:s.children||[],shoppingPending:!!s.shoppingPending?.[actor],familyMode:!!s.familyMode,colors:s.colors||{},diets:dietProjection(s)});}
+  if(req.method==='GET'){const {data:s}=await state();return json({member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[],pets:s.pets||[],petsMode:!!s.petsMode,gifts:visibleGifts(s,actor),giftsMode:true,children:s.children||[],familyMode:!!s.familyMode,colors:s.colors||{},diets:dietProjection(s)});}
   if(['item','profile-photo'].includes(p.action)&&p.payload?.photoId){const photoId=deviceInput.parse(p.payload.photoId);const photos=await db('nd_photos?id=eq.'+photoId+'&select=owner');if(!photos.length||photos[0].owner!==actor)throw new ApiError(403,'Vous ne pouvez joindre que votre propre photo.');}
-  const {result,data}=await mutate(s=>householdMutation(s,p,actor));if(result)try{await notify(data,actor,result.category,'Votre moitié '+result.message,req.headers.get('x-adeux-device')||'');}catch{}return json({ok:true});
+  // Routine changes stay in « Les nouvelles de la maison »; only invitations and « J'ai fini la liste » reach the partner (communication.ts).
+  const {result,data}=await mutate(s=>householdMutation(s,p,actor));if(result&&pushesPartner(p.action))try{await notify(data,actor,result.category,((actor===0?data.household?.first:data.household?.second)||'Votre moitié')+' '+result.message,req.headers.get('x-adeux-device')||'');}catch{}return json({ok:true});
  }
 
  if(route==='photos'){
