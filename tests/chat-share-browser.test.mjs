@@ -1,6 +1,6 @@
 // « Partager avec… » in a real browser: every kind can be chosen and sent, the sweet note accepts
-// one's own words, the shopping week is chosen, empty lists offer a way to start, stickers stay
-// close together, our emojis are drawn inline and nothing scrolls sideways at 360 px or on desktop.
+// one's own words, the shopping week is chosen, empty lists offer a way to start, stickers keep
+// the normal message spacing, the emoji picker closes after sending, our emojis are drawn while writing and nothing scrolls sideways at 360 px or on desktop.
 // The fake API runs the real house-api card helpers and validation on a local fixture state.
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
@@ -64,11 +64,21 @@ try{for(const engine of process.env.CHROMIUM_EXECUTABLE?[chromium]:[chromium,web
   await page.locator('.house-card-mot').filter({hasText:'Et un câlin'}).waitFor();
   // The plant card reads horizontally (the speech bubble keeps a real width).
   assert(await page.locator('.house-card-plant-row p').first().evaluate(el=>el.getBoundingClientRect().width)>120,'Plant speech bubble is not squeezed');
-  // Two stickers in a row stay close; our emojis are drawn inside the text.
-  await page.getByRole('button',{name:'Choisir un émoji'}).click();for(const s of ['bisou !','ouaf !']){await page.getByRole('button',{name:'Envoyer le sticker « '+s+' »',exact:true}).click();await page.waitForFunction(n=>document.querySelectorAll('.chat-sticker-bubble').length===n,s==='bisou !'?1:2);}
-  const gap=await page.evaluate(()=>{const [a,b]=[...document.querySelectorAll('.chat-sticker-bubble .couple-sticker')].map(e=>e.getBoundingClientRect());return b.top-a.bottom;});assert(gap<32,'Stickers in a row stay close: '+gap);
-  await page.getByRole('button',{name:'Émojis',exact:true}).click();await page.getByRole('button',{name:'Le chat',exact:true}).click();await page.locator('textarea[aria-label="Votre message"]').press('End');await page.locator('textarea[aria-label="Votre message"]').type(' a volé ma place');
+  // A sticker closes the picker once sent; two stickers in a row keep the normal space between messages.
+  for(const s of ['bisou !','ouaf !']){await page.getByRole('button',{name:'Choisir un émoji'}).click();await page.getByRole('button',{name:'Envoyer le sticker « '+s+' »',exact:true}).click();await page.waitForFunction(n=>document.querySelectorAll('.chat-sticker-bubble').length===n,s==='bisou !'?1:2);assert.equal(await page.locator('.chat-emoji-picker').count(),0,'Picker closed after a sticker');}
+  const gap=await page.evaluate(()=>{const [a,b]=[...document.querySelectorAll('.chat-sticker-bubble')].map(e=>e.getBoundingClientRect());return b.top-a.bottom;});assert(gap>=16&&gap<=40,'Stickers keep the normal message spacing: '+gap);
+  // Our emojis are drawn inside the writing area (never their code), sent as a code, drawn in the message.
+  const input=page.locator('[role=textbox][aria-label="Votre message"]');
+  await page.getByRole('button',{name:'Choisir un émoji'}).click();await page.getByRole('button',{name:'Émojis',exact:true}).click();await page.getByRole('button',{name:'Le chat',exact:true}).click();
+  await input.locator('img[data-nd="nd-chat"][alt="Le chat"]').waitFor();assert(!(await input.innerText()).includes(':nd-'),'No code shown while writing');
+  await input.click();await input.press('End');await input.type(' a volé ma place');
+  // Typing or pasting a code also draws it.
+  await input.type(' :nd-coeur:');await input.locator('img[data-nd="nd-coeur"]').waitFor();
   await page.getByRole('button',{name:'Envoyer le message'}).click();await page.locator('.chat-message .nd-emoji[aria-label="Le chat"]').waitFor();
+  assert.equal(await page.locator('.chat-emoji-picker').count(),0,'Picker closed after sending');assert.equal(await input.innerText(),'','Writing area emptied');
+  assert(await page.locator('.chat-message p').filter({hasText:'a volé ma place'}).locator('.nd-emoji[aria-label="Un cœur tout doux"]').count(),'Typed code drawn in the message');
+  // Tapping the conversation closes the picker.
+  await page.getByRole('button',{name:'Choisir un émoji'}).click();await page.locator('.chat-messages').click({position:{x:20,y:20}});assert.equal(await page.locator('.chat-emoji-picker').count(),0,'Tap on messages closes the picker');
   assert.deepEqual(await sideways(page),[],engine.name()+' '+width+' no horizontal scroll');
   // Photos and documents still open the file chooser, whose Send is active.
   await page.getByRole('button',{name:/Joindre une photo ou partager/}).click();const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByRole('button',{name:/^Photos ou documents/}).click()]);
@@ -81,6 +91,6 @@ try{for(const engine of process.env.CHROMIUM_EXECUTABLE?[chromium]:[chromium,web
    await page.getByRole('button',{name:action}).waitFor();assert(!(await page.getByRole('button',{name:/^Envoyer$/}).isEnabled()),kind);
    await page.getByRole('button',{name:action}).click();assert.equal(await page.evaluate(()=>window.opened?.create),create);assert.equal(await page.locator('dialog.house-share-dialog').count(),0);}
   await context.close();
-  console.log('PASS: '+engine.name()+' every share kind sends, own sweet note, week choice, empty states with a way to start, close stickers, inline emojis, no sideways scroll at 360 px and 1280 px.');
+  console.log('PASS: '+engine.name()+' every share kind sends, own sweet note, week choice, empty states with a way to start, spaced stickers, picker closing, emojis drawn while writing, no sideways scroll at 360 px and 1280 px.');
  }finally{await browser.close();}
 }}finally{await new Promise(r=>server.close(r));}

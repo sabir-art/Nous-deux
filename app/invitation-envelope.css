@@ -59,7 +59,7 @@
 @keyframes inv-give-room{0%{margin-top:49cqw}10%{margin-top:49cqw}46%,100%{margin-top:3cqw}}
 
 /* Fenêtre « Une invitation pour vous » et « Notre invitation ». */
-.invitation-ticket.envelope-ticket{background:color-mix(in srgb,var(--rose) 28%,var(--surface));padding:var(--space-5) var(--space-4)}
+.invitation-ticket.envelope-ticket{background:var(--beurre);padding:var(--space-5) var(--space-4)}
 .envelope-ticket .inv-env{margin-bottom:var(--space-2)}
 .envelope-ticket .invitation-description{max-width:34ch;margin:0}
 .envelope-ticket .celebration-toggle{order:10;align-self:center;margin:0}
