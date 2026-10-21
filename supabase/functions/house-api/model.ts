@@ -10,30 +10,32 @@ import {childMutation,checkChild} from './children.ts';
 import {entryInput,itemInput,householdInput,deleteInput,appointmentInput,shoppingCheckInput,templateInput,templateApplyInput,ideaInput,ideaResponseInput,plantInput,plantCareInput} from './validation.ts';
 import {deviceInput,memberInput,preferenceInput,subscriptionInput,changeDescription} from './communication.ts';
 export class ApiError extends Error{constructor(public status:number,message:string){super(message);}}
-export type State=MealState&DietState&{favoritePlaces?:import('./places.ts').FavoritePlace[];shoppingBatches?:string[];profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];pets?:import('./pets.ts').Pet[];gifts?:import('./gifts.ts').Gift[];children?:import('./children.ts').Child[];familyMode?:boolean;colors?:Record<string,string>;plantReminderDays?:Record<string,string>};
+export type State=MealState&DietState&{favoritePlaces?:import('./places.ts').FavoritePlace[];shoppingBatches?:string[];profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];pets?:import('./pets.ts').Pet[];gifts?:import('./gifts.ts').Gift[];children?:import('./children.ts').Child[];familyMode?:boolean;colors?:Record<string,string>;plantReminderDays?:Record<string,string>;reminderLog?:Record<string,string>;shoppingFinished?:Record<string,string>;shoppingPending?:Record<string,unknown>};
 const conflict=()=>{throw new ApiError(409,'Cet élément a changé sur un autre appareil. Fermez puis rouvrez le formulaire.');};
 // Only expenses carry a split or a repetition; 50/50 and 'none' stay implicit so older entries keep their shape.
-function entryExtras(v:{kind:string;child?:string;split?:string;owed?:number;recurrence?:string;intervalDays?:number;repeatUntil?:string}){
+// A refund may say what it pays back: a short free text (`about`) and/or the expense it settles (`forExpense`).
+function entryExtras(v:{about?:string;forExpense?:string;kind:string;child?:string;split?:string;owed?:number;recurrence?:string;intervalDays?:number;repeatUntil?:string}){
  const expense=v.kind==='expense',repeat=expense&&v.recurrence&&v.recurrence!=='none'?v.recurrence:undefined;
- return {child:expense?v.child:undefined,split:expense&&(v.split==='full'||v.split==='custom')?v.split:undefined,owed:expense&&v.split==='custom'?v.owed:undefined,recurrence:repeat,intervalDays:repeat==='custom'?v.intervalDays:undefined,repeatUntil:repeat&&v.repeatUntil?v.repeatUntil:undefined};
+ return {about:!expense&&v.about?v.about:undefined,forExpense:!expense&&v.forExpense?v.forExpense:undefined,child:expense?v.child:undefined,split:expense&&(v.split==='full'||v.split==='custom')?v.split:undefined,owed:expense&&v.split==='custom'?v.owed:undefined,recurrence:repeat,intervalDays:repeat==='custom'?v.intervalDays:undefined,repeatUntil:repeat&&v.repeatUntil?v.repeatUntil:undefined};
 }
-// Shopping changes are held per member and pushed once per outing: when that member leaves the shopping page
-// or closes the app, the client sends 'shopping-done' and a single notice sums up what happened.
-type ShoppingPending={updated:boolean;checked:boolean;week:string};
-function holdShopping(s:State,p:any,actor:number){
- const item=p.action==='shopping-check'?s.items.find(i=>i.id===p.payload?.id):undefined;const old=s.shoppingPending?.[actor];
- s.shoppingPending={...s.shoppingPending,[actor]:{updated:!!old?.updated||!item,checked:!!old?.checked||!!item,week:item?.weekStart||old?.week||''}};
- return null;
-}
-function flushShopping(s:State,actor:number){
- const pending=s.shoppingPending?.[actor];if(!pending)return null;delete s.shoppingPending![actor];
- const week=s.items.filter(i=>i.kind==='shopping'&&i.weekStart===pending.week);
- const message=pending.checked&&week.length&&week.every(i=>i.done)?'a coché toute la liste de courses.':pending.updated?'a mis à jour la liste de courses.':'a coché des achats dans les courses.';
- return {category:'shopping' as const,message};
+// Shopping changes never ring the partner's phone. When the list is ready, its author taps « J'ai fini la liste »:
+// one notice goes to the partner, at most once every SHOPPING_FINISHED_GAP per member (retries and double taps included).
+export const SHOPPING_FINISHED_GAP=2*3600000;
+function finishShopping(s:State,payload:any,actor:number,now:string){
+ if(actor!==0&&actor!==1)throw new ApiError(403,'Compte personnel requis.');
+ const v=z.object({weekStart:z.string().refine(validDate)}).parse(payload);if(weekMonday(v.weekStart)!==v.weekStart)throw new ApiError(400,'Choisissez une semaine.');
+ const count=s.items.filter(i=>i.kind==='shopping'&&i.weekStart===v.weekStart&&!i.done).length;
+ if(!count)throw new ApiError(400,'Il n’y a rien à acheter sur cette liste.');
+ const last=s.shoppingFinished?.[actor];if(last&&Date.parse(now)-Date.parse(last)<SHOPPING_FINISHED_GAP)throw new ApiError(429,'Votre moitié a déjà été prévenue il y a moins de 2 heures.');
+ s.shoppingFinished={...s.shoppingFinished,[actor]:now};if(s.shoppingPending)delete s.shoppingPending[actor];
+ const note={category:'shopping' as const,message:`a fini la liste de courses : ${count} article${count>1?'s':''} à acheter${v.weekStart===weekMonday(parisToday())?'':' pour la semaine du '+new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'long',timeZone:'UTC'}).format(new Date(v.weekStart+'T12:00:00Z'))}.`};
+ s.sequence=(s.sequence||0)+1;s.activity.unshift({id:s.sequence,actor,...note,createdAt:now});s.activity=s.activity.filter(e=>Date.parse(e.createdAt)>Date.now()-90*86400000).slice(0,500);return note;
 }
 export function householdMutation(s:State,p:any,actor:number){
- if(p.action==='shopping-done')return flushShopping(s,actor);
- const note=householdChange(s,p,actor);return note?.category==='shopping'?holdShopping(s,p,actor):note;
+ if(p.action==='shopping-finished')return finishShopping(s,p.payload,actor,new Date().toISOString());
+ // Pages cached before « J'ai fini la liste » still send 'shopping-done' when leaving the list: accepted, without any push.
+ if(p.action==='shopping-done'){if(s.shoppingPending)delete s.shoppingPending[actor];return null;}
+ return householdChange(s,p,actor);
 }
 function householdChange(s:State,p:any,actor:number){
  if(actor!==0&&actor!==1)throw new ApiError(403,'Compte personnel requis.');
@@ -108,7 +110,7 @@ function householdChange(s:State,p:any,actor:number){
   if(!list)throw new ApiError(400,'Action inconnue.');
   const existing=s[list].find(x=>x.id===payload?.id);if(list==='appointments'&&existing?.sourceIdeaId)throw new ApiError(403,'Ce rendez-vous vient d’une invitation acceptée. Modifiez ou annulez l’invitation depuis Nos idées.');if(existing&&existing.owner!==actor)throw new ApiError(403,'Seul l’auteur peut modifier ou supprimer cet élément.');
   if(action.startsWith('delete-')){const v=deleteInput.parse(payload);const i=s[list].findIndex(x=>x.id===v.id);if(i<0||s[list][i].version!==v.version)conflict();s[list].splice(i,1);}
-  else{const v=(list==='entries'?entryInput:list==='items'?itemInput:appointmentInput).parse(payload);checkChild(s,(v as {child?:string}).child);if((v as any).category==='birthday'&&(v as any).circle==='kid'&&!(v as any).child)throw new ApiError(400,'Choisissez l’enfant dont c’est l’ami.');if((v as {pet?:string}).pet!==undefined&&!(s.pets||[]).some(p=>p.id===(v as {pet?:string}).pet))throw new ApiError(400,'Ce compagnon n’existe plus dans votre espace.');const i=s[list].findIndex(x=>x.id===v.id);if(i<0&&v.version!==0||i>=0&&s[list][i].version!==v.version)conflict();if(list==='items'&&existing&&existing.kind!==v.kind)throw new ApiError(400,'Le type de liste ne peut pas changer.');if(list==='items'&&v.kind==='shopping'&&((existing&&v.done!==existing.done)||(!existing&&v.done)))throw new ApiError(400,'Utilisez la case achat pour cocher un article.');const value={...v,...(list==='entries'?entryExtras(v as any):{}),...(list==='appointments'?((v as any).category==='birthday'?{countdown:undefined,recurrence:'yearly',intervalDays:undefined,endDate:'',repeatUntil:''}:(v as any).category==='couple'?{circle:undefined,person:-1,visibility:'shared',status:'scheduled',recurrence:'yearly',intervalDays:undefined,endDate:'',repeatUntil:''}:{circle:undefined,countdown:undefined}):{}),...(list==='items'&&v.kind==='shopping'?{child:undefined,note:v.note??existing?.note??'',photoId:v.photoId===undefined?existing?.photoId??null:v.photoId,weekStart:weekMonday(v.weekStart||existing?.weekStart||parisToday()),purchasedBy:existing?.purchasedBy??null,purchasedAt:existing?.purchasedAt??null}:{}),owner:actor,version:v.version+1,createdAt:i<0?now:s[list][i].createdAt};if(i<0)s[list].push(value);else s[list][i]=value;}
+  else{const v=(list==='entries'?entryInput:list==='items'?itemInput:appointmentInput).parse(payload);checkChild(s,(v as {child?:string}).child);if(list==='entries'&&(v as {kind:string}).kind==='settlement'&&(v as {forExpense?:string}).forExpense&&!s.entries.some(e=>e.id===(v as {forExpense?:string}).forExpense&&e.kind==='expense'))throw new ApiError(400,'Cette dépense n’existe plus. Choisissez-en une autre.');if((v as any).category==='birthday'&&(v as any).circle==='kid'&&!(v as any).child)throw new ApiError(400,'Choisissez l’enfant dont c’est l’ami.');if((v as {pet?:string}).pet!==undefined&&!(s.pets||[]).some(p=>p.id===(v as {pet?:string}).pet))throw new ApiError(400,'Ce compagnon n’existe plus dans votre espace.');const i=s[list].findIndex(x=>x.id===v.id);if(i<0&&v.version!==0||i>=0&&s[list][i].version!==v.version)conflict();if(list==='items'&&existing&&existing.kind!==v.kind)throw new ApiError(400,'Le type de liste ne peut pas changer.');if(list==='items'&&v.kind==='shopping'&&((existing&&v.done!==existing.done)||(!existing&&v.done)))throw new ApiError(400,'Utilisez la case achat pour cocher un article.');const value={...v,...(list==='entries'?entryExtras(v as any):{}),...(list==='appointments'?((v as any).category==='birthday'?{countdown:undefined,recurrence:'yearly',intervalDays:undefined,endDate:'',repeatUntil:''}:(v as any).category==='couple'?{circle:undefined,person:-1,visibility:'shared',status:'scheduled',recurrence:'yearly',intervalDays:undefined,endDate:'',repeatUntil:''}:{circle:undefined,countdown:undefined}):{}),...(list==='items'&&v.kind==='shopping'?{child:undefined,note:v.note??existing?.note??'',photoId:v.photoId===undefined?existing?.photoId??null:v.photoId,weekStart:weekMonday(v.weekStart||existing?.weekStart||parisToday()),purchasedBy:existing?.purchasedBy??null,purchasedAt:existing?.purchasedAt??null}:{}),owner:actor,version:v.version+1,createdAt:i<0?now:s[list][i].createdAt};if(i<0)s[list].push(value);else s[list][i]=value;}
  }
  // Private changes never enter the shared activity feed or trigger partner push.
  const current=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;
@@ -129,6 +131,8 @@ export function deviceMutation(s:State,p:any){const deviceId=deviceInput.parse(p
  if(p.action==='disable'){if(i>=0)s.devices.splice(i,1);return;}
  if(!['subscribe','preferences'].includes(p.action))throw new ApiError(400,'Action inconnue.');
  const member=memberInput.parse(p.member),preferences=preferenceInput.parse(p.preferences);
+ // A page cached before the agenda reminders does not send that switch: keep the device's own choice.
+ if(p.preferences&&typeof p.preferences==='object'&&!('reminders'in p.preferences)&&i>=0&&typeof s.devices[i].preferences?.reminders==='boolean')preferences.reminders=s.devices[i].preferences.reminders;
  if(p.action==='preferences'){if(i>=0)Object.assign(s.devices[i],{member,preferences});return;}
  const subscription=subscriptionInput.parse(p.subscription);if(i<0&&s.devices.length>=12)throw new ApiError(400,'Limite de 12 appareils atteinte.');const d={deviceId,member,preferences,subscription};if(i<0)s.devices.push(d);else s.devices[i]=d;
 }

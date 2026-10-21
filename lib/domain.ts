@@ -1,4 +1,4 @@
-export type Entry={child?:string;split?:'half'|'full'|'custom';owed?:number;recurrence?:'none'|'weekly'|'monthly'|'yearly'|'custom';intervalDays?:number;repeatUntil?:string;original?:Entry;owner?:number|null;id:string;kind:'expense'|'settlement';title:string;cents:number;member:number;category:string;date:string;note:string;version:number;createdAt:string};
+export type Entry={about?:string;forExpense?:string;child?:string;split?:'half'|'full'|'custom';owed?:number;recurrence?:'none'|'weekly'|'monthly'|'yearly'|'custom';intervalDays?:number;repeatUntil?:string;original?:Entry;owner?:number|null;id:string;kind:'expense'|'settlement';title:string;cents:number;member:number;category:string;date:string;note:string;version:number;createdAt:string};
 export type Item={child?:string;note?:string;photoId?:string|null;weekStart?:string;purchasedBy?:number|null;purchasedAt?:string|null;owner?:number|null;id:string;kind:'shopping'|'task';title:string;quantity:string;assignee:number;due:string;priority:number;done:boolean;version:number;createdAt:string};
 export type Household={categoryBudgets?:Record<string,number>;first:string;second:string;name:string;budget:number;version:number};
 export type Appointment={taskId?:string;assignee?:number;countdown?:boolean;pet?:string;circle?:'close'|'family'|'friends'|'mine'|'kid';child?:string;sourceIdeaId?:string;sourceIdeaVersion?:number;place?:import('./life').Place|null;intervalDays?:number;holidayGroups?:string[];visibility?:'private'|'shared';recurrence?:'none'|'weekly'|'monthly'|'yearly'|'custom';endDate?:string;repeatUntil?:string;source?:string;provisional?:boolean;original?:Appointment;owner?:number|null;id:string;title:string;category:'medical'|'personal'|'admin'|'work'|'holiday'|'travel'|'birthday'|'couple'|'party'|'absence'|'family'|'sport'|'study'|'home'|'other'|'france'|'christian'|'islam'|'culture'|'jewish'|'world'|'abroad'|'mission';person:number;status:'to_book'|'scheduled'|'done';date:string;time:string;bookBy:string;location:string;note:string;createdAt:string;version:number};
@@ -14,7 +14,7 @@ export const childNeeds=(c:{needs?:string;notes?:string})=>[c.needs,c.notes].map
 export function childAge(birthDate:string,today:string){if(!birthDate)return '';const [y,m,d]=birthDate.split('-').map(Number),[ty,tm,td]=today.split('-').map(Number);const months=(ty-y)*12+(tm-m)-(td<d?1:0);return months<1?'Nouveau-né':months<24?`${months} mois`:`${Math.floor(months/12)} ans`;}
 export type Gift={id:string;owner:number;recipient:-1|0|1;child?:string;other?:string;birthday?:string;title:string;note:string;link:string;price:number|null;secret:boolean;bought:boolean;version:number;createdAt:string};
 export type PersonTone='lavande'|'peche'|'ciel'|'corail'|'sable'|'perle'|'menthe'|'beurre'|'lilas'|'citron'|'rose';
-export type Data={diets?:import('./diets').Diets;petsMode?:boolean;shoppingPending?:boolean;familyMode?:boolean;colors?:Record<string,PersonTone>;meals?:Meals;profiles?:Record<string,string|null>;ideas?:import('./life').Idea[];plants?:import('./life').Plant[];pets?:import('./pets').Pet[];gifts?:Gift[];children?:Child[];templates?:ShoppingTemplate[];member?:number;household:Household|null;entries:Entry[];items:Item[];appointments:Appointment[]};
+export type Data={diets?:import('./diets').Diets;petsMode?:boolean;familyMode?:boolean;colors?:Record<string,PersonTone>;meals?:Meals;profiles?:Record<string,string|null>;ideas?:import('./life').Idea[];plants?:import('./life').Plant[];pets?:import('./pets').Pet[];gifts?:Gift[];children?:Child[];templates?:ShoppingTemplate[];member?:number;household:Household|null;entries:Entry[];items:Item[];appointments:Appointment[]};
 export const categories=['Courses','Maison','Factures','Sorties','Transport','Autre','Enfants'];
 export function centsFromInput(value:string):number{
  const s=value.trim().replace(',','.');
@@ -35,3 +35,9 @@ export function validDate(value:string):boolean{
 }
 export function money(cents:number):string{return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(cents/100);}
 export function today():string{return new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}
+// What a refund pays back, for the lists: « Remboursement · Avion ». The linked expense gives the title;
+// the few words typed by the person follow as a detail. A link to an expense deleted since is simply ignored.
+export function refundLabel(e:Pick<Entry,'title'|'about'|'forExpense'>,entries:Pick<Entry,'id'|'kind'|'title'>[]):{title:string;detail:string}{
+ const linked=e.forExpense?entries.find(x=>x.id===e.forExpense&&x.kind==='expense'):undefined;const subject=linked?.title||e.about||'';
+ return {title:subject?`Remboursement · ${subject}`:e.title,detail:linked&&e.about?e.about:''};
+}
