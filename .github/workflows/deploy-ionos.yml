@@ -33,7 +33,7 @@ jobs:
           IONOS_SFTP_HOST: ${{ secrets.IONOS_SFTP_HOST }}
           IONOS_SFTP_USERNAME: ${{ secrets.IONOS_SFTP_USERNAME }}
           IONOS_SFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
-        shell: python
+        shell: /usr/bin/python3 {0}
         run: |
           import base64
           import hashlib
