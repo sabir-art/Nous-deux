@@ -24,6 +24,9 @@ export function useHouseNavigation(notify:(message:string)=>void){
    // Native Back dismisses the top dialog first, preserving its underlying page.
    const dialog=[...document.querySelectorAll<HTMLDialogElement>('dialog[open]')].at(-1);
    if(dialog){restoring=true;history.forward();dialog.dispatchEvent(new Event('cancel',{cancelable:true}));return;}
+   // Then an open panel that stands in for the keyboard (emoji picker).
+   const layer=[...document.querySelectorAll<HTMLElement>('[data-back-dismiss]')].at(-1);
+   if(layer){restoring=true;history.forward();layer.dispatchEvent(new Event('nd-back-dismiss'));return;}
    const route=readRoute(event.state);
    if(route?.exit&&guarded){
     // Stay on the base entry so the next *native* Back can leave normally.

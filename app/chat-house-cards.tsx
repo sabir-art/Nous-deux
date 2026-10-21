@@ -27,15 +27,30 @@ const shortDate=(d:string)=>d?new Date(d+'T12:00:00').toLocaleDateString('fr-FR'
 const days=['Lun.','Mar.','Mer.','Jeu.','Ven.','Sam.','Dim.'];
 const who=(n:number,names:string[])=>n===0||n===1?names[n]:'L’un de nous';
 export const shareChoices:{kind:Exclude<HouseCardKind,'mot'>;label:string;hint:string;icon:import('react').ComponentType<import('lucide-react').LucideProps>;tone:string}[]=[
- {kind:'shopping',label:'La liste de courses',hint:'Ce qu’il reste à acheter, la semaine de votre choix',icon:ShoppingBasket,tone:'menthe'},
+ {kind:'shopping',label:'La liste de courses',hint:'Ce qu’il reste à acheter, la semaine de votre choix',icon:ShoppingBasket,tone:'ciel'},
  {kind:'expense',label:'Une dépense',hint:'Un paiement récent, avec un petit mot',icon:Receipt,tone:'beurre'},
  {kind:'plant',label:'Une plante',hint:'Son humeur et ses soins à faire',icon:Leaf,tone:'menthe'},
  {kind:'task',label:'Une mission',hint:'Un rappel doux pour la maison',icon:CheckCheck,tone:'lavande'},
  {kind:'appointment',label:'Un rendez-vous partagé',hint:'Une date de notre agenda commun',icon:CalendarDays,tone:'lilas'},
- {kind:'recipe',label:'Une recette',hint:'Une idée pour le prochain repas',icon:BookOpen,tone:'rose'},
- {kind:'menu',label:'Un menu de la semaine',hint:'Nos repas déjà prévus',icon:UtensilsCrossed,tone:'rose'},
+ {kind:'recipe',label:'Une recette',hint:'Une idée pour le prochain repas',icon:BookOpen,tone:'corail'},
+ {kind:'menu',label:'Un menu de la semaine',hint:'Nos repas déjà prévus',icon:UtensilsCrossed,tone:'peche'},
  {kind:'invitation',label:'Une invitation',hint:'Une idée de sortie, dans son enveloppe',icon:Mail,tone:'rose'},
 ];
+/** Une couleur pastel par type partagé, la même dans « Partager avec… » et sur la carte envoyée. */
+export const kindTone:Record<HouseCardKind,string>={...Object.fromEntries(shareChoices.map(c=>[c.kind,c.tone])),mot:'citron'} as Record<HouseCardKind,string>;
+/** Notre menu : une cloche de service souriante sur son assiette (dans l’esprit des mascottes Buddy). */
+export function MenuBuddy({size=56}:{size?:number}){
+ return <svg className="nd-buddy menu-buddy" viewBox="0 0 120 120" width={size} height={size} aria-hidden="true">
+  <path d="M44 24c-5-5 4-8-1-14M76 24c-5-5 4-8-1-14" fill="none" stroke="var(--pupil)" strokeWidth="4" strokeLinecap="round" opacity=".4"/>
+  <circle className="body f-lavande" cx="60" cy="33" r="8"/>
+  <path className="body f-lavande" d="M12 98C12 60 33 39 60 39s48 21 48 59z"/>
+  <path d="M27 80q3-20 22-29" fill="none" stroke="var(--eye)" strokeWidth="5" strokeLinecap="round" opacity=".75"/>
+  <rect x="4" y="96" width="112" height="13" rx="6.5" fill="var(--eye)"/><rect x="18" y="108" width="84" height="6" rx="3" className="body f-peche"/>
+  <path className="lid" d="M37 73q9-11 18 0M65 73q9-11 18 0"/><path className="mouth" d="M54 86q6 10 12 0"/>
+  <circle className="cheek" cx="38" cy="84" r="7"/><circle className="cheek" cx="82" cy="84" r="7"/>
+  <path className="f-heart" d="M98 34C87.5 27.7 92.4 20.7 98 22.8 103.6 20.7 108.5 27.7 98 34z"/>
+ </svg>;
+}
 export const openTarget=(card:HouseCard):HouseOpenTarget=>card.kind==='mot'?{page:'chat'}:card.kind==='invitation'?{page:'ideas',ideaId:card.ref}:card.kind==='shopping'?{page:'shopping',weekStart:card.ref}:card.kind==='expense'?{page:'expenses'}:card.kind==='plant'?{page:'plants'}:card.kind==='task'?{page:'tasks'}:card.kind==='appointment'?{page:'calendar',date:String(card.data.date||'')}:{page:'meals'};
 const openLabels:Record<HouseCardKind,string>={shopping:'Ouvrir les courses',expense:'Voir notre argent',plant:'Voir le jardin',task:'Voir nos missions',appointment:'Voir dans l’agenda',recipe:'Ouvrir le carnet',menu:'Voir nos menus',mot:'',invitation:'Ouvrir l’invitation'};
 
@@ -56,28 +71,28 @@ export function HouseCardMessage({card,names,onOpen,mine,messageId}:{card:HouseC
  const d=card.data||{};
  switch(card.kind){
   case 'shopping':{const items:{title:string;quantity:string}[]=Array.isArray(d.items)?d.items:[];const more=Math.max(0,Number(d.toBuy||0)-items.length);
-   return <CardShell card={card} tone="menthe" label={'Courses · '+(d.weekStart?weekLabel(String(d.weekStart)):'cette semaine')} title={<>{Number(d.toBuy||0)} article{Number(d.toBuy)>1?'s':''} <em>à acheter</em></>} onOpen={onOpen} deco={<Buddy shape="pot" tone="beurre" mood="wow" look="up" size={64}/>}>
+   return <CardShell card={card} tone={kindTone.shopping} label={'Courses · '+(d.weekStart?weekLabel(String(d.weekStart)):'cette semaine')} title={<>{Number(d.toBuy||0)} article{Number(d.toBuy)>1?'s':''} <em>à acheter</em></>} onOpen={onOpen} deco={<Buddy shape="pot" tone="beurre" mood="wow" look="up" size={64}/>}>
     <ul className="house-card-list">{items.map((i,n)=><li key={n}><span aria-hidden="true">{foodEmoji(i.title,'🛒')}</span><span>{i.title}</span>{i.quantity&&<small>{i.quantity}</small>}</li>)}</ul>
     {(more>0||Number(d.bought)>0)&&<p className="house-card-meta">{more>0?`+ ${more} autre${more>1?'s':''}`:''}{more>0&&Number(d.bought)>0?' · ':''}{Number(d.bought)>0?`${d.bought} déjà acheté${Number(d.bought)>1?'s':''}`:''}</p>}
    </CardShell>;}
   case 'expense':{const settlement=d.kind==='settlement';
-   return <CardShell card={card} tone="beurre" label={settlement?'Remboursement':'Dépense · '+(d.category||'Autre')} title={String(d.title||'Dépense')} onOpen={onOpen} deco={<Buddy shape="blob" tone="peche" mood="happy" size={60}/>}>
+   return <CardShell card={card} tone={kindTone.expense} label={settlement?'Remboursement':'Dépense · '+(d.category||'Autre')} title={String(d.title||'Dépense')} onOpen={onOpen} deco={<Buddy shape="blob" tone="peche" mood="happy" size={60}/>}>
     <p className="house-card-amount">{money(Number(d.cents)||0)}</p>
     <p className="house-card-meta">{settlement?'Versé par ':'Payé par '}{who(Number(d.payer),names)}{d.date?' · '+shortDate(String(d.date)):''}{settlement?'':' · partagé 50/50'}</p>
    </CardShell>;}
   case 'plant':{const mood=String(d.mood||'happy'),thirsty=mood==='thirsty'||mood==='droopy',due:string[]=Array.isArray(d.due)?d.due:[];
-   return <CardShell card={card} tone="sapin" label="Notre jardin" title={<>{String(d.name||'Notre plante')} {thirsty?<em>a soif !</em>:mood==='ready'?<em>attend son arrosage</em>:<em>va bien</em>}</>} onOpen={onOpen}>
+   return <CardShell card={card} tone={kindTone.plant} label="Notre jardin" title={<>{String(d.name||'Notre plante')} {thirsty?<em>a soif !</em>:mood==='ready'?<em>attend son arrosage</em>:<em>va bien</em>}</>} onOpen={onOpen}>
     <div className="house-card-plant-row"><PlantBuddy name={String(d.name||'')} species={plantSpecies(String(d.species||''))} mood={plantFace(mood)} potTone="peche" speech={false} size={84}/><p>{plantQuips[mood as keyof typeof plantQuips]||plantQuips.happy}</p></div>
     {due.length>0?<p className="house-card-meta">À faire : {due.map(k=>careLabels[k as keyof typeof careLabels]||k).join(', ').toLowerCase()}{Number(d.overdue)>0?` · arrosage en retard de ${d.overdue} jour${Number(d.overdue)>1?'s':''}`:''}</p>:<p className="house-card-meta">Prochain arrosage : {shortDate(String(d.waterDue||''))||'bientôt'}</p>}
    </CardShell>;}
-  case 'task':return <CardShell card={card} tone="lavande" label={d.priority?'Mission prioritaire':'Mission'} title={String(d.title||'Mission')} onOpen={onOpen} deco={<Buddy shape="pill" tone={d.done?'menthe':'citron'} mood={d.done?'happy':'wow'} size={58}/>}>
+  case 'task':return <CardShell card={card} tone={kindTone.task} label={d.priority?'Mission prioritaire':'Mission'} title={String(d.title||'Mission')} onOpen={onOpen} deco={<Buddy shape="pill" tone={d.done?'menthe':'citron'} mood={d.done?'happy':'wow'} size={58}/>}>
    <p className="house-card-meta">Pour : {who(Number(d.assignee),names)}{d.due?' · avant le '+shortDate(String(d.due)):''} · <strong>{d.done?'Faite':'À faire'}</strong></p>
   </CardShell>;
   case 'appointment':{const date=String(d.date||'');
-   return <CardShell card={card} tone="lilas" label="Rendez-vous partagé" title={String(d.title||'Rendez-vous')} onOpen={onOpen}>
+   return <CardShell card={card} tone={kindTone.appointment} label="Rendez-vous partagé" title={String(d.title||'Rendez-vous')} onOpen={onOpen}>
     <div className="house-card-when">{date?<span className="house-card-day" aria-hidden="true"><b>{new Date(date+'T12:00:00').getDate()}</b><small>{new Date(date+'T12:00:00').toLocaleDateString('fr-FR',{month:'short'})}</small></span>:null}<p className="house-card-meta">{date?shortDate(date):'Date à fixer'}{d.time?' · '+d.time:''}{d.endDate&&d.endDate!==date?' → '+shortDate(String(d.endDate)):''}{d.location?<><br/>{String(d.location)}</>:null}</p></div>
    </CardShell>;}
-  case 'recipe':return <CardShell card={card} tone="rose" label="Recette" title={<><span aria-hidden="true">{foodEmoji(String(d.title||''),'🍽️')} </span>{String(d.title||'Recette')}</>} onOpen={onOpen} deco={<Sticker tone="citron" size="sm" rotate={6}>miam !</Sticker>}>
+  case 'recipe':return <CardShell card={card} tone={kindTone.recipe} label="Recette" title={<><span aria-hidden="true">{foodEmoji(String(d.title||''),'🍽️')} </span>{String(d.title||'Recette')}</>} onOpen={onOpen} deco={<Sticker tone="citron" size="sm" rotate={6}>miam !</Sticker>}>
    {(d.minutes||d.servings||d.group)&&<p className="house-card-meta">{[d.minutes&&`${d.minutes} min`,d.servings&&`${d.servings} portions`,d.group].filter(Boolean).join(' · ')}</p>}
   </CardShell>;
   // Petit mot doux : pas de page à ouvrir, juste le message et nos deux mascottes.
@@ -85,7 +100,7 @@ export function HouseCardMessage({card,names,onOpen,mine,messageId}:{card:HouseC
   // Invitation dans son enveloppe : elle s’ouvre une fois sous les yeux du partenaire.
   case 'invitation':return <InvitationChatCard invite={{title:String(d.title||'Une invitation'),category:String(d.category||'outing'),owner:Number(d.owner),date:String(d.date||''),time:String(d.time||'')}} names={names} mine={mine} messageId={messageId} note={card.note} onOpen={onOpen?()=>onOpen(openTarget(card)):undefined}/>;
   case 'menu':{const slots:{day:number;meal:string;title:string}[]=Array.isArray(d.slots)?d.slots:[];
-   return <CardShell card={card} tone="rose" label={'Menu · '+(d.weekStart?weekLabel(String(d.weekStart)):'semaine')} title={<>Notre menu <em>de la semaine</em></>} onOpen={onOpen}>
+   return <CardShell card={card} tone={kindTone.menu} label={'Menu · '+(d.weekStart?weekLabel(String(d.weekStart)):'semaine')} title={<>Notre menu <em>de la semaine</em></>} onOpen={onOpen} deco={<MenuBuddy size={60}/>}>
     <ul className="house-card-list">{slots.slice(0,6).map((s,n)=><li key={n}><span aria-hidden="true">{foodEmoji(s.title,'🍽️')}</span><span>{s.title}</span><small>{days[s.day]||''} {s.meal==='lunch'?'midi':'soir'}</small></li>)}</ul>
     {slots.length>6&&<p className="house-card-meta">+ {slots.length-6} autres repas</p>}
    </CardShell>;}
@@ -96,7 +111,7 @@ export function HouseCardMessage({card,names,onOpen,mine,messageId}:{card:HouseC
 // Petit mot doux en forme d’enveloppe : rabat en V, sceau en cœur, nos deux mascottes en bas.
 function SweetNoteCard({card}:{card:HouseCard}){
  const text=String(card.data?.text||'Je pense à toi.');
- return <article className={`house-card house-card-mot nd-tone-${card.ref==='perso'?'rose':sweetNoteTone(card.ref)}`}>
+ return <article className={`house-card house-card-mot nd-tone-${card.ref==='perso'?kindTone.mot:sweetNoteTone(card.ref)}`}>
   <svg className="mot-flap" viewBox="0 0 300 60" preserveAspectRatio="none" aria-hidden="true"><path className="mot-flap-fill" d="M0 0H300C236 16 186 38 150 56 114 38 64 16 0 0z"/><path className="mot-flap-line" d="M0 0C64 16 114 38 150 56 186 38 236 16 300 0"/></svg>
   <span className="mot-seal" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20.5C5 16 2.5 12.4 2.5 9a4.6 4.6 0 0 1 9.5-2.4A4.6 4.6 0 0 1 21.5 9c0 3.4-2.5 7-9.5 11.5z"/></svg></span>
   <span className="house-card-label">Un petit mot doux</span>
@@ -107,19 +122,19 @@ function SweetNoteCard({card}:{card:HouseCard}){
 }
 
 const relativeWeek=(week:string,current:string)=>{const n=Math.round((Date.parse(week)-Date.parse(current))/(7*86400000));return n===0?'Cette semaine':n===1?'La semaine prochaine':n===-1?'La semaine dernière':n>1?`Dans ${n} semaines`:`Il y a ${-n} semaines`;};
-type Empty={text:string;action:string;target:HouseOpenTarget;tone:'citron'|'menthe'|'beurre'|'lavande'|'rose'|'peche'|'lilas';shape:'pot'|'blob'|'pill'|'flower'|'dome';buddy:'citron'|'menthe'|'beurre'|'lavande'|'rose'|'peche'};
+type Empty={text:string;action:string;target:HouseOpenTarget;shape:'pot'|'blob'|'pill'|'flower'|'dome'|'menu';buddy:'citron'|'menthe'|'beurre'|'lavande'|'rose'|'peche'};
 const empties:Partial<Record<HouseCardKind,Empty>>={
- shopping:{text:'Notre liste de courses est encore toute vide. On y glisse quelques envies ?',action:'Ajouter des courses',target:{page:'shopping',create:'shopping'},tone:'beurre',shape:'pot',buddy:'peche'},
- expense:{text:'Aucune dépense notée pour l’instant. La première sera peut-être un bon resto ?',action:'Noter une dépense',target:{page:'expenses',create:'expense'},tone:'peche',shape:'blob',buddy:'lavande'},
- plant:{text:'Notre jardin attend sa première plante. On en adopte une ?',action:'Ajouter une plante',target:{page:'plants',create:'plants'},tone:'menthe',shape:'flower',buddy:'peche'},
- task:{text:'Pas encore de mission : la maison est bien calme ! On en confie une ?',action:'Créer une mission',target:{page:'tasks',create:'task'},tone:'citron',shape:'pill',buddy:'lavande'},
- appointment:{text:'Pas encore de rendez-vous partagé à venir. On prévoit un moment ensemble ?',action:'Ajouter un rendez-vous',target:{page:'calendar',create:'appointment'},tone:'lilas',shape:'dome',buddy:'beurre'},
- recipe:{text:'Aucune recette ne correspond. Et si on ajoutait la nôtre ?',action:'Ajouter ma recette',target:{page:'meals',create:'recipe'},tone:'rose',shape:'blob',buddy:'citron'},
- menu:{text:'Pas encore de menu de la semaine. On prévoit nos repas ensemble ?',action:'Préparer un menu',target:{page:'meals',create:'menu'},tone:'rose',shape:'pot',buddy:'beurre'},
- invitation:{text:'Pas encore d’invitation entre nous. On propose un resto, une balade, une surprise ?',action:'Proposer une idée',target:{page:'ideas',create:'ideas'},tone:'rose',shape:'flower',buddy:'lavande'},
+ shopping:{text:'Notre liste de courses est encore toute vide. On y glisse quelques envies ?',action:'Ajouter des courses',target:{page:'shopping',create:'shopping'},shape:'pot',buddy:'peche'},
+ expense:{text:'Aucune dépense notée pour l’instant. La première sera peut-être un bon resto ?',action:'Noter une dépense',target:{page:'expenses',create:'expense'},shape:'blob',buddy:'lavande'},
+ plant:{text:'Notre jardin attend sa première plante. On en adopte une ?',action:'Ajouter une plante',target:{page:'plants',create:'plants'},shape:'flower',buddy:'peche'},
+ task:{text:'Pas encore de mission : la maison est bien calme ! On en confie une ?',action:'Créer une mission',target:{page:'tasks',create:'task'},shape:'pill',buddy:'citron'},
+ appointment:{text:'Pas encore de rendez-vous partagé à venir. On prévoit un moment ensemble ?',action:'Ajouter un rendez-vous',target:{page:'calendar',create:'appointment'},shape:'dome',buddy:'beurre'},
+ recipe:{text:'Aucune recette ne correspond. Et si on ajoutait la nôtre ?',action:'Ajouter ma recette',target:{page:'meals',create:'recipe'},shape:'blob',buddy:'citron'},
+ menu:{text:'Pas encore de menu de la semaine. On prévoit nos repas ensemble ?',action:'Préparer un menu',target:{page:'meals',create:'menu'},shape:'menu',buddy:'lavande'},
+ invitation:{text:'Pas encore d’invitation entre nous. On propose un resto, une balade, une surprise ?',action:'Proposer une idée',target:{page:'ideas',create:'ideas'},shape:'flower',buddy:'lavande'},
 };
-function ShareEmpty({empty,onGo}:{empty:Empty;onGo?:(t:HouseOpenTarget)=>void}){
- return <div className={'house-share-empty nd-tone-'+empty.tone}><Buddy shape={empty.shape} tone={empty.buddy} mood="happy" size={56}/><p>{empty.text}</p>{onGo&&<button type="button" className="primary" onClick={()=>onGo(empty.target)}><Plus size={18} aria-hidden="true"/>{empty.action}</button>}</div>;
+function ShareEmpty({kind,empty,onGo}:{kind:HouseCardKind;empty:Empty;onGo?:(t:HouseOpenTarget)=>void}){
+ return <div className={'house-share-empty nd-tone-'+kindTone[kind]}>{empty.shape==='menu'?<MenuBuddy size={56}/>:<Buddy shape={empty.shape} tone={empty.buddy} mood="happy" size={56}/>}<p>{empty.text}</p>{onGo&&<button type="button" className="primary" onClick={()=>onGo(empty.target)}><Plus size={18} aria-hidden="true"/>{empty.action}</button>}</div>;
 }
 
 /** Choix d’un élément de la maison à partager. La confidentialité reste vérifiée par le serveur. */
@@ -159,7 +174,7 @@ export function HouseSharePicker({home,names,active,onClose,onSend,onFiles,onOpe
  return <LifeDialog title={choice?choice.label:'Partager avec '+names[1-active]} onClose={onClose} busy={busy} className="house-share-dialog">
   {!kind?<>
    <button type="button" className="house-share-files" onClick={()=>{onClose();onFiles();}}><Paperclip size={20}/><span><strong>Photos ou documents</strong><small>Images, PDF, documents · 30 Mo</small></span></button>
-   <button type="button" className="house-share-sweet nd-tone-rose" onClick={()=>choose('mot')}><Heart size={22} aria-hidden="true"/><span><strong>Un petit mot doux</strong><small>Le vôtre ou un mot tout prêt, dans une jolie enveloppe</small></span></button>
+   <button type="button" className={'house-share-sweet nd-tone-'+kindTone.mot} onClick={()=>choose('mot')}><Heart size={22} aria-hidden="true"/><span><strong>Un petit mot doux</strong><small>Le vôtre ou un mot tout prêt, dans une jolie enveloppe</small></span></button>
    <h3 className="house-share-heading">Partager depuis la maison</h3>
    <div className="house-share-grid">{shareChoices.map(c=><button type="button" key={c.kind} className={'nd-tone-'+c.tone} onClick={()=>choose(c.kind)}><c.icon size={22} aria-hidden="true"/><span><strong>{c.label}</strong><small>{c.hint}</small></span></button>)}</div>
   </>:<>
@@ -167,7 +182,7 @@ export function HouseSharePicker({home,names,active,onClose,onSend,onFiles,onOpe
    {kind==='shopping'?(shopWeeks.length?<>
     <div className="house-share-weeks" role="radiogroup" aria-label="Semaine à partager">{shopWeeks.map(w=><button type="button" role="radio" key={w} aria-checked={w===chosenWeek} onClick={()=>setShopWeek(w)}><strong>{relativeWeek(w,week)}</strong><small>{weekLabel(w)}</small></button>)}</div>
     <HouseCardMessage names={names} card={{kind:'shopping',ref:chosenWeek,data:{weekStart:chosenWeek,toBuy:toBuy.length,bought:(home?.items||[]).filter(i=>i.kind==='shopping'&&i.weekStart===chosenWeek&&i.done).length,items:toBuy.slice(0,12).map(i=>({title:i.title,quantity:i.quantity}))}}}/>
-   </>:<ShareEmpty empty={empties.shopping!} onGo={go}/>)
+   </>:<ShareEmpty kind="shopping" empty={empties.shopping!} onGo={go}/>)
    :kind==='mot'?<>
     <label className="house-share-note"><span>{pick?<>Une ligne en plus <span className="optional">(facultatif)</span></>:'Écrire mon propre mot'}</span><textarea rows={2} maxLength={280} value={note} disabled={busy} onChange={e=>setNote(e.target.value)} placeholder={pick?'Rien que pour toi…':'Tu illumines mes journées…'}/></label>
     <p className="house-share-or">{pick?'Votre mot tout prêt':'Ou choisir un mot tout prêt'}</p>
@@ -178,7 +193,7 @@ export function HouseSharePicker({home,names,active,onClose,onSend,onFiles,onOpe
     {kind==='recipe'&&<label className="house-share-search">Chercher une recette<input type="search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Chakchouka, curry…"/></label>}
     {(kind==='recipe'||kind==='menu')&&!recipes?<p role="status" className="helper-copy">On ouvre le carnet…</p>
     :options.length?<div className="house-share-options" role="radiogroup" aria-label={choice?.label}>{options.map(o=><button type="button" role="radio" aria-checked={pick===o.id} key={o.id} onClick={()=>setPick(o.id)}><strong>{o.title}</strong>{o.meta&&<small>{o.meta}</small>}</button>)}</div>
-    :empties[kind]&&<ShareEmpty empty={empties[kind]!} onGo={go}/>}
+    :empties[kind]&&<ShareEmpty kind={kind} empty={empties[kind]!} onGo={go}/>}
    </>}
    {kind!=='mot'&&(kind!=='shopping'||shopWeeks.length>0)&&(kind==='shopping'||options.length>0)&&(withNote?<label className="house-share-note"><span>Un petit mot <span className="optional">(facultatif)</span></span><textarea rows={2} maxLength={280} value={note} disabled={busy} autoFocus onChange={e=>setNote(e.target.value)} placeholder={kind==='plant'?'Regarde, elle a soif, tu peux l’arroser ?':kind==='shopping'?'Tu peux passer au marché ?':'Un mot doux…'}/></label>
    :<button type="button" className="text-link house-share-add-note" disabled={busy} onClick={()=>setWithNote(true)}><Plus size={18} aria-hidden="true"/>Ajouter un petit mot<span className="optional">(facultatif)</span></button>)}

@@ -31,7 +31,7 @@ const drawings:Record<string,ReactNode>={
 export function NdEmojiIcon({id,label}:{id:string;label?:string}){
  const e=findNdEmoji(id);if(!e)return null;
  // An empty label marks a decorative copy (inside a button that already names it).
- return <span className="nd-emoji" {...(label===''?{'aria-hidden':true}:{role:'img','aria-label':label??e.label})}><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">{drawings[id]}</svg></span>;
+ return <span className="nd-emoji" {...(label===''?{'aria-hidden':true}:{role:'img','aria-label':label??e.label})} data-nd={id}><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">{drawings[id]}</svg></span>;
 }
 
 /** Texte d’un message avec nos émojis dessinés ; un message fait seulement de 1 à 3 émojis s’affiche en grand. */

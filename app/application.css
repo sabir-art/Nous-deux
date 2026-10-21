@@ -622,8 +622,6 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .chat-message p.chat-emoji-only{font-size:40px;line-height:48px}
 .chat-emoji-heading{margin:var(--space-2) 0 var(--space-1);font:600 13px/16px var(--font-sans);color:var(--ink-muted)}.chat-emoji-sections>.chat-emoji-heading:first-child{margin-top:0}
 .chat-nd-emoji-grid .nd-emoji{width:30px;height:30px;vertical-align:middle}
-.chat-nd-preview{display:flex;align-items:center;gap:var(--space-2);margin:0 0 var(--space-2);padding:var(--space-1) var(--space-3);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink);font:500 15px/22px var(--font-sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.chat-nd-preview>span:first-child{font:600 12px/16px var(--font-sans);color:var(--ink-muted)}
 /* 20 octobre : teintes beaucoup plus pâles ; un fin contour de la même famille garde les jours différenciés. */
 .event-open.day-tone-0 .nd-event-card{background:color-mix(in srgb,var(--menthe) 20%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--menthe) 65%,var(--surface))}
 .event-open.day-tone-1 .nd-event-card{background:color-mix(in srgb,var(--beurre) 22%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--beurre) 75%,var(--surface))}
@@ -668,3 +666,15 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .match-empty .empty-art{width:80px;height:80px;border-radius:var(--radius-pill);background:var(--heart-soft)}
 .match-empty .meal-empty{font-size:40px}
 @media (max-width:420px){.recipe-tile>div:last-child{padding:var(--space-4) var(--space-5) var(--space-5)}.meal-match-intro>.nd-match{max-width:100%}}
+
+/* 21 octobre : la zone d’écriture dessine « Nos émojis » (app/chat-input.tsx), elle grandit avec le texte. */
+.chat-input{flex:1;min-width:0;min-height:44px;max-height:140px;overflow-y:auto;overscroll-behavior:contain;box-sizing:border-box;padding:10px 2px;font:400 16px/24px var(--font-sans);color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;outline:none;cursor:text;-webkit-user-select:text;user-select:text}
+.chat-input:empty::before{content:attr(data-placeholder);color:var(--ink-muted);pointer-events:none}
+.chat-input[aria-disabled=true]{opacity:.6}
+/* Le contour de focus est porté par la pilule entière (.chat-compose-input:focus-within). */
+.chat-compose-input .chat-input:focus,.chat-compose-input .chat-input:focus-visible{outline:none}
+.chat-input .nd-emoji-img{display:inline-block;width:1.45em;height:1.45em;margin:0 1px;vertical-align:-.36em}
+/* Stickers, émojis seuls et cartes respirent comme les autres messages : l’écart normal plus space-2 de chaque côté. */
+.chat-messages>div:has(>.chat-sticker-bubble),.chat-messages>div:has(>.chat-message .chat-emoji-only){margin-block:var(--space-2)}
+/* Billet d’invitation retrouvé : séparation douce à la place des anciens pointillés. */
+.invitation-ticket .ticket-art{border-bottom:2px solid color-mix(in srgb,var(--ink) 14%,transparent)}
