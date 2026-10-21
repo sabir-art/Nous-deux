@@ -16,11 +16,72 @@ jobs:
   deploy:
     if: github.ref == 'refs/heads/site-vitrine'
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
-      - name: Vérifier la connexion au serveur IONOS
+      - name: Récupérer le site vitrine
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Installer le client SFTP
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends python3-paramiko
+
+      - name: Publier le site et vérifier le fichier transféré
         env:
           IONOS_SFTP_HOST: ${{ secrets.IONOS_SFTP_HOST }}
+          IONOS_SFTP_USERNAME: ${{ secrets.IONOS_SFTP_USERNAME }}
+          IONOS_SFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
+        shell: python
         run: |
-          test -n "$IONOS_SFTP_HOST"
-          ssh-keyscan -T 15 -p 22 -t ed25519 "$IONOS_SFTP_HOST"
+          import base64
+          import hashlib
+          import os
+          from pathlib import Path
+          import paramiko
+
+          names = ("IONOS_SFTP_HOST", "IONOS_SFTP_USERNAME", "IONOS_SFTP_PASSWORD")
+          if any(not os.environ.get(name) for name in names):
+              raise SystemExit("Un des trois secrets IONOS SFTP est manquant.")
+
+          source = Path("index.html")
+          if not source.is_file() or source.stat().st_size == 0:
+              raise SystemExit("Le fichier index.html est absent ou vide.")
+          expected_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+          host = os.environ["IONOS_SFTP_HOST"]
+          # Clé publique observée lors de la première connexion, puis épinglée.
+          key = paramiko.Ed25519Key(data=base64.b64decode(
+              "AAAAC3NzaC1lZDI1NTE5AAAAINbBMvvDjN4IP04VAZlDH42A+HL25ifeIK9CorAvaMA/"
+          ))
+          client = paramiko.SSHClient()
+          client.get_host_keys().add(host, "ssh-ed25519", key)
+          client.set_missing_host_key_policy(paramiko.RejectPolicy())
+          try:
+              client.connect(
+                  hostname=host,
+                  port=22,
+                  username=os.environ["IONOS_SFTP_USERNAME"],
+                  password=os.environ["IONOS_SFTP_PASSWORD"],
+                  look_for_keys=False,
+                  allow_agent=False,
+                  timeout=30,
+                  banner_timeout=30,
+                  auth_timeout=30,
+              )
+              with client.open_sftp() as sftp:
+                  # Le compte SFTP est limité par IONOS à /nousdeux-vitrine.
+                  # Sa racine visible est donc / ; ne pas ajouter un sous-dossier.
+                  sftp.chdir("/")
+                  temporary = ".index-" + os.environ["GITHUB_RUN_ID"] + ".tmp"
+                  sftp.put(str(source), temporary, confirm=True)
+                  sftp.chmod(temporary, 0o644)
+                  with sftp.open(temporary, "rb") as uploaded:
+                      actual_hash = hashlib.sha256(uploaded.read()).hexdigest()
+                  if actual_hash != expected_hash:
+                      sftp.remove(temporary)
+                      raise RuntimeError("Le fichier transféré diffère du fichier GitHub.")
+                  sftp.posix_rename(temporary, "index.html")
+                  print("Site vitrine publié sur IONOS ; intégrité du fichier vérifiée.")
+          finally:
+              client.close()
