@@ -1,0 +1,26 @@
+name: Déployer le site sur IONOS
+
+on:
+  push:
+    branches: [site-vitrine]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ionos-site-vitrine
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/site-vitrine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Vérifier la connexion au serveur IONOS
+        env:
+          IONOS_SFTP_HOST: ${{ secrets.IONOS_SFTP_HOST }}
+        run: |
+          test -n "$IONOS_SFTP_HOST"
+          ssh-keyscan -T 15 -p 22 -t ed25519 "$IONOS_SFTP_HOST"
