@@ -1275,6 +1275,15 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}
 .tphone2{top:140px}
 .tcap.c2{top:462px}
 @media (max-width:860px){.tphone2{top:174px}.tcap.c2{top:410px}}
+
+/* v27 : contours vraiment fins */
+.phone,.tphone,.tphone2{--rim:0 0 0 1px rgba(255,255,255,.55)}
+.phone{border:2px solid #1d1a23;box-shadow:var(--rim),var(--shadow-lift)}
+.tphone{border:2px solid #1d1a23;box-shadow:var(--rim),var(--shadow-lift)}
+.tphone .app-scr{transform:scale(.736);height:674px}
+.tphone2{border:1.5px solid #1d1a23;box-shadow:var(--rim),var(--shadow-lift)}
+.tphone2 .app-scr{transform:scale(.4453)}
+@media (max-width:860px){.tphone2{border-width:1.5px}.tphone2 .app-scr{transform:scale(.3227)}}
 /* Pages contact et mentions légales */
 .subpage{padding-block:24px 64px;max-width:760px}
 .subpage[hidden]{display:none}
