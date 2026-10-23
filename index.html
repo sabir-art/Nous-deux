@@ -1322,6 +1322,16 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}
   .tcap.c1{left:0}.tcap.c2{right:0}
   .tstage.duo .tphone{transform:translateX(-39px) scale(.8)}
 }
+
+/* v31 : accueil fidèle à l'app, téléphones centrés et alignés sur le titre */
+.rh-body section{padding:0}
+.rh-head h1{margin:0;font:800 26px/32px var(--font-sans);color:var(--ink)}
+.rh-head p{margin:4px 0 0;font:500 15px/20px var(--font-sans);color:var(--ink-muted)}
+.rh-head p::first-letter{text-transform:uppercase}
+@media (min-width:861px){
+  #confiance{overflow-x:visible}
+  .tstage{translate:var(--sx,0px) 0;margin-top:calc(-1 * var(--lift,0px))}
+}
 /* Pages contact et mentions légales */
 .subpage{padding-block:24px 64px;max-width:760px}
 .subpage[hidden]{display:none}
@@ -1401,7 +1411,7 @@ footer{padding-block:32px 40px;color:var(--muted);font-size:14px;display:flex;fl
         <p class="lead">Nous deux réunit tout ce qu'un couple organise au quotidien : les courses, les rendez-vous, les dépenses, les repas et les petits mots. Au même endroit, sur vos deux téléphones.</p>
       </div>
       <div class="phone">
-        <span class="sticker st1">bonsoir !</span>
+        <span class="sticker st1">on s'organise !</span>
         <span class="sticker st2">c'est noté</span>
         <div class="phone-screen"><div id="real-home" class="real-home"></div></div>
       </div>
@@ -2615,6 +2625,7 @@ footer{padding-block:32px 40px;color:var(--muted);font-size:14px;display:flex;fl
     mount(home,h(React.Fragment,null,
       h("div",{className:"rh-top"},h("span",{className:"rh-brand",dangerouslySetInnerHTML:{__html:LOGO+"Nous deux"}}),h("span",{className:"rh-sync"},"À jour")),
       h("div",{className:"rh-body"},
+        h("div",{className:"rh-head"},h("h1",null,"Bonjour, Laura !"),h("p",null,new Intl.DateTimeFormat("fr-FR",{weekday:"long",day:"numeric",month:"long"}).format(new Date()))),
         h(N.HeroCard,{tone:"citron",title:h(React.Fragment,null,"Notre quotidien,",h("br"),h("em",null,"à deux.")),text:"Un peu d’organisation, beaucoup de nous.",action:"Voir notre journée",buddy:{shape:"flower",tone:"lavande",mood:"wow"}}),
         h("section",null,h("div",{className:"section-title"},h("h2",null,"On fait quoi ?")),
           h("div",{className:"rh-grid"},
@@ -2813,6 +2824,15 @@ footer{padding-block:32px 40px;color:var(--muted);font-size:14px;display:flex;fl
   document.querySelectorAll(".tphone button,.tphone [tabindex]").forEach(function(b){b.tabIndex=-1});
   var items=[].slice.call(list.querySelectorAll("li")),scenes=[].slice.call(document.querySelectorAll(".tscreen .scene")),stage=document.getElementById("tstage"),cur=-1,timer=null,RATE=.7,DUR=Math.round(5600/RATE),pinned=false,resume=document.getElementById("trust-resume");
   list.style.setProperty("--dur",DUR+"ms");
+  /* Téléphone centré entre la liste et le bord droit, haut aligné sur le titre */
+  var trustEl=list.closest(".trust"),titleEl=document.querySelector("#confiance .sec-h");
+  function place(){if(innerWidth<=860){stage.style.removeProperty("--sx");stage.style.removeProperty("--lift");return}
+    stage.style.setProperty("--sx","0px");stage.style.setProperty("--lift","0px");
+    var L=list.getBoundingClientRect().right,S=stage.getBoundingClientRect(),vw=document.documentElement.clientWidth;
+    stage.style.setProperty("--sx",Math.max(0,Math.round((L+vw)/2-(S.left+S.width/2)))+"px");
+    stage.style.setProperty("--lift",Math.max(0,Math.round(trustEl.getBoundingClientRect().top-titleEl.getBoundingClientRect().top))+"px")}
+  place();addEventListener("resize",place);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(place);
+
   /* Animations un peu plus lentes : on ralentit tout ce qui joue dans les téléphones */
   function slow(){if(stage.getAnimations)stage.getAnimations({subtree:true}).forEach(function(a){if(a.animationName)a.playbackRate=RATE})}
   function show(i){cur=i;scenes.forEach(function(sc,k){sc.classList.remove("on");items[k].classList.remove("on")});stage.classList.remove("duo");void list.offsetWidth;scenes[i].classList.add("on");items[i].classList.add("on");stage.classList.toggle("duo",i===3);slow();
