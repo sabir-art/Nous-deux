@@ -153,9 +153,8 @@ au prochain déploiement.
 Le README initial signalait les points suivants ; vérifier leur état dans
 `index.html` avant de les considérer comme résolus :
 
-- Adresse `CONTACT=""` utilisée pour ouvrir la messagerie du visiteur.
 - Passages jaunes `class="todo"` des mentions légales, confidentialité et CGU :
-  éditeur, statut, adresse, directeur de publication, hébergeur, région des données,
+  noms de famille des éditeurs, statut, adresse, directeur de publication, région des données,
   date de publication, gratuit/payant et durées de conservation.
 
 Demander les informations manquantes plutôt que les inventer.
