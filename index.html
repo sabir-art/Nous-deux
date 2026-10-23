@@ -1524,11 +1524,10 @@ footer{padding-block:32px 40px;color:var(--muted);font-size:14px;display:flex;fl
       <h2 class="sec-h">Votre quotidien reste <span class="fun">entre vous</span></h2>
       <div class="trust">
         <div class="trust-col"><ol class="trust-list" id="trust-list">
-          <li><button type="button" data-s="0"><b>Un compte chacun</b><span>Chacun a son propre compte et son mot de passe.</span><i class="bar"></i></button></li>
+          <li><button type="button" data-s="0"><b>Un compte chacun</b><span>Chacun son compte et son mot de passe, et tout reste synchronisé entre vos deux téléphones.</span><i class="bar"></i></button></li>
           <li><button type="button" data-s="1"><b>Le privé reste privé</b><span>Vos rendez-vous privés ne sont visibles que par vous.</span><i class="bar"></i></button></li>
           <li><button type="button" data-s="2"><b>Chacun ses droits</b><span>Seul l'auteur modifie ou supprime ce qu'il a créé.</span><i class="bar"></i></button></li>
-          <li><button type="button" data-s="3"><b>Toujours synchronisé</b><span>Ce que l'un ajoute apparaît aussi chez l'autre, avec une notification.</span><i class="bar"></i></button></li>
-          <li><button type="button" data-s="4"><b>Sur iPhone et Android</b><span>Nous deux est disponible sur l'App Store et sur Google Play.</span><i class="bar"></i></button></li>
+          <li><button type="button" data-s="3"><b>Sur iPhone et Android</b><span>Nous deux est disponible sur l'App Store et sur Google Play.</span><i class="bar"></i></button></li>
         </ol>
         <button type="button" class="trust-resume" id="trust-resume" hidden>Revoir toutes les scènes</button></div>
         <div class="tstage" id="tstage" aria-hidden="true">
@@ -2861,8 +2860,14 @@ footer{padding-block:32px 40px;color:var(--muted);font-size:14px;display:flex;fl
 
   /* Animations un peu plus lentes : on ralentit tout ce qui joue dans les téléphones */
   function slow(){if(stage.getAnimations)stage.getAnimations({subtree:true}).forEach(function(a){if(a.animationName)a.playbackRate=RATE})}
-  function show(i){cur=i;scenes.forEach(function(sc,k){sc.classList.remove("on");items[k].classList.remove("on")});stage.classList.remove("duo");void list.offsetWidth;scenes[i].classList.add("on");items[i].classList.add("on");stage.classList.toggle("duo",scenes[i].classList.contains("s-sync"));slow();
-    clearTimeout(timer);if(!reduce&&!pinned)timer=setTimeout(function(){show((cur+1)%scenes.length)},DUR)}
+  /* Chaque point joue une ou plusieurs scènes à la suite (« Un compte chacun » : les comptes, puis la synchro) */
+  var PLAN=[[0,3],[1],[2],[4]];
+  items.forEach(function(li,k){li.style.setProperty("--dur",PLAN[k].length*DUR+"ms")});
+  function play(sc){scenes.forEach(function(x){x.classList.remove("on")});stage.classList.remove("duo");void list.offsetWidth;scenes[sc].classList.add("on");stage.classList.toggle("duo",scenes[sc].classList.contains("s-sync"));slow()}
+  function show(i,step){step=step||0;cur=i;if(!step){items.forEach(function(x){x.classList.remove("on")});void list.offsetWidth;items[i].classList.add("on")}
+    play(PLAN[i][step]);clearTimeout(timer);if(reduce)return;
+    if(step+1<PLAN[i].length)timer=setTimeout(function(){show(i,step+1)},DUR);
+    else if(!pinned)timer=setTimeout(function(){show((cur+1)%items.length)},DUR)}
   /* Un clic : on joue seulement cette scène, une fois */
   items.forEach(function(li,k){li.querySelector("button").addEventListener("click",function(){pinned=true;resume.hidden=false;items.forEach(function(x,j){x.querySelector("button").setAttribute("aria-pressed",j===k?"true":"false")});show(k)})});
   resume.addEventListener("click",function(){pinned=false;resume.hidden=true;items.forEach(function(x){x.querySelector("button").removeAttribute("aria-pressed")});show(0)});
