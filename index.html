@@ -1208,7 +1208,7 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}
 .tlink svg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible}
 .tlink path{fill:none;stroke:var(--heart);stroke-width:3;stroke-linecap:round;stroke-dasharray:2 8;opacity:.7}
 .tlink .tl-m{display:none}
-.tlink i{position:absolute;left:0;top:0;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--heart);box-shadow:0 0 0 5px color-mix(in srgb,var(--heart) 22%,transparent);offset-path:path("M236 46 C 258 -22, 330 -2, 340 66");offset-rotate:0deg;offset-distance:0%;opacity:0}
+.tlink i{position:absolute;left:0;top:0;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--heart);box-shadow:0 0 0 5px color-mix(in srgb,var(--heart) 22%,transparent);offset-path:path("M258 50 C 274 -12, 332 -4, 340 66");offset-rotate:0deg;offset-distance:0%;opacity:0}
 .tcap{position:absolute;top:512px;font:700 13px var(--font-sans);color:var(--ink);opacity:0;transition:opacity .4s ease;white-space:nowrap}
 .tcap.c1{left:0;width:280px;text-align:center;transform:translateX(-110px)}
 .tcap.c2{right:0;width:170px;text-align:center;top:442px}
@@ -1216,7 +1216,7 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}
 @media (prefers-reduced-motion:no-preference){
   .s4.on .r-new{animation:t-in .5s cubic-bezier(.2,1.4,.4,1) 1.2s both}
   .tstage.duo .tlink i{animation:t-travel 1.1s ease-in-out 2 both}
-  .tstage.duo .tphone2 .as-notif{animation:t-drop .55s cubic-bezier(.2,1.3,.4,1) 3.1s both}
+  .tstage.duo .tphone2 .as-notif{animation:t-drop2 .6s cubic-bezier(.2,1.2,.4,1) 3.1s both}
   .tstage.duo .tphone2 .r-new{animation:t-in .5s cubic-bezier(.2,1.4,.4,1) 3.5s both}
 }
 @media (prefers-reduced-motion:reduce){.tphone2 .as-notif,.tphone2 .r-new{opacity:1}}
@@ -1228,7 +1228,7 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}
   .tphone2{top:110px;width:124px;height:226px;border-width:5px;border-radius:24px}
   .tphone2 .app-scr{transform:scale(.304)}
   .tlink .tl-d{display:none}.tlink .tl-m{display:block}
-  .tlink i{offset-path:path("M222 64 C 240 4, 290 18, 296 102")}
+  .tlink i{offset-path:path("M232 54 C 248 6, 290 18, 296 102")}
   .tcap{top:410px;font-size:12px}
   .tcap.c1{width:224px;transform:none}
   .tcap.c2{width:124px;top:346px}
@@ -1258,6 +1258,18 @@ dialog[open]>.dialog-inner{animation:sheet-reveal 200ms ease-out both}
   #histoire .story{grid-template-columns:1fr;gap:20px;padding:28px 22px}
   .sf{width:96px;height:96px}
 }
+
+/* v25 : contours de téléphones plus fins, notification nette */
+@keyframes t-drop2{from{opacity:1;transform:translateY(-170%)}to{opacity:1;transform:none}}
+.tphone2 .as-notif{background:#fff}
+.phone,.tphone,.tphone2{--rim:0 0 0 1px #8d8796,0 0 0 2.5px #1d1a23,0 1px 0 3px rgba(255,255,255,.35)}
+.phone{border-width:3.5px;box-shadow:var(--rim),var(--shadow-lift)}
+.tphone{border-width:3.5px;border-radius:40px;box-shadow:var(--rim),var(--shadow-lift)}
+.tphone::before{top:9px;width:78px;height:21px;margin-left:-39px}
+.tphone .app-scr{transform:scale(.7280);height:677px}
+.tphone2{border-width:3px;border-radius:28px;box-shadow:var(--rim),var(--shadow-lift)}
+.tphone2 .app-scr{transform:scale(.4373)}
+@media (max-width:860px){.tphone2{border-width:3px;border-radius:22px}.tphone2 .app-scr{transform:scale(.3147)}}
 /* Pages contact et mentions légales */
 .subpage{padding-block:24px 64px;max-width:760px}
 .subpage[hidden]{display:none}
@@ -1453,7 +1465,7 @@ footer{padding-block:32px 40px;color:var(--muted);font-size:14px;display:flex;fl
           </div>
         </div>
         <div class="tphone2"><div class="app-scr"><div class="as-top"><span class="rh-brand"><svg viewBox="70 33 189 260" aria-hidden="true"><g fill="#d60b52"><path d="M199.87,150.6c7.66,0,14.87,2.98,20.29,8.4,11.19,11.19,11.19,29.39,0,40.58l-55.86,55.86-55.86-55.86c-11.19-11.19-11.19-29.39,0-40.58,5.42-5.42,12.62-8.4,20.29-8.4s14.87,2.98,20.29,8.4l2.55,2.55,12.73,12.73,12.73-12.73,2.55-2.55c5.42-5.42,12.62-8.4,20.29-8.4M199.87,132.6c-11.95,0-23.9,4.56-33.02,13.68l-2.55,2.55-2.55-2.55c-9.12-9.12-21.07-13.68-33.02-13.68s-23.9,4.56-33.02,13.68h0c-18.23,18.23-18.23,47.8,0,66.03l68.59,68.59,68.59-68.59c18.23-18.23,18.23-47.8,0-66.03h0c-9.12-9.12-21.07-13.68-33.02-13.68h0Z"/>\n    <path d="M219.6,118.85c-2.3,0-4.61-.88-6.36-2.64l-48.94-48.94-44.73,44.73c-3.51,3.51-9.21,3.51-12.73,0-3.52-3.51-3.52-9.21,0-12.73l51.1-51.1c3.51-3.51,9.21-3.51,12.73,0l55.3,55.3c3.51,3.51,3.51,9.21,0,12.73-1.76,1.76-4.06,2.64-6.36,2.64Z"/>\n    <rect x="150.39" y="94.42" width="11.79" height="11.79"/>\n    <rect x="150.39" y="110.69" width="11.79" height="11.79"/>\n    <rect x="166.43" y="94.42" width="11.79" height="11.79"/>\n    <rect x="166.43" y="110.69" width="11.79" height="11.79"/>\n    <path d="M164.3,219.15c-11.71,0-22.71-4.56-30.99-12.84-2.73-2.73-2.73-7.17,0-9.9,2.73-2.73,7.17-2.73,9.9,0,5.63,5.63,13.13,8.74,21.09,8.74s15.46-3.1,21.09-8.74c2.73-2.73,7.17-2.73,9.9,0,2.73,2.73,2.73,7.17,0,9.9-8.28,8.28-19.29,12.84-30.99,12.84Z"/></g></svg> Nous deux</span><span class="rh-sync">À jour</span></div><div class="as-body"><h1 class="as-h1">Les courses</h1><div class="as-week"><span class="as-ib"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></span><div><span class="as-eye">Cette semaine</span><h2 class="as-wl"></h2></div><span class="as-ib"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span></div><div class="as-title"><h2>À acheter <span class="as-badge">2</span></h2><span class="as-shared">Partagé à deux</span></div><div class="as-add"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span><strong>Ajouter un article</strong><small>Touchez plusieurs articles, ajustez les détails ensuite</small></span></div><div class="as-row "><div class="as-desc"><strong>Tomates</strong><span><b>1 kg · </b>Ajouté par Abdellah</span><span class="as-bought">Acheté par Abdellah · <i class="as-today"></i></span></div><span class="as-check"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="as-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span></div><div class="as-row r-new r2"><div class="as-desc"><strong>Pain</strong><span>Ajouté par Laura</span><span class="as-bought">Acheté par Abdellah · <i class="as-today"></i></span></div><span class="as-check"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="as-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></div></div><div class="rh-nav as-nav"></div><div class="as-notif"><span class="as-notif-logo"><svg viewBox="70 33 189 260" aria-hidden="true"><g fill="#d60b52"><path d="M199.87,150.6c7.66,0,14.87,2.98,20.29,8.4,11.19,11.19,11.19,29.39,0,40.58l-55.86,55.86-55.86-55.86c-11.19-11.19-11.19-29.39,0-40.58,5.42-5.42,12.62-8.4,20.29-8.4s14.87,2.98,20.29,8.4l2.55,2.55,12.73,12.73,12.73-12.73,2.55-2.55c5.42-5.42,12.62-8.4,20.29-8.4M199.87,132.6c-11.95,0-23.9,4.56-33.02,13.68l-2.55,2.55-2.55-2.55c-9.12-9.12-21.07-13.68-33.02-13.68s-23.9,4.56-33.02,13.68h0c-18.23,18.23-18.23,47.8,0,66.03l68.59,68.59,68.59-68.59c18.23-18.23,18.23-47.8,0-66.03h0c-9.12-9.12-21.07-13.68-33.02-13.68h0Z"/>\n    <path d="M219.6,118.85c-2.3,0-4.61-.88-6.36-2.64l-48.94-48.94-44.73,44.73c-3.51,3.51-9.21,3.51-12.73,0-3.52-3.51-3.52-9.21,0-12.73l51.1-51.1c3.51-3.51,9.21-3.51,12.73,0l55.3,55.3c3.51,3.51,3.51,9.21,0,12.73-1.76,1.76-4.06,2.64-6.36,2.64Z"/>\n    <rect x="150.39" y="94.42" width="11.79" height="11.79"/>\n    <rect x="150.39" y="110.69" width="11.79" height="11.79"/>\n    <rect x="166.43" y="94.42" width="11.79" height="11.79"/>\n    <rect x="166.43" y="110.69" width="11.79" height="11.79"/>\n    <path d="M164.3,219.15c-11.71,0-22.71-4.56-30.99-12.84-2.73-2.73-2.73-7.17,0-9.9,2.73-2.73,7.17-2.73,9.9,0,5.63,5.63,13.13,8.74,21.09,8.74s15.46-3.1,21.09-8.74c2.73-2.73,7.17-2.73,9.9,0,2.73,2.73,2.73,7.17,0,9.9-8.28,8.28-19.29,12.84-30.99,12.84Z"/></g></svg></span><div><b>Nous deux</b><span>Laura a mis à jour la liste de courses.</span></div></div></div></div>
-        <div class="tlink"><svg class="tl-d" viewBox="0 0 420 540"><path d="M236 46 C 258 -22, 330 -2, 340 66"/></svg><svg class="tl-m" viewBox="0 0 358 470"><path d="M222 64 C 240 4, 290 18, 296 102"/></svg><i style="animation-delay:1.6s"></i><i style="animation-delay:1.9s"></i><i style="animation-delay:2.2s"></i></div>
+        <div class="tlink"><svg class="tl-d" viewBox="0 0 420 540"><path d="M258 50 C 274 -12, 332 -4, 340 66"/></svg><svg class="tl-m" viewBox="0 0 358 470"><path d="M232 54 C 248 6, 290 18, 296 102"/></svg><i style="animation-delay:1.6s"></i><i style="animation-delay:1.9s"></i><i style="animation-delay:2.2s"></i></div>
         <span class="tcap c1">iPhone de Laura</span><span class="tcap c2">Android d'Abdellah</span>
         </div>
       </div>
