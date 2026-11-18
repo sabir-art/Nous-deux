@@ -1,21 +1,29 @@
 import {defaultPreferences} from './communication.ts';
 import {addDays,dayDifference} from './life.ts';
 import {validDate} from './domain.ts';
+import {petCare,type Pet,type PetCare} from './pets.ts';
+import {OFF,defaultReminderTimes,inWindow,reminderTimesFor,type ReminderTimes} from './reminder-settings.ts';
 // Agenda and mission reminders, computed on each run of the existing scheduler (every 30 minutes),
 // always in Europe/Paris time. Nothing here is sent: the route sends what this returns and releases
 // the keys of a reminder whose push failed, so the next run can try again.
 //  - the day before, from 19:00: tomorrow's appointments, grouped in one notification;
 //  - the same morning, from 08:00: today's appointments (one notification) and today's missions (another one);
-//  - about one hour before (40 to 70 minutes) a health appointment that has a time.
+//  - about one hour before (40 to 70 minutes) a health appointment that has a time;
+//  - from 08:00, the pets' cares due today, grouped (only when « Nos compagnons » is on).
+// These are the defaults: each person sets their own times (reminder-settings.ts, on the half hour); a reminder
+// is due from its time and for the next hour, and « before » means from 20 minutes earlier to 10 minutes later.
 // Each person only hears about what the agenda already shows them: their own events and the shared ones,
 // never a private event of the partner. Every sent reminder is remembered per device, event, occurrence and kind.
 type Device={deviceId:string;member:number;preferences?:Record<string,boolean>};
 type Appointment={id:string;title:string;category:string;person?:number;child?:string;status?:string;date:string;time?:string;visibility?:string;owner?:number|null;recurrence?:string;intervalDays?:number;repeatUntil?:string};
 type Task={id:string;kind:string;title:string;assignee:number;due:string;done:boolean};
-export type ReminderState={household?:{first?:string;second?:string}|null;appointments:Appointment[];items:Task[];devices:Device[];children?:{id:string;name:string}[];reminderLog?:Record<string,string>};
-export type ReminderKind='eve'|'morning'|'soon'|'missions';
-export type Reminder={device:Device;kind:ReminderKind;category:'reminders'|'tasks';view:'calendar'|'tasks';title:string;body:string;tag:string;keys:string[]};
-export const EVE_START=19*60,MORNING_START=8*60,WINDOW=60,SOON_MIN=40,SOON_MAX=70,LOG_LIMIT=4000;
+export type ReminderState={household?:{first?:string;second?:string}|null;appointments:Appointment[];items:Task[];devices:Device[];children?:{id:string;name:string}[];reminderLog?:Record<string,string>;reminderTimes?:Record<string,Partial<ReminderTimes>>;pets?:Pet[];petsMode?:boolean};
+export type ReminderKind='eve'|'morning'|'soon'|'missions'|'pets';
+export type Reminder={device:Device;kind:ReminderKind;category:'reminders'|'tasks'|'pets';view:'calendar'|'tasks'|'pets';title:string;body:string;tag:string;keys:string[]};
+export const LOG_LIMIT=4000,SOON_EARLY=20,SOON_LATE=10;
+const careWords:Record<PetCare,string>={food:'repas',walk:'promenade',litter:'litière',groom:'brossage',health:'antipuces ou vermifuge'};
+// « 1 h », « 1 h 30 », « 30 min ».
+export const delayLabel=(m:number)=>m<60?`${m} min`:`${Math.floor(m/60)} h${m%60?' '+String(m%60).padStart(2,'0'):''}`;
 // Built-in holiday markers are never stored as household events; refuse them anyway.
 const MARKERS=new Set(['france','christian','islam','culture','jewish','world','abroad']);
 const HEALTH=new Set(['medical']);
@@ -49,10 +57,12 @@ export function claimReminders(s:ReminderState,now=new Date()):Reminder[]{
  const {date:today,minutes}=parisClock(now),tomorrow=addDays(today,1);
  const log=(s.reminderLog??={}),out:Reminder[]=[];
  const names=[s.household?.first||'',s.household?.second||''],kids=new Map((s.children||[]).map(c=>[c.id,c.name]));
- const eve=minutes>=EVE_START&&minutes<EVE_START+WINDOW,morning=minutes>=MORNING_START&&minutes<MORNING_START+WINDOW;
  for(const d of s.devices||[]){
   if(d.member!==0&&d.member!==1)continue;
-  const prefs={...defaultPreferences,...d.preferences};
+  const prefs={...defaultPreferences,...d.preferences},times=reminderTimesFor(s,d.member);
+  const eve=inWindow(minutes,times.eve),morning=inWindow(minutes,times.morning);
+  // The missions of the day keep the morning time, or 8 h when the morning agenda reminder is off.
+  const missionsTime=inWindow(minutes,times.morning===OFF?defaultReminderTimes.morning:times.morning);
   const key=(kind:ReminderKind,id:string,day:string)=>`${d.deviceId}|${kind}|${id}|${day}`;
   const who=(a:Appointment)=>a.child&&kids.has(a.child)?` (${kids.get(a.child)})`:(a.person===0||a.person===1)&&a.person!==d.member&&names[a.person]?` (${names[a.person]})`:'';
   const line=(a:Appointment)=>(a.time&&timeLabel(a.time)?timeLabel(a.time)+' · ':'')+a.title+who(a);
@@ -60,9 +70,9 @@ export function claimReminders(s:ReminderState,now=new Date()):Reminder[]{
   if(prefs.reminders){
    const mine=(s.appointments||[]).filter(a=>a&&typeof a.id==='string'&&!MARKERS.has(a.category)&&visibleTo(a,d.member));
    const on=(day:string)=>mine.filter(a=>occursOn(a,day)).sort((a,b)=>(a.time||'').localeCompare(b.time||'')||a.title.localeCompare(b.title,'fr'));
-   // About one hour before a health appointment, today or just after midnight.
-   const soon=[today,tomorrow].flatMap(day=>on(day).filter(a=>HEALTH.has(a.category)&&clock(a.time||'')!==null).map(a=>({a,day,until:dayDifference(day,today)*1440+clock(a.time!)!-minutes}))).filter(x=>x.until>=SOON_MIN&&x.until<=SOON_MAX&&!log[key('soon',x.a.id,x.day)]);
-   for(const {a,day,until} of soon)push('soon',[key('soon',a.id,day)],{category:'reminders',view:'calendar',title:'⏰ Rendez-vous santé bientôt',body:`${until>=55?'Dans 1 h':`Dans ${until} min`} · ${line(a)}`,tag:`nousdeux-soon-${a.id}-${day}`});
+   // About the chosen delay (one hour by default) before a health appointment, today or just after midnight.
+   const soon=times.soon<=0?[]:[today,tomorrow].flatMap(day=>on(day).filter(a=>HEALTH.has(a.category)&&clock(a.time||'')!==null).map(a=>({a,day,until:dayDifference(day,today)*1440+clock(a.time!)!-minutes}))).filter(x=>x.until>=times.soon-SOON_EARLY&&x.until<=times.soon+SOON_LATE&&!log[key('soon',x.a.id,x.day)]);
+   for(const {a,day,until} of soon)push('soon',[key('soon',a.id,day)],{category:'reminders',view:'calendar',title:'⏰ Rendez-vous santé bientôt',body:`${until>=times.soon-5?'Dans '+delayLabel(times.soon):`Dans ${until} min`} · ${line(a)}`,tag:`nousdeux-soon-${a.id}-${day}`});
    const group=(kind:'eve'|'morning',day:string,events:Appointment[])=>{
     const fresh=events.filter(a=>!log[key(kind,a.id,day)]);if(!fresh.length)return;
     const when=kind==='eve'?'Demain':'Aujourd’hui';
@@ -73,9 +83,14 @@ export function claimReminders(s:ReminderState,now=new Date()):Reminder[]{
    // The morning note skips what has already started and what the 1-hour reminder covers.
    if(morning)group('morning',today,on(today).filter(a=>{const t=clock(a.time||'');return (t===null||t>minutes)&&!log[key('soon',a.id,today)];}));
   }
-  if(prefs.tasks&&morning&&!log[key('missions','day',today)]){
+  if(prefs.tasks&&missionsTime&&!log[key('missions','day',today)]){
    const tasks=(s.items||[]).filter(t=>t&&t.kind==='task'&&!t.done&&t.due===today&&(t.assignee===d.member||t.assignee!==0&&t.assignee!==1));
    if(tasks.length)push('missions',[key('missions','day',today)],{category:'tasks',view:'tasks',title:'✅ Les missions du jour',body:'Aujourd’hui : '+frenchList(tasks.map(t=>t.title)),tag:`nousdeux-missions-${today}`});
+  }
+  // Pets are shared by both: one grouped note of the cares due today (or late) and not yet noted today.
+  if(s.petsMode&&prefs.pets&&inWindow(minutes,times.pets)&&!log[key('pets','day',today)]){
+   const due=(s.pets||[]).flatMap(p=>{const kinds=petCare(p,today).filter(c=>c.overdue>=0&&!(p.careLog||[]).some(l=>l.kind===c.kind&&l.date===today)).map(c=>careWords[c.kind]);return kinds.length?[`${p.name} (${kinds.join(', ')})`]:[];});
+   if(due.length)push('pets',[key('pets','day',today)],{category:'pets',view:'pets',title:'🐾 Les soins de nos compagnons',body:'Aujourd’hui : '+frenchList(due),tag:`nousdeux-pets-${today}`});
   }
  }
  // Bounded memory: forget past occurrences and removed devices, and never keep more than LOG_LIMIT keys.

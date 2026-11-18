@@ -52,7 +52,15 @@ export const chatInput=z.object({action:z.enum(['send','edit','delete','hide','c
 export const chatCursorInput=z.object({before:z.string().datetime({offset:true}),beforeId:z.string().uuid()});
 
 export const photoInput=z.object({id:z.string().uuid(),data:z.string().max(360000).regex(/^data:image\/jpeg;base64,\/9j\/[A-Za-z0-9+/=]+$/)});
-export const ideaInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),title:label,description:z.string().trim().max(1000),category:z.enum(['restaurant','outing','home','trip','surprise']),date:z.union([z.literal(''),date]),time:z.string().regex(/^$|^([01]\d|2[0-3]):[0-5]\d$/),location:z.string().trim().max(150),place:placeInput.nullable().optional()}).refine(v=>!v.time||!!v.date);
+// « Préparer ce moment » : at most 30 short lines, bought or done by either of us (see idea-prep.ts).
+export const MAX_PREP_ITEMS=30,MAX_PREP_TITLE=60,MAX_PREP_QUANTITY=30;
+export const prepItemsInput=z.array(z.object({
+ id:z.string().uuid(),kind:z.enum(['buy','do']),
+ title:z.string().trim().min(1).max(MAX_PREP_TITLE),
+ quantity:z.string().trim().max(MAX_PREP_QUANTITY).default(''),
+ done:z.boolean().default(false),
+})).max(MAX_PREP_ITEMS).refine(items=>new Set(items.map(i=>i.id)).size===items.length,'Un élément est en double.');
+export const ideaInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),title:label,description:z.string().trim().max(1000),category:z.enum(['restaurant','outing','home','trip','surprise']),date:z.union([z.literal(''),date]),time:z.string().regex(/^$|^([01]\d|2[0-3]):[0-5]\d$/),location:z.string().trim().max(150),place:placeInput.nullable().optional(),prep:prepItemsInput.nullable().optional(),allMine:z.boolean().optional()}).refine(v=>!v.time||!!v.date);
 export const ideaResponseInput=z.object({id:z.string().uuid(),version:z.number().int().min(1),status:z.enum(['accepted','declined']),responseNote:z.string().trim().max(500).default('')});
 export const plantInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),name:z.string().trim().min(1).max(60),species:z.string().trim().max(80),location:z.string().trim().max(100),note:z.string().trim().max(700),waterEvery:z.number().int().min(1).max(365),lightEvery:z.number().int().min(0).max(365),feedEvery:z.number().int().min(0).max(365),lastWater:date,lastLight:date,lastFeed:date,reminders:z.boolean(),remindBoth:z.boolean()});
 export const plantCareInput=z.object({id:z.string().uuid(),version:z.number().int().min(1),kind:z.enum(['water','light','feed'])});

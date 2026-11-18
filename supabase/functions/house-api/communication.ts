@@ -1,9 +1,9 @@
 import {z} from 'npm:zod@3.25.76';
-export const notificationCategories=['shopping','tasks','expenses','calendar','calls','ideas','plants','chat','reminders'] as const;
+export const notificationCategories=['shopping','tasks','expenses','calendar','calls','ideas','plants','chat','reminders','pets'] as const;
 export type NotificationCategory=typeof notificationCategories[number];
-export const preferenceInput=z.object({shopping:z.boolean(),tasks:z.boolean(),expenses:z.boolean(),calendar:z.boolean(),calls:z.boolean(),ideas:z.boolean().default(true),plants:z.boolean().default(true),chat:z.boolean().default(true),reminders:z.boolean().default(true)}).strict();
+export const preferenceInput=z.object({shopping:z.boolean(),tasks:z.boolean(),expenses:z.boolean(),calendar:z.boolean(),calls:z.boolean(),ideas:z.boolean().default(true),plants:z.boolean().default(true),chat:z.boolean().default(true),reminders:z.boolean().default(true),pets:z.boolean().default(true)}).strict();
 export type Preferences=z.infer<typeof preferenceInput>;
-export const defaultPreferences:Preferences={shopping:true,tasks:true,expenses:true,calendar:true,calls:true,ideas:true,plants:true,chat:true,reminders:true};
+export const defaultPreferences:Preferences={shopping:true,tasks:true,expenses:true,calendar:true,calls:true,ideas:true,plants:true,chat:true,reminders:true,pets:true};
 export const deviceInput=z.string().uuid();
 export const memberInput=z.number().int().min(0).max(1);
 // Restrict outbound push requests to known browser push services (no arbitrary URLs).
@@ -12,6 +12,15 @@ export function allowedPushEndpoint(value:string){
  u.hostname==='fcm.googleapis.com'||u.hostname==='web.push.apple.com'||u.hostname.endsWith('.push.apple.com')||u.hostname==='updates.push.services.mozilla.com'||u.hostname.endsWith('.notify.windows.com'));}catch{return false;}
 }
 export const subscriptionInput=z.object({endpoint:z.string().max(2048).refine(allowedPushEndpoint),expirationTime:z.number().nullable().optional(),keys:z.object({p256dh:z.string().regex(/^[A-Za-z0-9_-]{87}=?$/),auth:z.string().regex(/^[A-Za-z0-9_-]{22}={0,2}$/)})});
+// Which push service a subscription uses, for a readable diagnosis (never the address itself).
+export type PushService='apple'|'google'|'mozilla'|'microsoft'|'other';
+export function pushService(endpoint:string):PushService{
+ try{const h=new URL(endpoint).hostname;return h==='web.push.apple.com'||h.endsWith('.push.apple.com')?'apple':h==='fcm.googleapis.com'?'google':h==='updates.push.services.mozilla.com'?'mozilla':h.endsWith('.notify.windows.com')?'microsoft':'other';}catch{return 'other';}
+}
+// One push per browser subscription: if an older record shares the push address of a newer one, the newest wins.
+export function pushTargets<T extends {subscription?:{endpoint?:string}}>(devices:T[]):T[]{
+ const seen=new Set<string>(),out:T[]=[];for(const d of [...devices].reverse()){const e=d.subscription?.endpoint||'';if(e&&seen.has(e))continue;if(e)seen.add(e);out.unshift(d);}return out;
+}
 // Sober rule (21 October 2026): the partner's phone only rings for what asks for an answer or a gesture —
 // chat messages and calls (their own routes), an invitation or its answer, and « J'ai fini la liste ».
 // Routine changes (articles, purchases, expenses, appointments, missions, plant care…) only enter

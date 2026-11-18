@@ -1,16 +1,18 @@
 import {giftMutation} from './gifts.ts';
 import {synchronizeInvitation} from './invitation-agenda.ts';
+import {ideaPrepMutation,prepFromIdea} from './idea-prep.ts';
 import {validDate,categories} from './domain.ts';
 import {z} from 'npm:zod@3.25.76';
 import {mealVote,type MealState} from './meals.ts';
 import {dietMutation,DietError,type DietState} from './diets.ts';
 import {parisDate,plantCare} from './life.ts';
 import {petMutation} from './pets.ts';
+import {inWindow,reminderTimesFor,type ReminderTimes} from './reminder-settings.ts';
 import {childMutation,checkChild} from './children.ts';
 import {entryInput,itemInput,householdInput,deleteInput,appointmentInput,shoppingCheckInput,templateInput,templateApplyInput,ideaInput,ideaResponseInput,plantInput,plantCareInput} from './validation.ts';
 import {deviceInput,memberInput,preferenceInput,subscriptionInput,changeDescription} from './communication.ts';
 export class ApiError extends Error{constructor(public status:number,message:string){super(message);}}
-export type State=MealState&DietState&{favoritePlaces?:import('./places.ts').FavoritePlace[];shoppingBatches?:string[];profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];pets?:import('./pets.ts').Pet[];gifts?:import('./gifts.ts').Gift[];children?:import('./children.ts').Child[];familyMode?:boolean;colors?:Record<string,string>;plantReminderDays?:Record<string,string>;reminderLog?:Record<string,string>;shoppingFinished?:Record<string,string>;shoppingPending?:Record<string,unknown>};
+export type State=MealState&DietState&{favoritePlaces?:import('./places.ts').FavoritePlace[];shoppingBatches?:string[];profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];pets?:import('./pets.ts').Pet[];gifts?:import('./gifts.ts').Gift[];children?:import('./children.ts').Child[];familyMode?:boolean;colors?:Record<string,string>;plantReminderDays?:Record<string,string>;reminderLog?:Record<string,string>;reminderTimes?:Record<string,Partial<ReminderTimes>>;petsMode?:boolean;shoppingFinished?:Record<string,string>;shoppingPending?:Record<string,unknown>};
 const conflict=()=>{throw new ApiError(409,'Cet élément a changé sur un autre appareil. Fermez puis rouvrez le formulaire.');};
 // Only expenses carry a split or a repetition; 50/50 and 'none' stay implicit so older entries keep their shape.
 // A refund may say what it pays back: a short free text (`about`) and/or the expense it settles (`forExpense`).
@@ -41,6 +43,8 @@ function householdChange(s:State,p:any,actor:number){
  if(actor!==0&&actor!==1)throw new ApiError(403,'Compte personnel requis.');
  const {action,payload}=p;if(typeof action!=='string')throw new ApiError(400,'Action invalide.');const previous=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;const now=new Date().toISOString();
 
+ // A preparation never changes the invitation's agreement and never rings the partner's phone.
+ if(action==='idea-prep'||action==='idea-prep-check'||action==='idea-prep-shopping'||action==='idea-prep-rest')return ideaPrepMutation(s,action,payload,actor,now);
  if(['idea','idea-response','delete-idea','plant','plant-care','plant-care-all','delete-plant'].includes(action))return lifeMutation(s,action,payload,actor,now);
  if(['child','delete-child','family-mode','agenda-color'].includes(action)){
   const id=(payload as {id?:string})?.id;childMutation(s,action,payload,actor,now,parisDate());
@@ -127,14 +131,25 @@ export function callMutation(s:State,p:any){
  if(p.action==='end'){if(!caller&&!callee&&!(c.state==='ringing'&&member!==c.caller))throw new ApiError(403,'Cet appel est ouvert sur un autre appareil.');Object.assign(c,{state:'ended',offer:'',answer:'',expiresAt:now});return {ok:true};}
  if(p.action==='heartbeat'&&(caller||callee)){if(c.state==='connected')c.expiresAt=now+60000;return {ok:true};}throw new ApiError(403,'Action non autorisée.');
 }
-export function deviceMutation(s:State,p:any){const deviceId=deviceInput.parse(p.deviceId);const i=s.devices.findIndex(d=>d.deviceId===deviceId);
- if(p.action==='disable'){if(i>=0)s.devices.splice(i,1);return;}
+export function deviceMutation(s:State,p:any):{enabled:boolean}{const deviceId=deviceInput.parse(p.deviceId);let i=s.devices.findIndex(d=>d.deviceId===deviceId);
+ if(p.action==='disable'){if(i>=0)s.devices.splice(i,1);return {enabled:false};}
+ // On each opening, the app hands back this browser's subscription: a new push address (renewed by the browser)
+ // or a new device id (after logging in again) replaces the old record instead of leaving a dead or duplicate one.
+ if(p.action==='refresh'){
+  const subscription=subscriptionInput.parse(p.subscription);if(i<0)i=s.devices.findIndex(d=>d.subscription?.endpoint===subscription.endpoint);if(i<0)return {enabled:false};
+  const member=memberInput.parse(p.member);s.devices[i]={...s.devices[i],deviceId,member,subscription};
+  s.devices=s.devices.filter((d,j)=>j===i||d.deviceId!==deviceId&&d.subscription?.endpoint!==subscription.endpoint);return {enabled:true};
+ }
  if(!['subscribe','preferences'].includes(p.action))throw new ApiError(400,'Action inconnue.');
  const member=memberInput.parse(p.member),preferences=preferenceInput.parse(p.preferences);
- // A page cached before the agenda reminders does not send that switch: keep the device's own choice.
- if(p.preferences&&typeof p.preferences==='object'&&!('reminders'in p.preferences)&&i>=0&&typeof s.devices[i].preferences?.reminders==='boolean')preferences.reminders=s.devices[i].preferences.reminders;
- if(p.action==='preferences'){if(i>=0)Object.assign(s.devices[i],{member,preferences});return;}
- const subscription=subscriptionInput.parse(p.subscription);if(i<0&&s.devices.length>=12)throw new ApiError(400,'Limite de 12 appareils atteinte.');const d={deviceId,member,preferences,subscription};if(i<0)s.devices.push(d);else s.devices[i]=d;
+ // A page cached before a switch existed does not send it: keep the device's own choice.
+ for(const k of ['reminders','pets'] as const)if(p.preferences&&typeof p.preferences==='object'&&!(k in p.preferences)&&i>=0&&typeof s.devices[i].preferences?.[k]==='boolean')preferences[k]=s.devices[i].preferences[k];
+ if(p.action==='preferences'){if(i>=0)Object.assign(s.devices[i],{member,preferences});return {enabled:i>=0};}
+ const subscription=subscriptionInput.parse(p.subscription);
+ // One browser subscription = one record: an older record of the same push address (another device id after a
+ // new login, or the other person on a shared phone) would ring twice or for the wrong person.
+ s.devices=s.devices.filter(d=>d.deviceId===deviceId||d.subscription?.endpoint!==subscription.endpoint);i=s.devices.findIndex(d=>d.deviceId===deviceId);
+ if(i<0&&s.devices.length>=12)throw new ApiError(400,'Limite de 12 appareils atteinte.');const d={deviceId,member,preferences,subscription};if(i<0)s.devices.push(d);else s.devices[i]=d;return {enabled:true};
 }
 
 export function visibleAppointments(s:State,actor:number){return s.appointments.filter(a=>a.visibility!=='private'||a.owner===actor);}
@@ -167,6 +182,8 @@ function lifeMutation(s:State,action:string,p:any,actor:number,now:string){
    if(!old&&list.length>=(isIdea?300:100))throw new ApiError(400,'La limite de fiches est atteinte. Supprimez une ancienne fiche pour continuer.');
    if(!isIdea&&['lastWater','lastLight','lastFeed'].some(k=>v[k]>date))throw new ApiError(400,'Un soin déjà effectué ne peut pas être dans le futur.');
    const value={...v,owner:actor,version:v.version+1,createdAt:old?.createdAt||now,...(isIdea?{status:'pending',responseNote:'',respondedAt:null}:{careLog:old?.careLog||[],...(old?{lastWater:old.lastWater,lastLight:old.lastLight,lastFeed:old.lastFeed}:{})})};
+   // « Préparer ce moment » rides along with the idea: kept as it is when the field is absent (cached page).
+   if(isIdea){const prep=prepFromIdea(old,(v as {prep?:unknown}).prep,actor,(v as {allMine?:boolean}).allMine);delete (value as {prep?:unknown}).prep;delete (value as {allMine?:unknown}).allMine;if(prep)(value as {prep?:unknown}).prep=prep;}
    if(old)list[list.indexOf(old)]=value;else list.push(value);
   }
  }
@@ -174,8 +191,10 @@ function lifeMutation(s:State,action:string,p:any,actor:number,now:string){
  const note={category:isIdea?'ideas':'plants',message:action==='idea-response'?(p.status==='accepted'?'a accepté votre invitation.':'a répondu « pas cette fois » à votre invitation.'):action==='idea'?'vous propose une activité à deux.':action.startsWith('plant-care')?'a pris soin d’une plante.':action==='plant'?'a mis à jour le petit jardin.':'a supprimé une fiche.'};
  s.sequence=(s.sequence||0)+1;s.activity.unshift({id:s.sequence,actor,...note,createdAt:now});s.activity=s.activity.slice(0,500);return note;
 }
-export function claimPlantReminders(s:State,date:string){
- s.plantReminderDays??={};const targets=s.devices.filter(d=>(d.preferences?.plants??true)&&s.plantReminderDays![d.deviceId]!==date).flatMap(d=>{
+// Once a day per device, at the time its person chose (08:00 by default, reminder-settings.ts), for the plants
+// that person follows. Without `minutes` (tests, older callers) the time is not checked.
+export function claimPlantReminders(s:State,date:string,minutes?:number){
+ s.plantReminderDays??={};const targets=s.devices.filter(d=>(d.preferences?.plants??true)&&s.plantReminderDays![d.deviceId]!==date&&(minutes===undefined||inWindow(minutes,reminderTimesFor(s,d.member).plants))).flatMap(d=>{
  const due=(s.plants||[]).filter(p=>p.reminders&&(p.owner===d.member||p.remindBoth)&&plantCare(p,date).some(c=>c.overdue>=0));if(!due.length)return [];
  s.plantReminderDays![d.deviceId]=date;return [{device:d,count:due.length}];
  });for(const id of Object.keys(s.plantReminderDays))if(!s.devices.some(d=>d.deviceId===id))delete s.plantReminderDays[id];return targets;

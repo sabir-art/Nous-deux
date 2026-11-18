@@ -28,12 +28,14 @@ jobs:
       - run: node tests/supabase-model.test.mjs
       - run: node tests/reminders.test.mjs
       - run: node tests/reminders-route.test.mjs
+      - run: node tests/reminder-settings.test.mjs
       - run: node tests/pets.test.mjs
       - run: node tests/gifts.test.mjs
       - run: node tests/children.test.mjs
       - run: node tests/daily-calls.test.mjs
       - run: node tests/calendar.test.mjs
       - run: node tests/invitation-calendar.test.mjs
+      - run: node tests/idea-prep.test.mjs
       - run: node tests/chat-api.test.mjs
       - run: node tests/notification-photo.test.mjs
       - run: node tests/voices-places.test.mjs
@@ -58,6 +60,7 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/nous-deux-browsers" --no-package-lock --ignore-scripts playwright@1.62.1 @electric-sql/pglite@0.3.14
           PGLITE_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/@electric-sql/pglite" node tests/daily-database.test.mjs
           PGLITE_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/@electric-sql/pglite" node tests/chat-database.test.mjs
+          PGLITE_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/@electric-sql/pglite" node tests/reminders-migration-database.test.mjs
           node "$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright/cli.js" install --with-deps chromium webkit
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/browser-layout.test.mjs
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/daily-browser.test.mjs

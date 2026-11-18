@@ -111,8 +111,8 @@ input::-webkit-date-and-time-value{text-align:left;min-width:0}
 /* Our shared address book. Search, favorite selection and navigation stay together. */
 .ideas-tabs{margin-block:4px 8px}.restaurant-space{display:grid;gap:20px;min-width:0}.restaurant-intro{display:flex;gap:20px;align-items:center;justify-content:space-between;padding:24px;background:var(--beurre);border-radius:var(--radius-lg);flex-wrap:wrap}.restaurant-intro>div{flex:1;min-width:180px}.restaurant-intro p{margin-top:8px}.restaurant-filter{display:grid;gap:8px;font-weight:600}.restaurant-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.restaurant-card{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:20px;min-width:0}.restaurant-card>footer{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-top:20px}.restaurant-card>footer>small{color:var(--ink-muted)}
 .place-card{display:grid;gap:14px;min-width:0}.place-card.compact{background:var(--surface-sunken);padding:16px;border-radius:var(--radius-md)}.place-heading{display:flex;align-items:flex-start;gap:12px;min-width:0}.place-heading>div{min-width:0;flex:1}.place-heading strong{display:block;font-weight:700;overflow-wrap:anywhere}.place-heading p{margin-top:4px;font-size:14px;line-height:20px;color:var(--ink-muted)}.place-pin{display:grid;place-items:center;width:42px;height:42px;flex-shrink:0;background:var(--rose);color:#302822;border-radius:var(--radius-pill)}.place-links{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.place-links .secondary,.place-links .primary{padding:10px 14px;font-size:13px;gap:6px}.place-map{width:100%;height:220px;min-width:0;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface-sunken)}.place-credit{display:block;font-size:12px;color:var(--ink-muted)}.selected-place{display:grid;gap:12px}.selected-place>button{justify-self:start}.place-picker{display:grid;gap:12px;min-width:0;padding:16px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--surface)}.place-picker legend{font-size:15px;padding:0 6px;margin:0}.place-picker legend>span{font-size:13px;font-weight:400}.place-picker label,.manual-place{display:grid;gap:8px}.place-search-field{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:var(--radius-md);padding:0 12px}.place-search-field input{border:0!important;min-width:0;padding-inline:0!important;background:transparent}.place-search-field:focus-within{outline:2px solid var(--focus);outline-offset:2px}.place-search-field input:focus{outline:none}.place-search-status{margin:0}.place-results{max-height:280px;overflow:auto;overscroll-behavior:contain;display:grid;gap:8px;min-width:0}.place-results:empty{display:none}.place-results>button{display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface-sunken);border-radius:var(--radius-md);min-width:0;min-height:60px;width:100%;text-align:left;white-space:normal}.place-results>button>span{display:grid;gap:4px;flex:1;min-width:0;overflow-wrap:anywhere}.place-results strong{font-size:15px}.place-results small{color:var(--ink-muted);font-size:12px;line-height:17px}.favorite-place-picker{padding:0 0 12px;border-bottom:1px solid var(--line)}.favorite-place-picker summary{justify-content:flex-start;font-size:14px}.favorite-place-picker summary>span{margin-left:auto}.favorite-place-picker .place-results{margin-top:12px}.manual-place{gap:16px}
-/* Slow paper confetti: decorative, non-interactive and explicitly pausable. */
-.invitation-paper.celebrating{position:relative;isolation:isolate;overflow:hidden}.invitation-paper.celebrating>*:not(.invitation-confetti){position:relative;z-index:1}.invitation-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;opacity:.85}.invitation-confetti i{position:absolute;top:-24px;left:var(--confetti-x);width:10px;height:17px;background:var(--confetti-color);animation:invitation-fall var(--confetti-time) linear var(--confetti-delay) infinite;will-change:transform;border-radius:2px}.invitation-confetti .confetti-heart{background:none;color:var(--ink-muted);font-style:normal;font-size:16px;opacity:.3}.invitation-confetti.paused i{animation-play-state:paused}.celebration-toggle{align-self:flex-end;font-size:12px;padding:8px 12px;min-height:44px;opacity:1}.invitation-ticket .place-card{margin-top:16px}.invitation-ticket .place-links{justify-content:center}@keyframes invitation-fall{from{transform:translate3d(0,-30px,0) rotate(0)}to{transform:translate3d(22px,850px,0) rotate(var(--confetti-turn))}}@media(prefers-reduced-motion:reduce){.invitation-confetti,.celebration-toggle{display:none}.invitation-confetti i{animation:none}}@media(max-width:650px){.restaurant-grid{grid-template-columns:minmax(0,1fr)}.restaurant-intro,.restaurant-card{padding:20px}.place-picker{padding:12px}}
+/* Paper confetti: decorative, non-interactive, one short shower (under 6 s). */
+.invitation-paper.celebrating{position:relative;isolation:isolate;overflow:hidden}.invitation-paper.celebrating>*:not(.invitation-confetti){position:relative;z-index:1}.invitation-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;opacity:.85}.invitation-confetti i{position:absolute;top:-24px;left:var(--confetti-x);width:10px;height:17px;background:var(--confetti-color);animation:invitation-fall var(--confetti-time) linear var(--confetti-delay) 1 both;will-change:transform;border-radius:2px}.invitation-confetti .confetti-heart{background:none;color:var(--ink-muted);font-style:normal;font-size:16px;opacity:.3}.invitation-confetti.paused i{animation-play-state:paused}.invitation-ticket .place-card{margin-top:16px}.invitation-ticket .place-links{justify-content:center}@keyframes invitation-fall{from{transform:translate3d(0,-30px,0) rotate(0)}to{transform:translate3d(22px,850px,0) rotate(var(--confetti-turn))}}@media(prefers-reduced-motion:reduce){.invitation-confetti{display:none}.invitation-confetti i{animation:none}}@media(max-width:650px){.restaurant-grid{grid-template-columns:minmax(0,1fr)}.restaurant-intro,.restaurant-card{padding:20px}.place-picker{padding:12px}}
 
 .budget-overview>.section-title{flex-wrap:wrap}.budget-overview .month-picker{flex:0 0 250px;min-width:230px;max-width:100%}.category-budget-card>.nd-chart{max-width:100%;width:100%}
 
@@ -706,3 +706,60 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 @media(min-width:760px){.template-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* Noter un remboursement: what it pays back sits in the form's own rhythm. */
 .refund-subject{display:contents}
+/* Vérifier mes notifications: one state per line, colour + words (never colour alone). */
+.push-status{display:flex;flex-direction:column;gap:var(--space-2);margin:0}
+.push-status>div{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);padding:var(--space-3) var(--space-4);background:var(--surface-sunken);border-radius:var(--radius-md);min-width:0}
+.push-status dt{font:500 14px/20px var(--font-sans);min-width:0;flex:1}
+.push-status dd{margin:0;font:600 14px/20px var(--font-sans);text-align:right;overflow-wrap:anywhere}
+.push-status dd.is-ok,.push-test li.is-ok strong{color:var(--success)}
+.push-status dd.is-ko,.push-test li.is-ko strong{color:var(--danger)}
+.push-status dd.is-todo{color:var(--ink-muted)}
+.push-advice{font:500 14px/20px var(--font-sans);color:var(--ink)!important;background:var(--action-soft);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md)}
+.push-test{display:flex;flex-direction:column;gap:var(--space-2);font:500 14px/20px var(--font-sans)}
+.push-test ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--space-2)}
+.push-test li{display:flex;flex-direction:column;gap:var(--space-1);padding:var(--space-3) var(--space-4);border:1px solid var(--line);border-radius:var(--radius-md);overflow-wrap:anywhere}
+.reminder-times .section-title{margin-bottom:0}
+.reminder-group{display:flex;flex-direction:column;gap:var(--space-3)}
+.push-test.is-ko>p{color:var(--danger)}
+/* « Je te date » : préparer ce moment (facultatif). Liste sobre, cibles de 44 px, rien ne déborde à 320 px. */
+.idea-prep-chip{display:inline-flex;align-items:center;gap:var(--space-1);border-radius:var(--radius-pill);padding:var(--space-1) var(--space-3);font:600 13px/16px var(--font-sans);background:var(--surface);color:var(--ink);max-width:100%}
+.idea-prep-option{display:grid;gap:var(--space-2);min-width:0}
+.idea-prep-option .optional{font-weight:400;color:var(--ink-muted)}
+.idea-prep-summary{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);background:var(--beurre);font:500 14px/20px var(--font-sans);color:var(--ink);min-width:0}
+.idea-prep-summary>span{min-width:0;overflow-wrap:anywhere}
+.idea-prep-summary button,.idea-prep-start,.idea-prep-actions button{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:44px;white-space:nowrap}
+.idea-prep-start{width:100%}
+.idea-prep-dialog .helper-copy{margin:0 0 var(--space-4)}
+.idea-prep-section{display:grid;gap:var(--space-3);margin-bottom:var(--space-6);min-width:0}
+.idea-prep-section h3,.idea-prep-panel h3,.idea-prep-group h4{display:flex;align-items:center;gap:var(--space-2);margin:0;font:700 16px/22px var(--font-sans);color:var(--ink)}
+.idea-prep-edit,.idea-prep-group ul{list-style:none;margin:0;padding:0;display:grid;min-width:0}
+.idea-prep-edit li{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);min-height:44px;border-bottom:1px solid var(--line);min-width:0}
+.idea-prep-edit li>span,.idea-prep-text{display:flex;flex-direction:column;min-width:0}
+.idea-prep-edit strong,.idea-prep-text strong{font:500 15px/20px var(--font-sans);overflow-wrap:anywhere}
+.idea-prep-edit small,.idea-prep-text small{font:400 13px/18px var(--font-sans);color:var(--ink-muted)}
+.idea-prep-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-2) var(--space-3);align-items:end;min-width:0}
+.idea-prep-add.buy{grid-template-columns:minmax(0,1fr) auto}
+.idea-prep-add.buy>label:first-child{grid-column:1/-1}
+.idea-prep-add label{display:grid;gap:var(--space-1);min-width:0;font:600 14px/20px var(--font-sans)}
+.idea-prep-add label .optional{font-weight:400;color:var(--ink-muted)}
+.idea-prep-add input{min-width:0;width:100%}
+.idea-prep-add button{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:44px;white-space:nowrap}
+.idea-prep-count{margin:0 0 var(--space-3);font:400 13px/18px var(--font-sans);color:var(--ink-muted)}
+.idea-prep-panel{width:100%;display:grid;gap:var(--space-3);padding:var(--space-5);border-radius:var(--radius-lg);background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line);text-align:left;min-width:0}
+.idea-prep-panel>header{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3)}
+.idea-prep-progress{font:700 14px/20px var(--font-sans);font-variant-numeric:tabular-nums;color:var(--ink)}
+.idea-prep-left{margin:0;font:500 14px/20px var(--font-sans);color:var(--ink-muted)}
+.idea-prep-group{display:grid;gap:var(--space-1);min-width:0}
+.idea-prep-group h4{font-size:14px;line-height:20px}
+.idea-prep-group li{border-bottom:1px solid var(--line);min-width:0}
+.idea-prep-group li:last-child{border-bottom:0}
+.idea-prep-group .check-label{align-items:center;padding:var(--space-1) 0;min-width:0}
+.idea-prep-group li.done strong{text-decoration:line-through;color:var(--ink-muted)}
+.idea-prep-actions{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3)}
+.idea-prep-actions .text-link{align-self:auto}
+/* « T’inquiète, je m’occupe de tout » et « Je m’occupe du reste » (préparation d’un « Je te date »). */
+.idea-prep-allmine{display:flex;align-items:flex-start;gap:var(--space-2);margin:0;padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);background:var(--rose);color:var(--ink);font:600 15px/22px var(--font-sans)}.idea-prep-allmine svg{flex:none;margin-top:3px}.idea-prep-allmine span{display:flex;flex-direction:column;min-width:0}.idea-prep-allmine small{font:500 13px/18px var(--font-sans);color:var(--ink-muted)}
+.idea-prep-allmine-toggle{font:500 14px/20px var(--font-sans)}
+.idea-prep-rest{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);margin:0;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:var(--menthe);color:var(--ink);font:600 14px/20px var(--font-sans)}.idea-prep-rest .text-link{margin-left:auto;min-height:44px}
+.idea-prep-take{width:100%;min-height:44px}
+.idea-prep-start-row{width:100%;display:grid;gap:var(--space-2)}
