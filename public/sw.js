@@ -22,18 +22,19 @@ self.addEventListener('pushsubscriptionchange',event=>{
  const key=event.oldSubscription?.options?.applicationServerKey;if(!key)return;
  event.waitUntil(self.registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key}).catch(()=>{}));
 });
-// A tap always brings the app forward: an open window is focused and told which page to show (no reload, no
-// navigation that a browser may refuse); otherwise the app opens on that page.
+// A tap always brings the app forward (18 November 2026, v2): an open window of the app is focused and told which
+// page to show; when there is none, or the browser refuses to focus it, the app opens on that page. Every step is
+// guarded so that one refusal never leaves the tap without effect.
 self.addEventListener('notificationclick',event=>{
  event.notification.close();
- const data=event.notification.data||{},target=new URL(data.url||'/Nous-deux/',self.location.origin).href,view=new URL(target).searchParams.get('view');
+ const data=event.notification.data||{},scope=self.registration.scope;
+ let target=scope;try{const u=new URL(data.url||scope,self.location.origin);if(u.href.startsWith(scope))target=u.href;}catch{}
+ const view=new URL(target).searchParams.get('view');
  event.waitUntil((async()=>{
-  const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
-  const client=clients.find(c=>{try{const u=new URL(c.url);return u.origin===self.location.origin&&u.pathname.startsWith('/Nous-deux/');}catch{return false;}});
-  if(client){
-   let focused=null;try{focused=await client.focus();}catch{}
-   if(focused){focused.postMessage(data.callId?{type:'nousdeux-call',open:true,callId:data.callId}:{type:'nousdeux-open',view});return;}
+  let clients=[];try{clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});}catch{}
+  for(const client of clients.filter(c=>typeof c.url==='string'&&c.url.startsWith(scope))){
+   try{const focused=await client.focus();if(focused){try{focused.postMessage(data.callId?{type:'nousdeux-call',open:true,callId:data.callId}:{type:'nousdeux-open',view});}catch{}return;}}catch{}
   }
-  await self.clients.openWindow(target);
+  try{await self.clients.openWindow(target);}catch{}
  })());
 });
