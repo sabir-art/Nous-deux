@@ -776,5 +776,5 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 /* Accueil : les « Je te date » en attente, un toucher ouvre l’invitation (voir, modifier, répondre). */
 .home-invitations{margin-bottom:var(--space-6)}.home-invitations h2{margin:0 0 12px;font:700 20px/26px var(--font-sans);color:var(--ink)}
 .home-invitation-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:var(--space-3)}
-.home-invitation{display:flex;flex-direction:column;gap:4px;min-width:0;min-height:44px;padding:var(--space-4);border-radius:var(--radius-lg);background:var(--beurre);color:var(--ink);text-align:left;border:0}.home-invitation.is-for-me{background:var(--rose)}
+.home-invitation{display:flex;flex-direction:column;gap:4px;min-width:0;min-height:44px;padding:var(--space-4);border-radius:var(--radius-lg);background:var(--beurre);color:var(--ink);text-align:left;border:0}.home-invitation.is-for-me{background:var(--rose)}.home-invitation.is-planned{background:var(--menthe)}
 .home-invitation-kicker{font:600 13px/18px var(--font-sans);color:var(--ink-muted)}.home-invitation strong{font:700 17px/22px var(--font-sans);overflow-wrap:anywhere}.home-invitation small{font:400 14px/20px var(--font-sans);color:var(--ink-muted)}.home-invitation-action{margin-top:4px;font:600 14px/20px var(--font-sans);color:var(--ink)}
