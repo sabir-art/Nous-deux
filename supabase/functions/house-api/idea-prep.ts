@@ -12,10 +12,13 @@ import {MAX_PREP_ITEMS,MAX_PREP_TITLE,MAX_PREP_QUANTITY,prepItemsInput} from './
 
 export {MAX_PREP_ITEMS,MAX_PREP_TITLE,MAX_PREP_QUANTITY,prepItemsInput};
 export type PrepItem={id:string;kind:'buy'|'do';title:string;quantity:string;done:boolean;doneBy:number|null;shoppingItem?:string;shoppingWeek?:string};
-export type IdeaPrep={version:number;items:PrepItem[];allMine?:boolean;restBy?:number|null};
+export type IdeaPrep={version:number;items:PrepItem[];allMine?:boolean;restBy?:number|null;note?:string};
+// Un petit mot de l'auteur pour sa moitié, seulement pour la préparation (« j'ai pris ça, il ne restait que ça »).
+export const MAX_PREP_NOTE=280;
+const prepNote=z.string().trim().max(MAX_PREP_NOTE);
 /** Only the flags that are set are stored: an older preparation reads the same. */
-const withFlags=(version:number,items:PrepItem[],allMine:boolean,restBy:number|null):IdeaPrep=>({version,items,...(allMine?{allMine:true}:{}),...(!allMine&&restBy!==null?{restBy}:{})});
-const prepEditInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),items:prepItemsInput.nullable(),allMine:z.boolean().optional()});
+const withFlags=(version:number,items:PrepItem[],allMine:boolean,restBy:number|null,note:string):IdeaPrep=>({version,items,...(allMine?{allMine:true}:{}),...(!allMine&&restBy!==null?{restBy}:{}),...(note?{note}:{})});
+const prepEditInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),items:prepItemsInput.nullable(),allMine:z.boolean().optional(),note:prepNote.optional()});
 const prepRestInput=z.object({id:z.string().uuid(),take:z.boolean()});
 const prepCheckInput=z.object({id:z.string().uuid(),item:z.string().uuid(),done:z.boolean()});
 const prepShoppingInput=z.object({id:z.string().uuid(),operationId:z.string().uuid()});
@@ -31,14 +34,15 @@ export function mergePrep(old:IdeaPrep|undefined,items:z.infer<typeof prepItemsI
 const sameList=(a:PrepItem[],b:PrepItem[])=>a.length===b.length&&a.every((x,n)=>x.id===b[n].id&&x.kind===b[n].kind&&x.title===b[n].title&&x.quantity===b[n].quantity);
 
 /** Called by the 'idea' action: no field (page cached before this feature) keeps the stored preparation. */
-export function prepFromIdea(old:{prep?:IdeaPrep}|undefined,raw:unknown,actor:number,allMineRaw?:boolean):IdeaPrep|undefined{
+export function prepFromIdea(old:{prep?:IdeaPrep}|undefined,raw:unknown,actor:number,allMineRaw?:boolean,noteRaw?:string):IdeaPrep|undefined{
  // A page cached before « je m'occupe de tout » sends no allMine: the stored promise stays.
  if(allMineRaw===undefined){if(raw===undefined)return old?.prep;if(raw===null&&!old?.prep?.allMine)return undefined;}
  const items=raw===undefined?old?.prep?.items||[]:raw===null?[]:mergePrep(old?.prep,prepItemsInput.parse(raw),actor);
  const allMine=allMineRaw===undefined?!!old?.prep?.allMine:allMineRaw;
  if(!items.length&&!allMine)return undefined;
- if(old?.prep&&sameList(old.prep.items,items)&&!!old.prep.allMine===allMine)return old.prep;
- return withFlags((old?.prep?.version||0)+1,items,allMine,old?.prep?.restBy??null);
+ const note=noteRaw===undefined?old?.prep?.note||'':prepNote.parse(noteRaw);
+ if(old?.prep&&sameList(old.prep.items,items)&&!!old.prep.allMine===allMine&&(old.prep.note||'')===note)return old.prep;
+ return withFlags((old?.prep?.version||0)+1,items,allMine,old?.prep?.restBy??null,note);
 }
 
 /** The partner's secret or private idea is indistinguishable from a missing one, preparation included. */
@@ -62,9 +66,10 @@ export function ideaPrepMutation(s:State,action:string,p:unknown,actor:number,no
   }
   const items=v.items===null?[]:mergePrep(old,v.items,actor);
   // Same request sent twice (lost answer, double tap): already applied, nothing to do.
-  if(old&&sameList(old.items,items)&&!!old.allMine===allMine)return null;
+  const note=v.note===undefined?old?.note||'':v.note;
+  if(old&&sameList(old.items,items)&&!!old.allMine===allMine&&(old.note||'')===note)return null;
   if(current!==v.version)throw new ApiError(409,'La préparation a changé sur un autre appareil. Rouvrez-la.');
-  idea.prep=withFlags(current+1,items,allMine,old?.restBy??null);return null;
+  idea.prep=withFlags(current+1,items,allMine,old?.restBy??null,note);return null;
  }
  if(action==='idea-prep-check'){
   const v=prepCheckInput.parse(p),idea=findIdea(s,v.id,actor),item=(idea.prep as IdeaPrep|undefined)?.items.find(i=>i.id===v.item);
