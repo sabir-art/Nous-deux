@@ -97,8 +97,34 @@ assert.throws(()=>change(s,{action:'idea-prep-check',payload:{id:plain.id,item:s
 console.log('PASS: preparation saved with the idea, kept by cached pages, bounds, author-only list, ticks by both, agreement untouched, retries, shopping once in the right week, removal, secret/private ideas invisible.');
 
 // Interface: the « Je te date » wording and the optional box.
+
+// « T’inquiète, je m’occupe de tout » (author, with or without a list) and « Je m’occupe du reste » (either of us).
+{const h=home(),bread2=line('Pain'),cheese2=line('Fromage');
+ const a=idea({prep:null,allMine:true});change(h,{action:'idea',payload:a},0);
+ assert.deepEqual(h.ideas[0].prep,{version:1,items:[],allMine:true},'only the promise, no list');
+ assert.deepEqual(visibleIdeas(h,1)[0].prep.allMine,true,'the partner reads it');
+ assert.throws(()=>change(h,{action:'idea-prep-rest',payload:{id:a.id,take:true}},1),e=>e.status===400,'nothing left to take');
+ // Unticking with no list removes the preparation; a cached page (no allMine field) keeps it.
+ const {allMine:_a,...cached}=a;change(h,{action:'idea',payload:{...cached,version:1,description:'Bougies'}},0);assert.equal(h.ideas[0].prep.allMine,true,'cached page keeps the promise');
+ change(h,{action:'idea-prep',payload:{id:a.id,version:1,items:null,allMine:false}},0);assert.equal(h.ideas[0].prep,undefined,'unticked without a list: no preparation');
+ // A list without the promise: the partner takes the rest, only they let it go; the author cannot take it for them.
+ const b=idea({prep:[bread2,cheese2],allMine:false});change(h,{action:'idea',payload:b},0);const stored=()=>h.ideas.find(x=>x.id===b.id).prep;
+ assert.equal(stored().allMine,undefined);assert.equal(stored().restBy,undefined);
+ change(h,{action:'idea-prep-rest',payload:{id:b.id,take:true}},1);assert.equal(stored().restBy,1);
+ change(h,{action:'idea-prep-rest',payload:{id:b.id,take:true}},1);assert.equal(stored().restBy,1,'twice: same');
+ assert.throws(()=>change(h,{action:'idea-prep-rest',payload:{id:b.id,take:true}},0),e=>e.status===409);
+ assert.throws(()=>change(h,{action:'idea-prep-rest',payload:{id:b.id,take:false}},0),e=>e.status===403);
+ assert.equal(pushesPartner('idea-prep-rest'),false,'never rings');
+ // Editing the list keeps who takes the rest; the promise clears it.
+ change(h,{action:'idea-prep',payload:{id:b.id,version:1,items:[bread2]}},0);assert.equal(stored().restBy,1);assert.equal(stored().version,2);
+ change(h,{action:'idea-prep',payload:{id:b.id,version:2,items:[bread2],allMine:true}},0);assert.equal(stored().allMine,true);assert.equal(stored().restBy,undefined);assert.equal(stored().items.length,1,'the list stays with the promise');
+ change(h,{action:'idea-prep',payload:{id:b.id,version:3,items:[bread2],allMine:true}},0);assert.equal(stored().version,3,'same request twice: nothing changes');
+ change(h,{action:'idea-prep',payload:{id:b.id,version:3,items:[bread2],allMine:false}},0);assert.equal(stored().allMine,undefined);
+ change(h,{action:'idea-prep-rest',payload:{id:b.id,take:true}},1);change(h,{action:'idea-prep-rest',payload:{id:b.id,take:false}},1);assert.equal(stored().restBy,undefined,'let go');
+ assert.equal(h.ideas.find(x=>x.id===b.id).status,'pending','agreement untouched');
+ assert.throws(()=>change(h,{action:'idea',payload:idea({allMine:'oui'})},0),undefined,'allMine is a boolean');}
 const ideas=readFileSync('app/house-ideas.tsx','utf8'),app=readFileSync('app/house-app.tsx','utf8'),cards=readFileSync('app/chat-house-cards.tsx','utf8');
 assert(app.includes("'Je te date',Heart"),'The + menu offers « Je te date » with its heart');
 assert(!app.includes("'Une idée'"));assert(!/Proposer une idée/.test(ideas+cards));
-for(const text of ['Préparer ce moment','Ajouter le reste aux courses','Je te date'])assert(ideas.includes(text),text);
+for(const text of ['Préparer ce moment','Ajouter le reste aux courses','Je te date','Je m’occupe du reste','T’inquiète, je m’occupe de tout'])assert(ideas.includes(text),text);
 console.log('PASS: « Je te date » in the + menu, the ideas page and the chat, « Préparer ce moment » and its shopping button.');

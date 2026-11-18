@@ -2,6 +2,8 @@
 // L'auteur écrit la liste (courses et choses à préparer) ; chacun des deux peut cocher.
 // La préparation a sa propre version : la modifier ne relance pas la demande d'accord,
 // et une coche ne fait jamais sonner le téléphone de l'autre.
+// 18 novembre 2026 : l'auteur peut cocher « T'inquiète, je m'occupe de tout » (allMine, avec ou sans liste),
+// et l'un des deux peut dire « Je m'occupe du reste » (restBy) pour ce qui n'est pas encore acheté ou prêt.
 import {z} from 'npm:zod@3.25.76';
 import {ApiError,weekMonday,type State} from './model.ts';
 import {secretIdea} from './chat-invitation.ts';
@@ -10,8 +12,11 @@ import {MAX_PREP_ITEMS,MAX_PREP_TITLE,MAX_PREP_QUANTITY,prepItemsInput} from './
 
 export {MAX_PREP_ITEMS,MAX_PREP_TITLE,MAX_PREP_QUANTITY,prepItemsInput};
 export type PrepItem={id:string;kind:'buy'|'do';title:string;quantity:string;done:boolean;doneBy:number|null;shoppingItem?:string;shoppingWeek?:string};
-export type IdeaPrep={version:number;items:PrepItem[]};
-const prepEditInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),items:prepItemsInput.nullable()});
+export type IdeaPrep={version:number;items:PrepItem[];allMine?:boolean;restBy?:number|null};
+/** Only the flags that are set are stored: an older preparation reads the same. */
+const withFlags=(version:number,items:PrepItem[],allMine:boolean,restBy:number|null):IdeaPrep=>({version,items,...(allMine?{allMine:true}:{}),...(!allMine&&restBy!==null?{restBy}:{})});
+const prepEditInput=z.object({id:z.string().uuid(),version:z.number().int().min(0),items:prepItemsInput.nullable(),allMine:z.boolean().optional()});
+const prepRestInput=z.object({id:z.string().uuid(),take:z.boolean()});
 const prepCheckInput=z.object({id:z.string().uuid(),item:z.string().uuid(),done:z.boolean()});
 const prepShoppingInput=z.object({id:z.string().uuid(),operationId:z.string().uuid()});
 
@@ -26,11 +31,14 @@ export function mergePrep(old:IdeaPrep|undefined,items:z.infer<typeof prepItemsI
 const sameList=(a:PrepItem[],b:PrepItem[])=>a.length===b.length&&a.every((x,n)=>x.id===b[n].id&&x.kind===b[n].kind&&x.title===b[n].title&&x.quantity===b[n].quantity);
 
 /** Called by the 'idea' action: no field (page cached before this feature) keeps the stored preparation. */
-export function prepFromIdea(old:{prep?:IdeaPrep}|undefined,raw:unknown,actor:number):IdeaPrep|undefined{
- if(raw===undefined)return old?.prep;if(raw===null)return undefined;
- const items=mergePrep(old?.prep,prepItemsInput.parse(raw),actor);
- if(old?.prep&&sameList(old.prep.items,items))return old.prep;
- return {version:(old?.prep?.version||0)+1,items};
+export function prepFromIdea(old:{prep?:IdeaPrep}|undefined,raw:unknown,actor:number,allMineRaw?:boolean):IdeaPrep|undefined{
+ // A page cached before « je m'occupe de tout » sends no allMine: the stored promise stays.
+ if(allMineRaw===undefined){if(raw===undefined)return old?.prep;if(raw===null&&!old?.prep?.allMine)return undefined;}
+ const items=raw===undefined?old?.prep?.items||[]:raw===null?[]:mergePrep(old?.prep,prepItemsInput.parse(raw),actor);
+ const allMine=allMineRaw===undefined?!!old?.prep?.allMine:allMineRaw;
+ if(!items.length&&!allMine)return undefined;
+ if(old?.prep&&sameList(old.prep.items,items)&&!!old.prep.allMine===allMine)return old.prep;
+ return withFlags((old?.prep?.version||0)+1,items,allMine,old?.prep?.restBy??null);
 }
 
 /** The partner's secret or private idea is indistinguishable from a missing one, preparation included. */
@@ -46,15 +54,17 @@ export function ideaPrepMutation(s:State,action:string,p:unknown,actor:number,no
   const v=prepEditInput.parse(p),idea=findIdea(s,v.id,actor);
   if(idea.owner!==actor)throw new ApiError(403,'Seule la personne qui propose ce date peut écrire sa préparation.');
   const old:IdeaPrep|undefined=idea.prep,current=old?.version||0;
-  if(v.items===null){
+  const allMine=v.allMine===undefined?!!old?.allMine:v.allMine;
+  // null without « je m'occupe de tout », or an empty list without it: the preparation is removed.
+  if(v.items===null?v.allMine!==true:!v.items.length&&!allMine){
    if(!old)return null;if(current!==v.version)throw new ApiError(409,'La préparation a changé sur un autre appareil. Rouvrez-la.');
    delete idea.prep;return null;
   }
-  const items=mergePrep(old,v.items,actor);
+  const items=v.items===null?[]:mergePrep(old,v.items,actor);
   // Same request sent twice (lost answer, double tap): already applied, nothing to do.
-  if(old&&sameList(old.items,items))return null;
+  if(old&&sameList(old.items,items)&&!!old.allMine===allMine)return null;
   if(current!==v.version)throw new ApiError(409,'La préparation a changé sur un autre appareil. Rouvrez-la.');
-  idea.prep={version:current+1,items};return null;
+  idea.prep=withFlags(current+1,items,allMine,old?.restBy??null);return null;
  }
  if(action==='idea-prep-check'){
   const v=prepCheckInput.parse(p),idea=findIdea(s,v.id,actor),item=(idea.prep as IdeaPrep|undefined)?.items.find(i=>i.id===v.item);
@@ -62,6 +72,16 @@ export function ideaPrepMutation(s:State,action:string,p:unknown,actor:number,no
   if(item.done===v.done)return null;
   if(!v.done&&item.doneBy!==null&&item.doneBy!==actor&&idea.owner!==actor)throw new ApiError(403,'Seule la personne qui l’a coché peut le décocher.');
   item.done=v.done;item.doneBy=v.done?actor:null;return null;
+ }
+ // « Je m'occupe du reste » : one of us takes what is not bought or ready yet; only that person lets it go.
+ if(action==='idea-prep-rest'){
+  const v=prepRestInput.parse(p),idea=findIdea(s,v.id,actor),prep=idea.prep as IdeaPrep|undefined;
+  if(!prep)throw new ApiError(404,'Ce moment n’a pas de préparation.');
+  if(prep.allMine)throw new ApiError(400,'Tout est déjà pris en charge.');
+  const by=prep.restBy??null;
+  if(v.take){if(by===actor)return null;if(by!==null)throw new ApiError(409,'Ta moitié s’occupe déjà du reste.');prep.restBy=actor;return null;}
+  if(by===null)return null;if(by!==actor)throw new ApiError(403,'Seule la personne qui s’en occupe peut l’annuler.');
+  delete prep.restBy;return null;
  }
  if(action==='idea-prep-shopping'){
   const v=prepShoppingInput.parse(p),idea=findIdea(s,v.id,actor),prep=idea.prep as IdeaPrep|undefined;
