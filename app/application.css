@@ -721,3 +721,39 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 .reminder-times .section-title{margin-bottom:0}
 .reminder-group{display:flex;flex-direction:column;gap:var(--space-3)}
 .push-test.is-ko>p{color:var(--danger)}
+/* « Je te date » : préparer ce moment (facultatif). Liste sobre, cibles de 44 px, rien ne déborde à 320 px. */
+.idea-prep-chip{display:inline-flex;align-items:center;gap:var(--space-1);border-radius:var(--radius-pill);padding:var(--space-1) var(--space-3);font:600 13px/16px var(--font-sans);background:var(--surface);color:var(--ink);max-width:100%}
+.idea-prep-option{display:grid;gap:var(--space-2);min-width:0}
+.idea-prep-option .optional{font-weight:400;color:var(--ink-muted)}
+.idea-prep-summary{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);background:var(--beurre);font:500 14px/20px var(--font-sans);color:var(--ink);min-width:0}
+.idea-prep-summary>span{min-width:0;overflow-wrap:anywhere}
+.idea-prep-summary button,.idea-prep-start,.idea-prep-actions button{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:44px;white-space:nowrap}
+.idea-prep-start{width:100%}
+.idea-prep-dialog .helper-copy{margin:0 0 var(--space-4)}
+.idea-prep-section{display:grid;gap:var(--space-3);margin-bottom:var(--space-6);min-width:0}
+.idea-prep-section h3,.idea-prep-panel h3,.idea-prep-group h4{display:flex;align-items:center;gap:var(--space-2);margin:0;font:700 16px/22px var(--font-sans);color:var(--ink)}
+.idea-prep-edit,.idea-prep-group ul{list-style:none;margin:0;padding:0;display:grid;min-width:0}
+.idea-prep-edit li{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);min-height:44px;border-bottom:1px solid var(--line);min-width:0}
+.idea-prep-edit li>span,.idea-prep-text{display:flex;flex-direction:column;min-width:0}
+.idea-prep-edit strong,.idea-prep-text strong{font:500 15px/20px var(--font-sans);overflow-wrap:anywhere}
+.idea-prep-edit small,.idea-prep-text small{font:400 13px/18px var(--font-sans);color:var(--ink-muted)}
+.idea-prep-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-2) var(--space-3);align-items:end;min-width:0}
+.idea-prep-add.buy{grid-template-columns:minmax(0,1fr) auto}
+.idea-prep-add.buy>label:first-child{grid-column:1/-1}
+.idea-prep-add label{display:grid;gap:var(--space-1);min-width:0;font:600 14px/20px var(--font-sans)}
+.idea-prep-add label .optional{font-weight:400;color:var(--ink-muted)}
+.idea-prep-add input{min-width:0;width:100%}
+.idea-prep-add button{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:44px;white-space:nowrap}
+.idea-prep-count{margin:0 0 var(--space-3);font:400 13px/18px var(--font-sans);color:var(--ink-muted)}
+.idea-prep-panel{width:100%;display:grid;gap:var(--space-3);padding:var(--space-5);border-radius:var(--radius-lg);background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line);text-align:left;min-width:0}
+.idea-prep-panel>header{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3)}
+.idea-prep-progress{font:700 14px/20px var(--font-sans);font-variant-numeric:tabular-nums;color:var(--ink)}
+.idea-prep-left{margin:0;font:500 14px/20px var(--font-sans);color:var(--ink-muted)}
+.idea-prep-group{display:grid;gap:var(--space-1);min-width:0}
+.idea-prep-group h4{font-size:14px;line-height:20px}
+.idea-prep-group li{border-bottom:1px solid var(--line);min-width:0}
+.idea-prep-group li:last-child{border-bottom:0}
+.idea-prep-group .check-label{align-items:center;padding:var(--space-1) 0;min-width:0}
+.idea-prep-group li.done strong{text-decoration:line-through;color:var(--ink-muted)}
+.idea-prep-actions{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3)}
+.idea-prep-actions .text-link{align-self:auto}

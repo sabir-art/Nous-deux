@@ -1,5 +1,6 @@
 import {giftMutation} from './gifts.ts';
 import {synchronizeInvitation} from './invitation-agenda.ts';
+import {ideaPrepMutation,prepFromIdea} from './idea-prep.ts';
 import {validDate,categories} from './domain.ts';
 import {z} from 'npm:zod@3.25.76';
 import {mealVote,type MealState} from './meals.ts';
@@ -42,6 +43,8 @@ function householdChange(s:State,p:any,actor:number){
  if(actor!==0&&actor!==1)throw new ApiError(403,'Compte personnel requis.');
  const {action,payload}=p;if(typeof action!=='string')throw new ApiError(400,'Action invalide.');const previous=action.includes('appointment')?s.appointments.find(a=>a.id===payload?.id):null;const now=new Date().toISOString();
 
+ // A preparation never changes the invitation's agreement and never rings the partner's phone.
+ if(action==='idea-prep'||action==='idea-prep-check'||action==='idea-prep-shopping')return ideaPrepMutation(s,action,payload,actor,now);
  if(['idea','idea-response','delete-idea','plant','plant-care','plant-care-all','delete-plant'].includes(action))return lifeMutation(s,action,payload,actor,now);
  if(['child','delete-child','family-mode','agenda-color'].includes(action)){
   const id=(payload as {id?:string})?.id;childMutation(s,action,payload,actor,now,parisDate());
@@ -179,6 +182,8 @@ function lifeMutation(s:State,action:string,p:any,actor:number,now:string){
    if(!old&&list.length>=(isIdea?300:100))throw new ApiError(400,'La limite de fiches est atteinte. Supprimez une ancienne fiche pour continuer.');
    if(!isIdea&&['lastWater','lastLight','lastFeed'].some(k=>v[k]>date))throw new ApiError(400,'Un soin déjà effectué ne peut pas être dans le futur.');
    const value={...v,owner:actor,version:v.version+1,createdAt:old?.createdAt||now,...(isIdea?{status:'pending',responseNote:'',respondedAt:null}:{careLog:old?.careLog||[],...(old?{lastWater:old.lastWater,lastLight:old.lastLight,lastFeed:old.lastFeed}:{})})};
+   // « Préparer ce moment » rides along with the idea: kept as it is when the field is absent (cached page).
+   if(isIdea){const prep=prepFromIdea(old,(v as {prep?:unknown}).prep,actor);delete (value as {prep?:unknown}).prep;if(prep)(value as {prep?:unknown}).prep=prep;}
    if(old)list[list.indexOf(old)]=value;else list.push(value);
   }
  }
