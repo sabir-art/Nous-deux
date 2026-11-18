@@ -10,4 +10,5 @@ export function halfHours([min,max]:readonly [number,number]){
  for(let m=min;m<=max;m+=30){const h=Math.floor(m/60),mm=m%60;out.push({value:`${String(h).padStart(2,'0')}:${mm?'30':'00'}`,label:mm?`${h} h 30`:`${h} h`});}
  return out;
 }
+export const OFF='off';
 export const soonLabel=(m:number)=>m<60?`${m} min avant`:`${Math.floor(m/60)} h${m%60?' '+String(m%60).padStart(2,'0'):''} avant`;

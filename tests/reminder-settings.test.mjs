@@ -40,6 +40,20 @@ assert.deepEqual(at('2026-10-22T06:00:00Z'),[[1,'morning','Aujourd’hui, 2 rend
 assert.deepEqual(at('2026-10-22T06:30:00Z'),[[0,'soon','Dans 1 h 30 · 10 h · Dentiste']],'08:30: 90 min before for Alex');
 assert.deepEqual(at('2026-10-22T07:00:00Z'),[[1,'soon','Dans 1 h · 10 h · Dentiste']],'09:00: 1 h before for Camille');
 
+// Each reminder can be switched off: 'off' for a time, 0 for the delay. Missions keep 8 h when the morning one is off.
+{const off={eve:'off',morning:'off',soon:0,plants:'off',pets:'off'},s2={};
+assert.deepEqual(server.reminderTimesMutation(s2,off,1),off,'all reminders off');
+for(const bad of [{...off,eve:'OFF'},{...off,soon:-1},{...off,morning:''}])assert.throws(()=>server.reminderTimesMutation(s2,bad,1),undefined,JSON.stringify(bad));
+assert.deepEqual(server.reminderTimesFor({reminderTimes:{0:{eve:'off',soon:0}}},0),{...server.defaultReminderTimes,eve:'off',soon:0});
+assert.equal(server.inWindow(19*60,'off'),false);
+const quiet={...house,reminderLog:{},reminderTimes:{0:{...good,eve:'off',morning:'off',soon:0}}};
+const q=iso=>claimReminders(quiet,new Date(iso)).filter(r=>r.device.member===0).map(r=>r.kind);
+assert.deepEqual(q('2026-10-21T19:00:00Z'),[],'no eve reminder');
+assert.deepEqual(q('2026-10-22T05:30:00Z'),[],'no morning reminder at 07:30');
+assert.deepEqual(q('2026-10-22T06:00:00Z'),['missions'],'missions at 08:00 when the morning reminder is off');
+for(const iso of ['2026-10-22T06:30:00Z','2026-10-22T07:00:00Z','2026-10-22T08:00:00Z','2026-10-22T08:30:00Z','2026-10-22T09:00:00Z'])assert.deepEqual(q(iso),[],'no health reminder '+iso);
+assert.equal(claimPlantReminders({devices:[d0],reminderTimes:{0:{plants:'off'}},plants:[{id:'p',owner:0,remindBoth:true,reminders:true,waterEvery:3,lightEvery:0,feedEvery:0,lastWater:'2026-10-01',lastLight:'2026-10-01',lastFeed:'2026-10-01'}]},'2026-10-22',8*60).length,0,'plants off');}
+
 // Pets: one grouped note of today's due cares, at each person's time, only with « Nos compagnons » on.
 const today='2026-10-22',yesterday='2026-10-21',long='2026-09-01';
 const pet=(name,every,last,log=[])=>({id:crypto.randomUUID(),owner:0,name,kind:'dog',breed:'',tone:'beurre',note:'',every:{food:0,walk:0,litter:0,groom:0,health:0,...every},last:{food:long,walk:long,litter:long,groom:long,health:long,...last},version:1,createdAt:'',careLog:log});

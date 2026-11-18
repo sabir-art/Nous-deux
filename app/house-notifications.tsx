@@ -5,7 +5,7 @@ import {Bell,BellOff,Check,RefreshCw,Clock} from './icons';
 import {defaultPreferences,type Preferences} from '../lib/communication';
 import {deviceId} from '../lib/device';
 import {endpointHash,isInstalled,keyBytes,localSubscription,permission,platform,pushSupported,sameKey,type Permission} from '../lib/push-client';
-import {defaultReminderTimes,halfHours,reminderRanges,soonChoices,soonLabel,type ReminderTimes} from '../lib/reminder-settings';
+import {OFF,defaultReminderTimes,halfHours,reminderRanges,soonChoices,soonLabel,type ReminderTimes} from '../lib/reminder-settings';
 type Event={id:number;actor:number;category:string;message:string;createdAt:string};
 type Service='apple'|'google'|'mozilla'|'microsoft'|'other';
 type TestResult={current:boolean;service:Service;ok:boolean;status:number|null;removed:boolean;reason?:string;error?:'endpoint'|'network'|'config'};
@@ -28,7 +28,7 @@ export function testLine(r:TestResult){
  if(r.status&&r.status>=500)return `Service de notification indisponible${code}. Réessayez plus tard.`;
  return `Refusée par le service de notification${code}.`;
 }
-const saved='Mes heures de rappel sont enregistrées.';
+const saved='Mes rappels sont enregistrés.';
 type Check={permission:Permission;installed:boolean;local:boolean;matches:boolean|null};
 export default function HouseNotifications({active,names,petsMode,onNavigate}:{active:number;names:string[];petsMode:boolean;onNavigate:(tab:string)=>void}){
  const [preferences,setPreferences]=useState<Preferences>(defaultPreferences),[enabled,setEnabled]=useState(false),[supported,setSupported]=useState(false),[busy,setBusy]=useState(false),[ready,setReady]=useState(false),[message,setMessage]=useState(''),[key,setKey]=useState(''),[events,setEvents]=useState<Event[]>([]),[seen,setSeen]=useState(0);
@@ -71,7 +71,7 @@ export default function HouseNotifications({active,names,petsMode,onNavigate}:{a
   :device==='android'?'Sur Android : autorisez les notifications de Chrome (ou de l’appli installée) et évitez qu’une économie de batterie ne la mette en veille.'
   :'Sur ordinateur : laissez le navigateur autoriser les notifications pour ce site.';
  const registered=enabled?(check.matches===false?'À renouveler':'Oui'):'Non';
- const timeSelect=(k:'eve'|'morning'|'plants'|'pets',label:string)=><label key={k}>{label}<select value={draft[k]} onChange={e=>{editing.current=true;setDraft(d=>({...d,[k]:e.target.value}));}}>{halfHours(reminderRanges[k]).map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select></label>;
+ const timeSelect=(k:'eve'|'morning'|'plants'|'pets',label:string)=><label key={k}>{label}<select value={draft[k]} onChange={e=>{editing.current=true;setDraft(d=>({...d,[k]:e.target.value}));}}><option value={OFF}>Pas de rappel</option>{halfHours(reminderRanges[k]).map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select></label>;
  return <div className="communication-grid"><section className="panel settings-panel"><span className="settings-icon"><Bell size={23}/></span><h2>À votre rythme</h2><p>Nous deux vous prévient pour l’essentiel : messages, appels, invitations, liste de courses terminée et rappels. Le reste attend dans « Les nouvelles de la maison ». Ce réglage concerne uniquement cet appareil, identifié comme <strong>{names[active]}</strong>.</p>
  {!supported&&<div className="info-box">Sur iPhone ou iPad, ajoutez Nous deux à l’écran d’accueil depuis Safari, puis ouvrez l’application depuis son icône pour activer les notifications.</div>}
  {supported&&<button className={enabled?'secondary wide':'primary wide'} disabled={busy||!ready||!key} onClick={()=>run(enabled?disable:enable)}>{enabled?<BellOff size={18}/>:<Bell size={18}/>} {enabled?'Désactiver sur cet appareil':'Activer sur cet appareil'}</button>}
@@ -91,13 +91,14 @@ export default function HouseNotifications({active,names,petsMode,onNavigate}:{a
   {test&&<div role="status" className={`push-test${test.failed?' is-ko':''}`}><p>{test.summary}</p>{test.results.length>0&&<ul>{test.results.map((r,i)=><li key={i} className={r.ok?'is-ok':'is-ko'}><strong>{services[r.service]}{r.current?' · cet appareil':''}</strong><span>{testLine(r)}</span></li>)}</ul>}</div>}
   <p className="aside-caption">L’essai part seulement vers vos propres appareils, cinq fois par heure au maximum.</p>
  </section>
- <section className="panel settings-panel reminder-times" aria-labelledby="reminder-times-title"><div className="section-title"><h2 id="reminder-times-title"><Clock size={20}/>Mes heures de rappel</h2></div>
-  <p>Pour {names[active]}, sur tous ses appareils. Les rappels partent à l’heure ou à la demie.</p>
+ <section className="panel settings-panel reminder-times" aria-labelledby="reminder-times-title"><div className="section-title"><h2 id="reminder-times-title"><Clock size={20}/>Mes rappels</h2></div>
+  <p>Pour {names[active]}, sur tous ses appareils. Pour chaque rappel, choisissez l’heure, ou « Pas de rappel » si vous n’en voulez pas.</p>
   <form className="form" onSubmit={e=>{e.preventDefault();void run(saveTimes);}}>
-   <fieldset className="reminder-group"><legend>Agenda</legend><div className="form-grid">{timeSelect('eve','La veille, à')}{timeSelect('morning','Le matin même, à')}</div>
-    <label>Avant un rendez-vous santé<select value={draft.soon} onChange={e=>{editing.current=true;setDraft(d=>({...d,soon:Number(e.target.value)}));}}>{soonChoices.map(m=><option key={m} value={m}>{soonLabel(m)}</option>)}</select></label></fieldset>
-   <div className="form-grid">{timeSelect('plants','Les plantes, à')}{petsMode&&timeSelect('pets','Nos compagnons, à')}</div>
-   <button className="primary wide" type="submit" disabled={busy||!ready||JSON.stringify(draft)===JSON.stringify(times)}><Check size={18}/>Enregistrer mes heures</button>
+   <fieldset className="reminder-group"><legend>Agenda</legend><div className="form-grid">{timeSelect('eve','La veille')}{timeSelect('morning','Le matin même')}</div>
+    <label>Avant un rendez-vous santé<select value={draft.soon} onChange={e=>{editing.current=true;setDraft(d=>({...d,soon:Number(e.target.value)}));}}><option value={0}>Pas de rappel</option>{soonChoices.map(m=><option key={m} value={m}>{soonLabel(m)}</option>)}</select></label>
+    <p className="aside-caption">Les missions du jour arrivent avec le rappel du matin, ou à 8 h s’il est coupé.</p></fieldset>
+   <div className="form-grid">{timeSelect('plants','Les plantes')}{petsMode&&timeSelect('pets','Nos compagnons')}</div>
+   <button className="primary wide" type="submit" disabled={busy||!ready||JSON.stringify(draft)===JSON.stringify(times)}><Check size={18}/>Enregistrer mes rappels</button>
   </form>
   {timesMessage&&<p role="status" className={timesMessage===saved?'notification-message':'form-error'}>{timesMessage}</p>}
   <p className="aside-caption">Les missions du jour arrivent avec le rappel du matin. {petsMode?'Le rappel des compagnons regroupe les soins du jour. ':''}Chaque rappel se coupe dans « Je souhaite être prévenu pour ».</p>
