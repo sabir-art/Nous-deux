@@ -18,6 +18,7 @@ import {ChildError} from './children.ts';
 import {visibleGifts,GiftError} from './gifts.ts';
 import {PetError} from './pets.ts';
 import {claimPlantReminders,visibleAppointments,ApiError,householdMutation,callMutation,deviceMutation,type State} from './model.ts';
+import {visibleIdeas} from './idea-prep.ts';
 import {defaultPreferences,deviceInput,allowedPushEndpoint,pushesPartner} from './communication.ts';
 import {claimReminders,releaseReminders,type Reminder} from './reminders.ts';
 const ORIGIN='https://sabir-art.github.io',BASE='/Nous-deux/';
@@ -150,7 +151,7 @@ export async function handler(req:Request):Promise<Response>{
  }
  if(route==='household'){
   // giftsMode stays true for pages cached before gift ideas moved to the agenda's birthdays; the old per-person switch is ignored.
-  if(req.method==='GET'){const {data:s}=await state();return json({member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:s.ideas||[],plants:s.plants||[],pets:s.pets||[],petsMode:!!s.petsMode,gifts:visibleGifts(s,actor),giftsMode:true,children:s.children||[],familyMode:!!s.familyMode,colors:s.colors||{},diets:dietProjection(s)});}
+  if(req.method==='GET'){const {data:s}=await state();return json({member:actor,profiles:s.profiles||{},meals:mealProjection(s,actor),household:s.household,entries:s.entries,items:s.items,appointments:visibleAppointments(s,actor),templates:s.templates||[],ideas:visibleIdeas(s,actor),plants:s.plants||[],pets:s.pets||[],petsMode:!!s.petsMode,gifts:visibleGifts(s,actor),giftsMode:true,children:s.children||[],familyMode:!!s.familyMode,colors:s.colors||{},diets:dietProjection(s)});}
   if(['item','profile-photo'].includes(p.action)&&p.payload?.photoId){const photoId=deviceInput.parse(p.payload.photoId);const photos=await db('nd_photos?id=eq.'+photoId+'&select=owner');if(!photos.length||photos[0].owner!==actor)throw new ApiError(403,'Vous ne pouvez joindre que votre propre photo.');}
   // Routine changes stay in « Les nouvelles de la maison »; only invitations and « J'ai fini la liste » reach the partner (communication.ts).
   const {result,data}=await mutate(s=>householdMutation(s,p,actor));if(result&&pushesPartner(p.action))try{await notify(data,actor,result.category,((actor===0?data.household?.first:data.household?.second)||'Votre moitié')+' '+result.message,req.headers.get('x-adeux-device')||'');}catch{}return json({ok:true});

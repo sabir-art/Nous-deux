@@ -34,6 +34,7 @@ jobs:
       - run: node tests/daily-calls.test.mjs
       - run: node tests/calendar.test.mjs
       - run: node tests/invitation-calendar.test.mjs
+      - run: node tests/idea-prep.test.mjs
       - run: node tests/chat-api.test.mjs
       - run: node tests/notification-photo.test.mjs
       - run: node tests/voices-places.test.mjs

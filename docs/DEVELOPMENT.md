@@ -35,7 +35,7 @@ La liste complète et les versions des outils de test figurent dans `.github/wor
 | Modification | Tests particulièrement concernés |
 | --- | --- |
 | Modèle, droits, mutations | `tests/supabase-model.test.mjs`, `tests/chat-api.test.mjs` |
-| Agenda / invitations | `tests/calendar.test.mjs`, `tests/invitation-calendar.test.mjs` |
+| Agenda / invitations | `tests/calendar.test.mjs`, `tests/invitation-calendar.test.mjs`, `tests/idea-prep.test.mjs`, `tests/invitation-card.test.mjs` |
 | Courses / plantes / photos | `tests/life.test.mjs`, `tests/photos.test.mjs`, `tests/browser-layout.test.mjs` |
 | Repas / recettes / IA | `tests/meals.test.mjs`, `tests/recipe-library.test.mjs`, `tests/recipe-experience.test.mjs`, `tests/recipe-discovery.test.mjs`, `tests/recipe-import.test.mjs`, `tests/ai-settings.test.mjs` |
 | Repas / recettes / IA | `tests/meals.test.mjs`, `tests/recipe-library.test.mjs`, `tests/recipe-experience.test.mjs`, `tests/diets.test.mjs`, `tests/recipe-discovery.test.mjs`, `tests/ai-settings.test.mjs` |

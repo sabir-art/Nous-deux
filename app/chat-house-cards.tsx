@@ -34,7 +34,7 @@ export const shareChoices:{kind:Exclude<HouseCardKind,'mot'>;label:string;hint:s
  {kind:'appointment',label:'Un rendez-vous partagé',hint:'Une date de notre agenda commun',icon:CalendarDays,tone:'lilas'},
  {kind:'recipe',label:'Une recette',hint:'Une idée pour le prochain repas',icon:BookOpen,tone:'corail'},
  {kind:'menu',label:'Un menu de la semaine',hint:'Nos repas déjà prévus',icon:UtensilsCrossed,tone:'peche'},
- {kind:'invitation',label:'Une invitation',hint:'Une idée de sortie, dans son enveloppe',icon:Mail,tone:'rose'},
+ {kind:'invitation',label:'Une invitation',hint:'Un « Je te date », dans son enveloppe',icon:Mail,tone:'rose'},
 ];
 /** Une couleur pastel par type partagé, la même dans « Partager avec… » et sur la carte envoyée. */
 export const kindTone:Record<HouseCardKind,string>={...Object.fromEntries(shareChoices.map(c=>[c.kind,c.tone])),mot:'citron'} as Record<HouseCardKind,string>;
@@ -131,7 +131,7 @@ const empties:Partial<Record<HouseCardKind,Empty>>={
  appointment:{text:'Pas encore de rendez-vous partagé à venir. On prévoit un moment ensemble ?',action:'Ajouter un rendez-vous',target:{page:'calendar',create:'appointment'},shape:'dome',buddy:'beurre'},
  recipe:{text:'Aucune recette ne correspond. Et si on ajoutait la nôtre ?',action:'Ajouter ma recette',target:{page:'meals',create:'recipe'},shape:'blob',buddy:'citron'},
  menu:{text:'Pas encore de menu de la semaine. On prévoit nos repas ensemble ?',action:'Préparer un menu',target:{page:'meals',create:'menu'},shape:'menu',buddy:'lavande'},
- invitation:{text:'Pas encore d’invitation entre nous. On propose un resto, une balade, une surprise ?',action:'Proposer une idée',target:{page:'ideas',create:'ideas'},shape:'flower',buddy:'lavande'},
+ invitation:{text:'Pas encore d’invitation entre nous. On propose un resto, une balade, une surprise ?',action:'Proposer un date',target:{page:'ideas',create:'ideas'},shape:'flower',buddy:'lavande'},
 };
 function ShareEmpty({kind,empty,onGo}:{kind:HouseCardKind;empty:Empty;onGo?:(t:HouseOpenTarget)=>void}){
  return <div className={'house-share-empty nd-tone-'+kindTone[kind]}>{empty.shape==='menu'?<MenuBuddy size={56}/>:<Buddy shape={empty.shape} tone={empty.buddy} mood="happy" size={56}/>}<p>{empty.text}</p>{onGo&&<button type="button" className="primary" onClick={()=>onGo(empty.target)}><Plus size={18} aria-hidden="true"/>{empty.action}</button>}</div>;
