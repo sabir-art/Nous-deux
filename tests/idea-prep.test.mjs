@@ -123,6 +123,15 @@ console.log('PASS: preparation saved with the idea, kept by cached pages, bounds
  change(h,{action:'idea-prep-rest',payload:{id:b.id,take:true}},1);change(h,{action:'idea-prep-rest',payload:{id:b.id,take:false}},1);assert.equal(stored().restBy,undefined,'let go');
  assert.equal(h.ideas.find(x=>x.id===b.id).status,'pending','agreement untouched');
  assert.throws(()=>change(h,{action:'idea',payload:idea({allMine:'oui'})},0),undefined,'allMine is a boolean');}
+// A little note on the preparation, by the author only, kept by cached pages, bounded.
+{const h=home(),it=line('Jus'),n=idea({prep:[it],prepNote:'Il ne restait que celui-là'});change(h,{action:'idea',payload:n},0);
+ assert.equal(h.ideas[0].prep.note,'Il ne restait que celui-là');assert.equal(visibleIdeas(h,1)[0].prep.note,'Il ne restait que celui-là');
+ const {prepNote:_n,...cached}=n;change(h,{action:'idea',payload:{...cached,version:1}},0);assert.equal(h.ideas[0].prep.note,'Il ne restait que celui-là','cached page keeps the note');
+ change(h,{action:'idea-prep',payload:{id:n.id,version:1,items:[it],note:''}},0);assert.equal(h.ideas[0].prep.note,undefined,'note cleared');
+ change(h,{action:'idea-prep',payload:{id:n.id,version:2,items:[it],note:'Bio'}},0);assert.equal(h.ideas[0].prep.note,'Bio');assert.equal(h.ideas[0].prep.version,3);
+ assert.throws(()=>change(h,{action:'idea-prep',payload:{id:n.id,version:3,items:[it],note:'x'.repeat(281)}},0));
+ assert.throws(()=>change(h,{action:'idea-prep',payload:{id:n.id,version:3,items:[it],note:'Moi'}},1),e=>e.status===403,'only the author writes it');
+ assert.throws(()=>change(h,{action:'idea',payload:idea({prep:[line('A')],prepNote:'y'.repeat(281)})},0));}
 const ideas=readFileSync('app/house-ideas.tsx','utf8'),app=readFileSync('app/house-app.tsx','utf8'),cards=readFileSync('app/chat-house-cards.tsx','utf8');
 assert(app.includes("'Je te date',Heart"),'The + menu offers « Je te date » with its heart');
 assert(!app.includes("'Une idée'"));assert(!/Proposer une idée/.test(ideas+cards));

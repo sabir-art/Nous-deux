@@ -183,7 +183,7 @@ function lifeMutation(s:State,action:string,p:any,actor:number,now:string){
    if(!isIdea&&['lastWater','lastLight','lastFeed'].some(k=>v[k]>date))throw new ApiError(400,'Un soin déjà effectué ne peut pas être dans le futur.');
    const value={...v,owner:actor,version:v.version+1,createdAt:old?.createdAt||now,...(isIdea?{status:'pending',responseNote:'',respondedAt:null}:{careLog:old?.careLog||[],...(old?{lastWater:old.lastWater,lastLight:old.lastLight,lastFeed:old.lastFeed}:{})})};
    // « Préparer ce moment » rides along with the idea: kept as it is when the field is absent (cached page).
-   if(isIdea){const prep=prepFromIdea(old,(v as {prep?:unknown}).prep,actor,(v as {allMine?:boolean}).allMine);delete (value as {prep?:unknown}).prep;delete (value as {allMine?:unknown}).allMine;if(prep)(value as {prep?:unknown}).prep=prep;}
+   if(isIdea){const prep=prepFromIdea(old,(v as {prep?:unknown}).prep,actor,(v as {allMine?:boolean}).allMine,(v as {prepNote?:string}).prepNote);delete (value as {prep?:unknown}).prep;delete (value as {allMine?:unknown}).allMine;delete (value as {prepNote?:unknown}).prepNote;if(prep)(value as {prep?:unknown}).prep=prep;}
    if(old)list[list.indexOf(old)]=value;else list.push(value);
   }
  }

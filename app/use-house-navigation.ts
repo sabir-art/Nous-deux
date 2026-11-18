@@ -37,6 +37,8 @@ export function useHouseNavigation(notify:(message:string)=>void){
   }
   addEventListener('popstate',pop);document.addEventListener('visibilitychange',rearm);return()=>{removeEventListener('popstate',pop);document.removeEventListener('visibilitychange',rearm);if(exitTimer.current)clearTimeout(exitTimer.current);};
  },[]);
+ // A tapped notification (public/sw.js) asks the open app to show its page.
+ useEffect(()=>{const sw=typeof navigator!=='undefined'?navigator.serviceWorker:undefined;if(!sw)return;const open=(event:MessageEvent)=>{if(event.data?.type==='nousdeux-open'&&typeof event.data.view==='string')navigate(event.data.view as HousePage);};sw.addEventListener('message',open);sw.startMessages?.();return()=>sw.removeEventListener('message',open);},[navigate]);
  const back=useCallback(()=>{if(depth.current>0){history.back();return;}current.current='home';direction.current=-1;write({page:'home',depth:0},true);setPage('home');},[]);
  return {page,navigate,direction,back};
 }
