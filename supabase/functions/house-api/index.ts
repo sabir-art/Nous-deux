@@ -18,8 +18,9 @@ import {ChildError} from './children.ts';
 import {visibleGifts,GiftError} from './gifts.ts';
 import {PetError} from './pets.ts';
 import {claimPlantReminders,visibleAppointments,ApiError,householdMutation,callMutation,deviceMutation,type State} from './model.ts';
-import {defaultPreferences,deviceInput,allowedPushEndpoint,pushesPartner} from './communication.ts';
-import {claimReminders,releaseReminders,type Reminder} from './reminders.ts';
+import {defaultPreferences,deviceInput,allowedPushEndpoint,pushesPartner,pushService,pushTargets} from './communication.ts';
+import {claimReminders,releaseReminders,parisClock,type Reminder} from './reminders.ts';
+import {reminderTimesFor,reminderTimesMutation} from './reminder-settings.ts';
 const ORIGIN='https://sabir-art.github.io',BASE='/Nous-deux/';
 const enc=new TextEncoder();
 const hash=async(s:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(s))),b=>b.toString(16).padStart(2,'0')).join('');
@@ -33,8 +34,24 @@ async function state(){const rows=await db('nd_state?id=eq.1&select=version,data
 async function mutate<T>(fn:(s:State)=>T){for(let i=0;i<4;i++){const snapshot=await state();const result=fn(snapshot.data);const rows=await db('nd_state?id=eq.1&version=eq.'+snapshot.version,'PATCH',{data:snapshot.data,version:snapshot.version+1});if(rows.length)return {result,data:snapshot.data};}throw new ApiError(409,'Modification simultanée. Réessayez.');}
 async function chatCards(){const rows=await db('nd_state?id=eq.1&select=chatCards:data->chatCards');return rows?.[0]?.chatCards as ChatCardState['chatCards']|null;}
 async function config(){return (await db('nd_config?id=eq.1&select=data'))[0].data;}
-async function send(device:any,data:any){if(!allowedPushEndpoint(device.subscription.endpoint))return false;const keys=(await config()).vapid;const payload=await buildPushPayload({data:JSON.stringify({...data,url:data.callId?BASE+'?view=calls&call='+data.callId:BASE+'?view='+(data.view||data.category||'settings')}),options:{ttl:data.category==='calls'?90:3600}},device.subscription,{...keys,subject:ORIGIN+BASE});const r=await fetch(device.subscription.endpoint,{...payload,redirect:'manual',signal:AbortSignal.timeout(5000)});if(r.status===404||r.status===410)await mutate(s=>{s.devices=s.devices.filter(d=>d.deviceId!==device.deviceId);});return r.ok;}
-async function notify(s:State,actor:number,category:string,message:string,originDevice=''){await Promise.allSettled(s.devices.filter(d=>d.member!==actor&&d.deviceId!==originDevice&&({...defaultPreferences,...d.preferences})[category]).map(d=>send(d,{title:category==='ideas'?'💌 Une invitation pour nous deux':category==='shopping'?'🛒 La liste de courses est prête':'À deux',body:category==='ideas'?'✨ '+message+' 💛':message,category,tag:category==='calls'?'adeux-call':category==='shopping'?'nousdeux-shopping-finished':undefined})));}
+// One push to one device. The result says what the push service answered, for « Vérifier mes notifications »:
+// status is its HTTP code (null when it could not be reached), removed means the subscription had expired (404/410)
+// and its device record was deleted, reason is the short code some services give (Apple: BadJwtToken…).
+type PushResult={ok:boolean;status:number|null;removed:boolean;reason?:string;error?:'endpoint'|'network'|'config'};
+async function deliver(device:any,data:any):Promise<PushResult>{
+ if(!allowedPushEndpoint(device.subscription?.endpoint||''))return {ok:false,status:null,removed:false,error:'endpoint'};
+ let payload;try{const keys=(await config()).vapid;payload=await buildPushPayload({data:JSON.stringify({...data,url:data.callId?BASE+'?view=calls&call='+data.callId:BASE+'?view='+(data.view||data.category||'settings')}),options:{ttl:data.category==='calls'?90:data.category==='test'?600:3600,urgency:'high'}},device.subscription,{...keys,subject:ORIGIN+BASE});}
+ catch{return {ok:false,status:null,removed:false,error:'config'};}
+ // The runtime computes Content-Length from the body; a hand-written copy is dropped so no service sees it twice.
+ const headers=Object.fromEntries(Object.entries(payload.headers as Record<string,string>).filter(([k])=>k.toLowerCase()!=='content-length'));
+ let r:Response;try{r=await fetch(device.subscription.endpoint,{method:'POST',headers,body:payload.body,redirect:'manual',signal:AbortSignal.timeout(5000)});}catch{return {ok:false,status:null,removed:false,error:'network'};}
+ let reason:string|undefined;if(!r.ok)try{const text=(await r.text()).slice(0,400);const code=(()=>{try{return JSON.parse(text)?.reason;}catch{return undefined;}})();if(typeof code==='string'&&/^[A-Za-z]{1,40}$/.test(code))reason=code;}catch{}
+ const removed=r.status===404||r.status===410;if(removed)await mutate(s=>{s.devices=s.devices.filter(d=>d.deviceId!==device.deviceId&&d.subscription?.endpoint!==device.subscription.endpoint);});
+ return {ok:r.ok,status:r.status,removed,...(reason?{reason}:{})};
+}
+async function send(device:any,data:any){return (await deliver(device,data)).ok;}
+async function notify(s:State,actor:number,category:string,message:string,originDevice=''){await Promise.allSettled(pushTargets(s.devices.filter(d=>d.member!==actor&&d.deviceId!==originDevice&&({...defaultPreferences,...d.preferences})[category])).map(d=>send(d,{title:category==='ideas'?'💌 Une invitation pour nous deux':category==='shopping'?'🛒 La liste de courses est prête':'À deux',body:category==='ideas'?'✨ '+message+' 💛':message,category,tag:category==='calls'?'adeux-call':category==='shopping'?'nousdeux-shopping-finished':undefined})));}
+const endpointHash=async(endpoint:string)=>(await hash(endpoint)).slice(0,16);
 const aiKey=async()=>{const stored=await db('rpc/nd_openai_key_get','POST',{});return typeof stored==='string'&&validAIKey(stored)?stored:Deno.env.get('OPENAI_API_KEY')||'';};
 const aiModel=()=>Deno.env.get('OPENAI_RECIPE_MODEL')||'gpt-5.4-mini';
 async function runDiscovery(){
@@ -60,12 +77,15 @@ export async function handler(req:Request):Promise<Response>{
   if(req.method!=='POST')return json({error:'Méthode non autorisée.'},405);
   const credential=req.headers.get('x-plant-reminder')||'';if(!/^[a-f0-9]{64}$/.test(credential))return json({error:'Accès réservé au planificateur.'},401);
   const cfg=await config();if(!cfg.plantReminderHash||!equal(await hash(credential),cfg.plantReminderHash))return json({error:'Accès réservé au planificateur.'},401);
-  // The same scheduler run (every 30 minutes) also sends agenda and mission reminders: no other cron is needed.
-  const now=new Date(),hour=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hour:'2-digit',hour12:false}).format(now),plantsHour=hour==='09';
+  // The same scheduler run (every 30 minutes) sends plant, agenda, mission and pet reminders, each at the time
+  // its person chose (reminder-settings.ts). The cron must call every 30 minutes, all day: see
+  // supabase/migrations/20261118090000_reminders_every_half_hour.sql, which removes the old 09:00-only filter.
+  const now=new Date(),{date:day,minutes}=parisClock(now),discoveryHour=minutes>=9*60&&minutes<10*60;
+  if(discoveryHour)backgroundDiscovery();
   // Nothing due: no write, the household state stays untouched.
-  const {data:snapshot}=await state();if(!plantsHour&&!claimReminders(structuredClone(snapshot),now).length)return json({ok:true,skipped:true});
-  if(plantsHour)backgroundDiscovery();
-  const day=parisDate(now);const {result}=await mutate(s=>({plants:plantsHour?claimPlantReminders(s,day):[],reminders:claimReminders(s,now)}));
+  const {data:snapshot}=await state(),preview=structuredClone(snapshot);
+  if(!claimPlantReminders(preview,day,minutes).length&&!claimReminders(preview,now).length)return json({ok:true,skipped:true});
+  const {result}=await mutate(s=>({plants:claimPlantReminders(s,day,minutes),reminders:claimReminders(s,now)}));
   const plantPush=async({device,count}:{device:any;count:number})=>{
    try{const ok=await send(device,{title:'Le petit jardin 🌱',body:count===1?'Une plante réclame son petit spa. Vérifiez ses soins du jour !':`${count} plantes attendent leurs soins. La réunion des feuilles a commencé !`,category:'plants',tag:'adeux-plants'});if(ok)return true;}catch{}
    await mutate(s=>{if(s.plantReminderDays?.[device.deviceId]===day)delete s.plantReminderDays[device.deviceId];});return false;
@@ -195,7 +215,7 @@ export async function handler(req:Request):Promise<Response>{
     const card=buildChatCard(s,v.card!,actor,parisDate(),v.text||'');storeChatCard(s as ChatCardState,v.id!,{member:actor,kind:v.card!.kind,ref:card.ref,data:card.data,...(v.text&&!card.ownText?{note:v.text}:{}),at:now});return {...card,note:card.ownText?'':v.text||''};
    });shared=result;}
    const inserted=await db('nd_messages?on_conflict=id','POST',{id:v.id,member:actor,text:shared?(shared.summary+(shared.note?'\n'+shared.note:'')).slice(0,2000):v.text||'',...(voice?{voice_id:voice.id,voice_duration:voice.duration_ms}:{}),...(attachment?{attachment_id:attachment.id,attachment_name:attachment.name,attachment_mime:attachment.mime,attachment_bytes:attachment.bytes}:{})},'resolution=ignore-duplicates,return=representation');
-   if(inserted?.length){const task=(async()=>{const {data:s}=await state();const icon=await notificationPhotoURL(s,actor,Deno.env.get('SUPABASE_URL')!,secret());await Promise.allSettled(s.devices.filter(d=>d.member!==actor&&({...defaultPreferences,...d.preferences}).chat).map(d=>send(d,{title:actor===0?s.household.first:s.household.second,body:shared?shared.push:voice?'🎙️ Un message vocal':attachment?'📎 Un fichier dans votre discussion':'💬 Un nouveau message',category:'chat',icon,tag:'nousdeux-chat-'+v.id})));})();if(typeof EdgeRuntime!=='undefined')EdgeRuntime.waitUntil(task.catch(()=>{}));else await task.catch(()=>{});}
+   if(inserted?.length){const task=(async()=>{const {data:s}=await state();const icon=await notificationPhotoURL(s,actor,Deno.env.get('SUPABASE_URL')!,secret());await Promise.allSettled(pushTargets(s.devices.filter(d=>d.member!==actor&&({...defaultPreferences,...d.preferences}).chat)).map(d=>send(d,{title:actor===0?s.household.first:s.household.second,body:shared?shared.push:voice?'🎙️ Un message vocal':attachment?'📎 Un fichier dans votre discussion':'💬 Un nouveau message',category:'chat',icon,tag:'nousdeux-chat-'+v.id})));})();if(typeof EdgeRuntime!=='undefined')EdgeRuntime.waitUntil(task.catch(()=>{}));else await task.catch(()=>{});}
    return json({ok:true});
   }
   if(v.action==='edit'&&(await chatCards())?.[v.id!])throw new ApiError(400,'Ce message ne peut pas être modifié.');
@@ -217,7 +237,7 @@ export async function handler(req:Request):Promise<Response>{
   if(req.method==='POST'&&p.action==='start'&&s.call&&s.call.state!=='ended'&&s.call.expiresAt>Date.now())throw new DailyError(409,'Terminez d’abord l’appel en cours.');
   const result=await handleDailyCalls(req.method,url,p,{db,key:Deno.env.get('DAILY_API_KEY')||'',actor,device,defer:task=>{if(typeof EdgeRuntime!=='undefined')EdgeRuntime.waitUntil(task);},names:[s.household?.first||'Abdellah',s.household?.second||'Laura'],notify:async call=>{
    const icon=await notificationPhotoURL(s,actor,Deno.env.get('SUPABASE_URL')!,secret());
-   const task=Promise.allSettled(s.devices.filter(d=>d.member!==actor&&({...defaultPreferences,...d.preferences}).calls).map(d=>send(d,{title:(actor===0?s.household.first:s.household.second)+(call.mode==='video'?' vous appelle en vidéo':' vous appelle'),icon,body:'Ouvrez Nous deux pour répondre.',category:'calls',callId:call.id,expiresAt:call.expires_at,tag:'nousdeux-call-'+call.id})));
+   const task=Promise.allSettled(pushTargets(s.devices.filter(d=>d.member!==actor&&({...defaultPreferences,...d.preferences}).calls)).map(d=>send(d,{title:(actor===0?s.household.first:s.household.second)+(call.mode==='video'?' vous appelle en vidéo':' vous appelle'),icon,body:'Ouvrez Nous deux pour répondre.',category:'calls',callId:call.id,expiresAt:call.expires_at,tag:'nousdeux-call-'+call.id})));
    if(typeof EdgeRuntime!=='undefined')EdgeRuntime.waitUntil(task);else await task;
   }});return json(result);
  }
@@ -227,9 +247,28 @@ export async function handler(req:Request):Promise<Response>{
   const {result,data}=await mutate(s=>callMutation(s,{...p,member:actor}));if(p.action==='start')try{await notify(data,actor,'calls','Votre moitié vous appelle. Ouvrez À deux pour répondre.');}catch{}return json(result);
  }
  if(route==='notifications'){
-  if(req.method==='GET'){const device=deviceInput.parse(url.searchParams.get('device'));const {data:s}=await state();const d=s.devices.find(d=>d.deviceId===device&&d.member===actor);return json({publicKey:(await config()).vapid.publicKey,enabled:!!d,preferences:{...defaultPreferences,...d?.preferences},activity:s.activity.slice(0,50)});}
+  if(req.method==='GET'){
+   const device=deviceInput.parse(url.searchParams.get('device'));const {data:s}=await state();const d=s.devices.find(d=>d.deviceId===device&&d.member===actor);
+   // For « Vérifier mes notifications »: which push service this device uses and a short fingerprint of its address,
+   // so the page can tell whether the browser's subscription is the one the server knows (never the address itself).
+   const mine=pushTargets(s.devices.filter(x=>x.member===actor));
+   return json({publicKey:(await config()).vapid?.publicKey||'',enabled:!!d,preferences:{...defaultPreferences,...d?.preferences},activity:s.activity.slice(0,50),times:reminderTimesFor(s,actor),petsMode:!!s.petsMode,devices:mine.length,subscription:d?{service:pushService(d.subscription?.endpoint||''),hash:await endpointHash(d.subscription?.endpoint||'')}:null});
+  }
+  if(p.action==='reminder-times'){const {result}=await mutate(s=>reminderTimesMutation(s,p.times,actor));return json({ok:true,times:result});}
   if(p.action==='test'){const device=deviceInput.parse(p.deviceId);const {data:s}=await state();const d=s.devices.find(d=>d.deviceId===device&&d.member===actor);if(!d)return json({error:'Activez les notifications.'},400);return await send(d,{title:'À deux',body:'Les notifications de votre maison sont activées.'})?json({ok:true}):json({error:'Le service de notification a refusé le test.'},502);}
-  await mutate(s=>{const d=s.devices.find(d=>d.deviceId===p.deviceId);if(d&&d.member!==actor)throw new ApiError(403,'Cet appareil appartient à un autre compte.');deviceMutation(s,{...p,member:actor});});return json({ok:true});
+  // Sent at every opening of the app: no write when the subscription the server knows is already this one.
+  if(p.action==='refresh'){const {data:s}=await state(),copy=structuredClone(s);const result=deviceMutation(copy,{...p,member:actor});if(JSON.stringify(copy.devices)===JSON.stringify(s.devices))return json({ok:true,...result});}
+  const {result}=await mutate(s=>{const d=s.devices.find(d=>d.deviceId===p.deviceId);if(d&&d.member!==actor)throw new ApiError(403,'Cet appareil appartient à un autre compte.');return deviceMutation(s,{...p,member:actor});});return json({ok:true,...result});
+ }
+ if(route==='notification-test'){
+  // « M'envoyer une notification d'essai »: only to the signed-in person's own devices, 5 times an hour at most.
+  if(req.method!=='POST')return json({error:'Méthode non autorisée.'},405);
+  const hits=await db('rpc/nd_rate_hit','POST',{rate_key:'push-test:'+actor+':'+Math.floor(Date.now()/3600000),expiry:Date.now()+7200000});if(hits>5)throw new ApiError(429,'Cinq essais par heure au maximum. Réessayez un peu plus tard.');
+  const current=typeof p.deviceId==='string'?p.deviceId:'';
+  const {data:s}=await state(),mine=pushTargets(s.devices.filter(d=>d.member===actor));
+  const here=s.devices.find(d=>d.deviceId===current&&d.member===actor)?.subscription?.endpoint;
+  const results=await Promise.all(mine.map(async d=>({current:!!here&&d.subscription?.endpoint===here,service:pushService(d.subscription?.endpoint||''),...await deliver(d,{title:'🔔 Essai réussi',body:'Les notifications de Nous deux arrivent bien sur cet appareil.',category:'test',view:'notifications',tag:'nousdeux-test'})})));
+  return json({devices:mine.length,sent:results.filter(r=>r.ok).length,results});
  }
  return json({error:'Route inconnue.'},404);
  }catch(e){if(e instanceof DailyError||e instanceof AttachmentError||e instanceof PlaceError||e instanceof VoiceError||e instanceof ApiError||e instanceof MealError||e instanceof RecipeError||e instanceof AISettingsError||e instanceof PetError||e instanceof GiftError||e instanceof ChildError)return json({error:e.message},e.status);if(e instanceof SyntaxError||e&&typeof e==='object'&&'issues'in e)return json({error:'Vérifiez les champs du formulaire.'},400);return json({error:'Service temporairement indisponible. Réessayez.'},503);}

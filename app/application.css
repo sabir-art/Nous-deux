@@ -706,3 +706,18 @@ i[class*=child-tone-],.calendar-event-chip[class*=child-tone-]{background:var(--
 @media(min-width:760px){.template-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* Noter un remboursement: what it pays back sits in the form's own rhythm. */
 .refund-subject{display:contents}
+/* Vérifier mes notifications: one state per line, colour + words (never colour alone). */
+.push-status{display:flex;flex-direction:column;gap:var(--space-2);margin:0}
+.push-status>div{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);padding:var(--space-3) var(--space-4);background:var(--surface-sunken);border-radius:var(--radius-md);min-width:0}
+.push-status dt{font:500 14px/20px var(--font-sans);min-width:0;flex:1}
+.push-status dd{margin:0;font:600 14px/20px var(--font-sans);text-align:right;overflow-wrap:anywhere}
+.push-status dd.is-ok,.push-test li.is-ok strong{color:var(--success)}
+.push-status dd.is-ko,.push-test li.is-ko strong{color:var(--danger)}
+.push-status dd.is-todo{color:var(--ink-muted)}
+.push-advice{font:500 14px/20px var(--font-sans);color:var(--ink)!important;background:var(--action-soft);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md)}
+.push-test{display:flex;flex-direction:column;gap:var(--space-2);font:500 14px/20px var(--font-sans)}
+.push-test ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--space-2)}
+.push-test li{display:flex;flex-direction:column;gap:var(--space-1);padding:var(--space-3) var(--space-4);border:1px solid var(--line);border-radius:var(--radius-md);overflow-wrap:anywhere}
+.reminder-times .section-title{margin-bottom:0}
+.reminder-group{display:flex;flex-direction:column;gap:var(--space-3)}
+.push-test.is-ko>p{color:var(--danger)}

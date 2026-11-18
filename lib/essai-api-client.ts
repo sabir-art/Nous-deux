@@ -8,6 +8,7 @@ import {recipeMutation} from '../supabase/functions/house-api/recipe-library.ts'
 import {discoveryProjection} from '../supabase/functions/house-api/recipe-discovery.ts';
 import {placeMutation} from '../supabase/functions/house-api/places.ts';
 import {defaultPreferences} from '../supabase/functions/house-api/communication.ts';
+import {reminderTimesFor,reminderTimesMutation} from '../supabase/functions/house-api/reminder-settings.ts';
 import {parisDate} from '../supabase/functions/house-api/life.ts';
 import {visibleGifts} from '../supabase/functions/house-api/gifts.ts';
 import {dietProjection} from '../supabase/functions/house-api/diets.ts';
@@ -83,7 +84,10 @@ function route(path:string,method:string,url:URL,p:any){
   case 'chat':if(method==='POST')chatChange(p,actor);return chatProjection(actor);
   case 'calls':return {call:null};
   case 'daily-calls':if(method==='POST')throw new ApiError(400,'Les appels : '+unavailable.toLowerCase());return {configured:false,call:null,history:[]};
-  case 'notifications':if(method==='POST')throw new ApiError(400,'Les notifications : '+unavailable.toLowerCase());return {publicKey:'',enabled:false,preferences:defaultPreferences,activity:load().activity.slice(0,50)};
+  // Reminder times follow the same validation as house-api; push itself needs a real device and server.
+  case 'notifications':if(method==='POST'){if(p.action==='reminder-times')return {ok:true,times:mutate(s=>reminderTimesMutation(s,p.times,actor))};throw new ApiError(400,'Les notifications : '+unavailable.toLowerCase());}
+   {const s=load();return {publicKey:'',enabled:false,preferences:defaultPreferences,activity:s.activity.slice(0,50),times:reminderTimesFor(s,actor),petsMode:!!s.petsMode,devices:0,subscription:null};}
+  case 'notification-test':throw new ApiError(400,'La notification d’essai : '+unavailable.toLowerCase()+' Elle part de la vraie appli, vers vos propres appareils.');
   default:throw new ApiError(400,unavailable);
  }
 }

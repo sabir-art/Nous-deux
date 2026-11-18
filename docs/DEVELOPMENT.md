@@ -44,6 +44,7 @@ La liste complète et les versions des outils de test figurent dans `.github/wor
 | Chat / fichiers / voix / cartes / stickers | `tests/chat-cards.test.mjs`, `tests/chat-attachments.test.mjs`, `tests/voices-places.test.mjs`, `tests/chat-controls-browser.test.mjs`, `tests/chat-share-browser.test.mjs`, `tests/chat-database.test.mjs` |
 | Navigation / cycle de vie React | `tests/app-navigation-browser.test.mjs`, `tests/chat-navigation-ui.test.mjs` |
 | Appels | `tests/daily-calls.test.mjs`, `tests/daily-database.test.mjs`, `tests/daily-browser.test.mjs` |
+| Notifications / rappels / Cron | `tests/reminders.test.mjs`, `tests/reminders-route.test.mjs`, `tests/reminder-settings.test.mjs`, `tests/reminders-migration-database.test.mjs` (PGlite), `tests/communication.test.mjs` |
 | Design / accessibilité / mobile | `tests/design-system.test.mjs`, `tests/accessibility.test.mjs`, `tests/mobile-ui.test.mjs`, `tests/browser-layout.test.mjs` |
 
 Exécuter une suite simple avec `node tests/nom.test.mjs`. Les tests navigateur utilisent Playwright et les tests SQL un PostgreSQL isolé PGlite. Installation temporaire reproductible, comme en CI :
@@ -88,6 +89,10 @@ Une future migration d'hébergement doit examiner au minimum :
 - connexion, lecture des données, photos, notifications et appels sur la nouvelle adresse.
 
 Chercher les occurrences de `sabir-art.github.io` et `/Nous-deux/` avant de changer de domaine. Conserver le même Supabase et les mêmes comptes ; ne pas convertir le projet en ancien runtime D1/Vinext simplement parce que des fichiers Cloudflare sont déjà présents.
+
+### Cron des rappels
+
+Le job pg_cron `nous-deux-plant-reminders` appelle `house-api?route=plant-reminders` à 0 et 30 de chaque heure ; la fonction décide seule de ce qui est dû (plantes, agenda, missions, compagnons, aux heures de chaque personne) et répond `skipped` sans écrire sinon. L’ancien script `supabase/sql/photos-and-plant-reminders.sql` le limitait à 9 h : la migration `supabase/migrations/20261118090000_reminders_every_half_hour.sql` retire ce filtre avec `cron.alter_job` (le secret reste lu dans Vault à chaque passage, il n’apparaît pas dans la migration). L’appliquer après le redéploiement de `house-api`, puis vérifier avec les requêtes de contrôle en fin de fichier (sans afficher de secret). Elle est rejouable sans effet.
 
 ## Fin de tâche
 
