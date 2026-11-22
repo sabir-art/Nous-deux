@@ -1,13 +1,17 @@
-# Application Android (Capacitor) — étape 1
+# Application Android (Capacitor)
 
-L'application Android emballe l'interface React actuelle avec [Capacitor](https://capacitorjs.com/) 8. Elle appelle la même API que le site (`https://jvjwyalusdygvkyzmiez.supabase.co/functions/v1/house-api`) et les mêmes comptes. Le site GitHub Pages n'est pas modifié : `pnpm run build:web` et `vite.web.config.ts` produisent exactement les mêmes fichiers qu'avant.
+L'application Android emballe l'interface React actuelle avec [Capacitor](https://capacitorjs.com/) 8. Elle appelle la même API que le site (`https://jvjwyalusdygvkyzmiez.supabase.co/functions/v1/house-api`) et les mêmes comptes. Feuille de route : `docs/ANDROID-PLAN.md`.
+
+Le site GitHub Pages garde son build (`pnpm run build:web`, `vite.web.config.ts`) : tout ce qui est propre à l'appli passe par `vite.android.config.ts`, `web/android.ts`, `app/android.css` et `lib/android-api-client.ts`, que le build web n'importe jamais.
 
 | Élément | Rôle |
 | --- | --- |
-| `capacitor.config.ts` | identifiant `fr.nousdeux.app`, nom « Nous deux », dossier web `dist-android` |
-| `vite.android.config.ts` | build séparé : chemins relatifs (`./`), sans manifeste ni service worker |
-| `lib/android-api-client.ts` | même client que `lib/api-client.ts`, seul `APP_BASE` vaut `/` (l'appli est servie depuis la racine) |
-| `android/` | projet Android Studio généré par `cap add android` ; icônes tirées de `public/icon-512.png`, rose `#D60B52`, fond crème `#F6F3EF` |
+| `capacitor.config.ts` | identifiant `fr.nousdeux.app`, nom « Nous deux », dossier web `dist-android`, bord à bord (`SystemBars`) |
+| `vite.android.config.ts` | build séparé : chemins relatifs (`./`), sans manifeste ni service worker, injecte `web/android.ts` ; `--mode essai` pour les tests locaux |
+| `lib/android-api-client.ts` | même client que `lib/api-client.ts`, avec `APP_BASE='/'` (appli servie depuis la racine) et `NATIVE_APP=true` |
+| `web/android.ts` | classe `native-app`, icônes des barres système selon le thème, bouton Retour d'Android (`@capacitor/app`) |
+| `app/android.css` | marges de sécurité (barre d'état, barre de navigation), fenêtres, écran de connexion pleine largeur sur téléphone |
+| `android/` | projet Android Studio ; icônes tirées de `public/icon-512.png`, rose `#D60B52`, démarrage crème `#F6F3EF`, `allowBackup="false"` |
 
 ## Prérequis
 
@@ -28,17 +32,29 @@ cd android
 
 L'APK de débogage est dans `android/app/build/outputs/apk/debug/app-debug.apk`.
 
+### Tester sans les vraies données
+
+`pnpm run build:android:essai` puis `pnpm exec cap sync android` : l'appli embarque le mode essai (`lib/essai-api-client.ts`, fausse maison dans le stockage de la WebView, rien n'est envoyé à Supabase). Pratique pour vérifier l'accueil, la discussion ou les fenêtres sans compte. **Toujours reconstruire avec `pnpm run sync:android` ensuite** : ne jamais publier un APK d'essai.
+
 ## Lancer
 
 - Android Studio : ouvrir le dossier `android/`, choisir l'émulateur ou le téléphone (débogage USB activé), ▶ Run.
 - Ou : `pnpm exec cap run android`, ou `adb install -r android/app/build/outputs/apk/debug/app-debug.apk`.
 - Inspecter la page : Chrome → `chrome://inspect` (débogage WebView actif sur les builds de débogage).
+- Largeur de téléphone 360 px sur l'émulateur 1080 px : `adb shell wm density 480` (`adb shell wm density reset` pour revenir).
 
 Après chaque changement de l'interface : `pnpm run sync:android`, puis relancer.
 
-## Ce qu'il faut savoir
+## Comportement de l'appli
 
-- L'appli est servie depuis **`https://localhost`** : c'est l'en-tête `Origin` envoyé à `house-api`. Tant que le serveur n'autorise pas cette origine, la connexion est refusée. L'autorisation se fera dans une PR serveur séparée (`supabase/functions/house-api`), pas dans cette étape.
-- Pas de notifications push : le Web Push n'existe pas dans la WebView Android (étape suivante : Firebase Cloud Messaging).
-- Pas d'appels natifs pour l'instant (étape suivante).
+- Origine envoyée à `house-api` : **`https://localhost`** (autorisée depuis `house-api` v40, liste `ORIGINS`).
+- Bord à bord : la page passe sous la barre d'état et la barre de navigation ; `env(safe-area-inset-*)` donne leurs tailles. Les icônes des barres suivent le thème clair/sombre de l'appli.
+- Bouton Retour : ferme d'abord la fenêtre ou le panneau d'émojis ouvert, puis revient à la page précédente, puis met l'appli en arrière-plan (l'état est conservé).
+- Serveur injoignable à la connexion : message et bouton « Réessayer » (le site garde « Actualisez la page »).
+- Pas de sauvegarde Android des données de l'appli (`allowBackup="false"`, règles d'extraction Android 12+) : la session ne part pas dans le cloud ni vers un autre téléphone.
+
+## Pas encore
+
+- Notifications push : le Web Push n'existe pas dans la WebView Android (étape 2 : Firebase Cloud Messaging).
+- Appels natifs (étape 3).
 - Aucune clé de signature (`*.jks`, `*.keystore`, `keystore.properties`) ni mot de passe dans Git : ils sont ignorés par `.gitignore`. La signature pour le Play Store sera traitée au moment de la publication.
