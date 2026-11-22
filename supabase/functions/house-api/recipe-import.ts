@@ -164,7 +164,7 @@ export function siteName(html:string,url:string){return meta(html,'og:site_name'
 /** Readable text of a page for the model: scripts, styles and navigation removed, bounded. */
 export function pageText(html:string,max=PAGE_TEXT_MAX){
  return decodeEntities(html.replace(/<!--[\s\S]*?-->/g,' ').replace(/<(script|style|noscript|svg|template|iframe|nav|header|footer|aside|form|button|select)\b[\s\S]*?<\/\1\s*>/gi,' ').replace(/<\/(p|li|div|h[1-6]|tr|section|article|ul|ol)>|<br\s*\/?>/gi,'\n').replace(/<[^>]*>/g,' '))
-  .replace(/[\x00-\x08\x0b-\x1f\x7f<>]/g,' ').replace(/[ \t ]+/g,' ').replace(/\s*\n\s*/g,'\n').replace(/\n{2,}/g,'\n').trim().slice(0,max);
+  .replace(/[\x00-\x08\x0b-\x1f\x7f<>]/g,' ').replace(/[ \t\u00a0]+/g,' ').replace(/\s*\n\s*/g,'\n').replace(/\n{2,}/g,'\n').trim().slice(0,max);
 }
 
 // ---- Validation ------------------------------------------------------------
