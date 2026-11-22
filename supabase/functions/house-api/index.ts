@@ -19,7 +19,8 @@ import {visibleGifts,GiftError} from './gifts.ts';
 import {PetError} from './pets.ts';
 import {claimPlantReminders,visibleAppointments,ApiError,householdMutation,callMutation,deviceMutation,type State} from './model.ts';
 import {visibleIdeas} from './idea-prep.ts';
-import {defaultPreferences,deviceInput,allowedPushEndpoint,pushesPartner,pushService,pushTargets} from './communication.ts';
+import {defaultPreferences,deviceInput,allowedPushEndpoint,pushesPartner,pushService,pushTargets,pushAddress} from './communication.ts';
+import {serviceAccount,sendFcm} from './fcm.ts';
 import {claimReminders,releaseReminders,parisClock,type Reminder} from './reminders.ts';
 import {reminderTimesFor,reminderTimesMutation} from './reminder-settings.ts';
 const ORIGIN='https://sabir-art.github.io',BASE='/Nous-deux/';
@@ -40,6 +41,13 @@ async function config(){return (await db('nd_config?id=eq.1&select=data'))[0].da
 // and its device record was deleted, reason is the short code some services give (Apple: BadJwtToken…).
 type PushResult={ok:boolean;status:number|null;removed:boolean;reason?:string;error?:'endpoint'|'network'|'config'};
 async function deliver(device:any,data:any):Promise<PushResult>{
+ // Android app (fcm.ts): same notification through Firebase Cloud Messaging; a token that no longer exists is removed.
+ if(device.fcm){
+  const account=serviceAccount(Deno.env.get('FCM_SERVICE_ACCOUNT'));if(!account)return {ok:false,status:null,removed:false,error:'config'};
+  const r=await sendFcm(account,device.fcm.token,data);
+  if(r.removed){const address=pushAddress(device);await mutate(s=>{s.devices=s.devices.filter(d=>d.deviceId!==device.deviceId&&pushAddress(d)!==address);});}
+  return r;
+ }
  if(!allowedPushEndpoint(device.subscription?.endpoint||''))return {ok:false,status:null,removed:false,error:'endpoint'};
  let payload;try{const keys=(await config()).vapid;payload=await buildPushPayload({data:JSON.stringify({...data,url:data.callId?BASE+'?view=calls&call='+data.callId:BASE+'?view='+(data.view||data.category||'settings')}),options:{ttl:data.category==='calls'?90:data.category==='test'?600:3600,urgency:'high'}},device.subscription,{...keys,subject:ORIGIN+BASE});}
  catch{return {ok:false,status:null,removed:false,error:'config'};}
@@ -257,7 +265,7 @@ export async function handler(req:Request):Promise<Response>{
    // For « Vérifier mes notifications »: which push service this device uses and a short fingerprint of its address,
    // so the page can tell whether the browser's subscription is the one the server knows (never the address itself).
    const mine=pushTargets(s.devices.filter(x=>x.member===actor));
-   return json({publicKey:(await config()).vapid?.publicKey||'',enabled:!!d,preferences:{...defaultPreferences,...d?.preferences},activity:s.activity.slice(0,50),times:reminderTimesFor(s,actor),petsMode:!!s.petsMode,devices:mine.length,subscription:d?{service:pushService(d.subscription?.endpoint||''),hash:await endpointHash(d.subscription?.endpoint||'')}:null});
+   return json({publicKey:(await config()).vapid?.publicKey||'',enabled:!!d,preferences:{...defaultPreferences,...d?.preferences},activity:s.activity.slice(0,50),times:reminderTimesFor(s,actor),petsMode:!!s.petsMode,devices:mine.length,subscription:d?{service:pushService(pushAddress(d)),hash:await endpointHash(pushAddress(d))}:null});
   }
   if(p.action==='reminder-times'){const {result}=await mutate(s=>reminderTimesMutation(s,p.times,actor));return json({ok:true,times:result});}
   if(p.action==='test'){const device=deviceInput.parse(p.deviceId);const {data:s}=await state();const d=s.devices.find(d=>d.deviceId===device&&d.member===actor);if(!d)return json({error:'Activez les notifications.'},400);return await send(d,{title:'À deux',body:'Les notifications de votre maison sont activées.'})?json({ok:true}):json({error:'Le service de notification a refusé le test.'},502);}
@@ -271,8 +279,8 @@ export async function handler(req:Request):Promise<Response>{
   const hits=await db('rpc/nd_rate_hit','POST',{rate_key:'push-test:'+actor+':'+Math.floor(Date.now()/3600000),expiry:Date.now()+7200000});if(hits>5)throw new ApiError(429,'Cinq essais par heure au maximum. Réessayez un peu plus tard.');
   const current=typeof p.deviceId==='string'?p.deviceId:'';
   const {data:s}=await state(),mine=pushTargets(s.devices.filter(d=>d.member===actor));
-  const here=s.devices.find(d=>d.deviceId===current&&d.member===actor)?.subscription?.endpoint;
-  const results=await Promise.all(mine.map(async d=>({current:!!here&&d.subscription?.endpoint===here,service:pushService(d.subscription?.endpoint||''),...await deliver(d,{title:'🔔 Essai réussi',body:'Les notifications de Nous deux arrivent bien sur cet appareil.',category:'test',view:'notifications',tag:'nousdeux-test'})})));
+  const here=pushAddress(s.devices.find(d=>d.deviceId===current&&d.member===actor));
+  const results=await Promise.all(mine.map(async d=>({current:!!here&&pushAddress(d)===here,service:pushService(pushAddress(d)),...await deliver(d,{title:'🔔 Essai réussi',body:'Les notifications de Nous deux arrivent bien sur cet appareil.',category:'test',view:'notifications',tag:'nousdeux-test'})})));
   return json({devices:mine.length,sent:results.filter(r=>r.ok).length,results});
  }
  return json({error:'Route inconnue.'},404);

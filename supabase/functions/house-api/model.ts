@@ -10,7 +10,7 @@ import {petMutation} from './pets.ts';
 import {inWindow,reminderTimesFor,type ReminderTimes} from './reminder-settings.ts';
 import {childMutation,checkChild} from './children.ts';
 import {entryInput,itemInput,householdInput,deleteInput,appointmentInput,shoppingCheckInput,templateInput,templateApplyInput,ideaInput,ideaResponseInput,plantInput,plantCareInput} from './validation.ts';
-import {deviceInput,memberInput,preferenceInput,subscriptionInput,changeDescription} from './communication.ts';
+import {deviceInput,memberInput,preferenceInput,subscriptionInput,fcmInput,pushAddress,changeDescription} from './communication.ts';
 export class ApiError extends Error{constructor(public status:number,message:string){super(message);}}
 export type State=MealState&DietState&{favoritePlaces?:import('./places.ts').FavoritePlace[];shoppingBatches?:string[];profiles?:Record<string,string|null>;household:any;entries:any[];items:any[];appointments:any[];activity:any[];devices:any[];call:any;sequence:number;templates?:any[];templateApplications?:string[];ideas?:any[];plants?:any[];pets?:import('./pets.ts').Pet[];gifts?:import('./gifts.ts').Gift[];children?:import('./children.ts').Child[];familyMode?:boolean;colors?:Record<string,string>;plantReminderDays?:Record<string,string>;reminderLog?:Record<string,string>;reminderTimes?:Record<string,Partial<ReminderTimes>>;petsMode?:boolean;shoppingFinished?:Record<string,string>;shoppingPending?:Record<string,unknown>};
 const conflict=()=>{throw new ApiError(409,'Cet élément a changé sur un autre appareil. Fermez puis rouvrez le formulaire.');};
@@ -136,21 +136,28 @@ export function deviceMutation(s:State,p:any):{enabled:boolean}{const deviceId=d
  // On each opening, the app hands back this browser's subscription: a new push address (renewed by the browser)
  // or a new device id (after logging in again) replaces the old record instead of leaving a dead or duplicate one.
  if(p.action==='refresh'){
-  const subscription=subscriptionInput.parse(p.subscription);if(i<0)i=s.devices.findIndex(d=>d.subscription?.endpoint===subscription.endpoint);if(i<0)return {enabled:false};
-  const member=memberInput.parse(p.member);s.devices[i]={...s.devices[i],deviceId,member,subscription};
-  s.devices=s.devices.filter((d,j)=>j===i||d.deviceId!==deviceId&&d.subscription?.endpoint!==subscription.endpoint);return {enabled:true};
+  const target=pushTarget(p),address=pushAddress(target);if(i<0)i=s.devices.findIndex(d=>pushAddress(d)===address);if(i<0)return {enabled:false};
+  const member=memberInput.parse(p.member);
+  s.devices[i]=target.subscription?{...s.devices[i],deviceId,member,subscription:target.subscription}:{...withoutPush(s.devices[i]),deviceId,member,fcm:target.fcm};
+  s.devices=s.devices.filter((d,j)=>j===i||d.deviceId!==deviceId&&pushAddress(d)!==address);return {enabled:true};
  }
  if(!['subscribe','preferences'].includes(p.action))throw new ApiError(400,'Action inconnue.');
  const member=memberInput.parse(p.member),preferences=preferenceInput.parse(p.preferences);
  // A page cached before a switch existed does not send it: keep the device's own choice.
  for(const k of ['reminders','pets'] as const)if(p.preferences&&typeof p.preferences==='object'&&!(k in p.preferences)&&i>=0&&typeof s.devices[i].preferences?.[k]==='boolean')preferences[k]=s.devices[i].preferences[k];
  if(p.action==='preferences'){if(i>=0)Object.assign(s.devices[i],{member,preferences});return {enabled:i>=0};}
- const subscription=subscriptionInput.parse(p.subscription);
- // One browser subscription = one record: an older record of the same push address (another device id after a
- // new login, or the other person on a shared phone) would ring twice or for the wrong person.
- s.devices=s.devices.filter(d=>d.deviceId===deviceId||d.subscription?.endpoint!==subscription.endpoint);i=s.devices.findIndex(d=>d.deviceId===deviceId);
- if(i<0&&s.devices.length>=12)throw new ApiError(400,'Limite de 12 appareils atteinte.');const d={deviceId,member,preferences,subscription};if(i<0)s.devices.push(d);else s.devices[i]=d;return {enabled:true};
+ const target=pushTarget(p),address=pushAddress(target);
+ // One browser subscription (or one app token) = one record: an older record of the same push address (another
+ // device id after a new login, or the other person on a shared phone) would ring twice or for the wrong person.
+ s.devices=s.devices.filter(d=>d.deviceId===deviceId||pushAddress(d)!==address);i=s.devices.findIndex(d=>d.deviceId===deviceId);
+ if(i<0&&s.devices.length>=12)throw new ApiError(400,'Limite de 12 appareils atteinte.');const d={deviceId,member,preferences,...target};if(i<0)s.devices.push(d);else s.devices[i]=d;return {enabled:true};
 }
+// What a device hands over to be reached: a browser subscription (site) or an FCM token (Android app), never both.
+function pushTarget(p:any):{subscription:ReturnType<typeof subscriptionInput.parse>;fcm?:undefined}|{fcm:ReturnType<typeof fcmInput.parse>;subscription?:undefined}{
+ if(p.fcm!==undefined){if(p.subscription!==undefined)throw new ApiError(400,'Un appareil s’abonne d’une seule façon.');return {fcm:fcmInput.parse(p.fcm)};}
+ return {subscription:subscriptionInput.parse(p.subscription)};
+}
+function withoutPush(d:any){const {subscription:_s,fcm:_f,...rest}=d;return rest;}
 
 export function visibleAppointments(s:State,actor:number){return s.appointments.filter(a=>a.visibility!=='private'||a.owner===actor);}
 

@@ -12,14 +12,21 @@ export function allowedPushEndpoint(value:string){
  u.hostname==='fcm.googleapis.com'||u.hostname==='web.push.apple.com'||u.hostname.endsWith('.push.apple.com')||u.hostname==='updates.push.services.mozilla.com'||u.hostname.endsWith('.notify.windows.com'));}catch{return false;}
 }
 export const subscriptionInput=z.object({endpoint:z.string().max(2048).refine(allowedPushEndpoint),expirationTime:z.number().nullable().optional(),keys:z.object({p256dh:z.string().regex(/^[A-Za-z0-9_-]{87}=?$/),auth:z.string().regex(/^[A-Za-z0-9_-]{22}={0,2}$/)})});
+// The Android app (22 November 2026) registers an FCM token instead of a browser subscription.
+export const fcmInput=z.object({token:z.string().min(20).max(4096).regex(/^[A-Za-z0-9_:.\-]+$/)}).strict();
+// The push address of a device: its browser endpoint, or its FCM token prefixed with « fcm: ».
+export function pushAddress(d:{subscription?:{endpoint?:string};fcm?:{token?:string}}|null|undefined){
+ return d?.subscription?.endpoint||(d?.fcm?.token?'fcm:'+d.fcm.token:'');
+}
 // Which push service a subscription uses, for a readable diagnosis (never the address itself).
-export type PushService='apple'|'google'|'mozilla'|'microsoft'|'other';
+export type PushService='apple'|'google'|'mozilla'|'microsoft'|'app'|'other';
 export function pushService(endpoint:string):PushService{
+ if(endpoint.startsWith('fcm:'))return 'app';
  try{const h=new URL(endpoint).hostname;return h==='web.push.apple.com'||h.endsWith('.push.apple.com')?'apple':h==='fcm.googleapis.com'?'google':h==='updates.push.services.mozilla.com'?'mozilla':h.endsWith('.notify.windows.com')?'microsoft':'other';}catch{return 'other';}
 }
-// One push per browser subscription: if an older record shares the push address of a newer one, the newest wins.
-export function pushTargets<T extends {subscription?:{endpoint?:string}}>(devices:T[]):T[]{
- const seen=new Set<string>(),out:T[]=[];for(const d of [...devices].reverse()){const e=d.subscription?.endpoint||'';if(e&&seen.has(e))continue;if(e)seen.add(e);out.unshift(d);}return out;
+// One push per browser subscription or app token: if an older record shares the push address of a newer one, the newest wins.
+export function pushTargets<T extends {subscription?:{endpoint?:string};fcm?:{token?:string}}>(devices:T[]):T[]{
+ const seen=new Set<string>(),out:T[]=[];for(const d of [...devices].reverse()){const e=pushAddress(d);if(e&&seen.has(e))continue;if(e)seen.add(e);out.unshift(d);}return out;
 }
 // Sober rule (21 October 2026): the partner's phone only rings for what asks for an answer or a gesture —
 // chat messages and calls (their own routes), an invitation or its answer, and « J'ai fini la liste ».
