@@ -10,6 +10,11 @@ const {handler}=await import('data:text/javascript;base64,'+Buffer.from(bundle.o
 function req(payload,query='',authenticated=true){return new Request('https://edge.test/?route=chat'+query,{method:payload?'POST':'GET',headers:{Origin:'https://sabir-art.github.io','Content-Type':'application/json',...(authenticated?{'x-house-session':'a'.repeat(64)}:{})},...(payload?{body:JSON.stringify(payload)}:{})});}
 assert.equal((await handler(req(undefined,'',false))).status,401);
 assert.equal((await handler(new Request('https://edge.test/?route=chat',{headers:{Origin:'https://evil.test'}}))).status,403);
+// The Android app (Capacitor, https://localhost) is allowed next to the site; each gets its own origin back, others none.
+{const pre=await handler(new Request('https://edge.test/?route=chat',{method:'OPTIONS',headers:{Origin:'https://localhost'}}));assert.equal(pre.status,204);assert.equal(pre.headers.get('access-control-allow-origin'),'https://localhost');
+const site=await handler(new Request('https://edge.test/?route=chat',{method:'OPTIONS',headers:{Origin:'https://sabir-art.github.io'}}));assert.equal(site.headers.get('access-control-allow-origin'),'https://sabir-art.github.io');
+assert.equal((await handler(new Request('https://edge.test/?route=chat',{headers:{Origin:'http://localhost'}}))).status,403);
+assert.equal((await handler(new Request('https://edge.test/?route=chat',{headers:{Origin:'https://localhost'}}))).status,401,'The Android origin still needs a session');}
 const id=crypto.randomUUID();assert.equal((await handler(req({action:'send',id,text:'Bonjour',member:1}))).status,200);assert.equal(records[0].member,0);
 await handler(req({action:'send',id,text:'Second envoi'}));assert.equal(records.length,1);assert.equal(records[0].text,'Bonjour');
 assert.equal((await handler(req({action:'send',id:crypto.randomUUID(),text:' '}))).status,400);

@@ -64,10 +64,14 @@ async function runDiscovery(){
  }catch{/* Never log credentials, prompts, household data or provider response bodies. */}
 }
 function backgroundDiscovery(){const task=runDiscovery();if(typeof EdgeRuntime!=='undefined')EdgeRuntime.waitUntil(task);return task;}
-const cors={'Access-Control-Allow-Origin':ORIGIN,'Access-Control-Allow-Headers':'content-type,apikey,x-house-session,x-adeux-member,x-adeux-device','Access-Control-Allow-Methods':'GET,POST,OPTIONS','Vary':'Origin','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
+// Allowed callers: the site (GitHub Pages) and the Android app (Capacitor serves it from https://localhost, 22 November 2026).
+// Identity never comes from the origin: every route still checks the x-house-session token.
+const ORIGINS=[ORIGIN,'https://localhost'];
+const baseCors={'Access-Control-Allow-Origin':ORIGIN,'Access-Control-Allow-Headers':'content-type,apikey,x-house-session,x-adeux-member,x-adeux-device','Access-Control-Allow-Methods':'GET,POST,OPTIONS','Vary':'Origin','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
 export async function handler(req:Request):Promise<Response>{
+ const origin=req.headers.get('origin'),cors={...baseCors,'Access-Control-Allow-Origin':origin&&ORIGINS.includes(origin)?origin:ORIGIN};
  const json=(body:unknown,status=200)=>Response.json(body,{status,headers:cors});
- if(req.headers.get('origin')&&req.headers.get('origin')!==ORIGIN)return json({error:'Origine non autorisée.'},403);
+ if(origin&&!ORIGINS.includes(origin))return json({error:'Origine non autorisée.'},403);
  if(req.method==='OPTIONS')return new Response(null,{status:204,headers:cors});
  if(!['GET','POST'].includes(req.method))return json({error:'Méthode non autorisée.'},405);
  try{
