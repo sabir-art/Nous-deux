@@ -1,4 +1,5 @@
 import {useCallback,useEffect,useRef,useState,type RefObject} from 'react';
+import {dismissTopLayer} from './back-layers';
 export const housePages=['home','calendar','meals','expenses','chat','shopping','tasks','ideas','plants','pets','gifts','family','calls','notifications','settings'] as const;
 export type HousePage=typeof housePages[number];
 const tabs:HousePage[]=['home','calendar','meals','expenses','chat'];
@@ -21,12 +22,9 @@ export function useHouseNavigation(notify:(message:string)=>void){
   const rearm=()=>{const route=readRoute(history.state);if(route?.exit&&document.visibilityState==='visible')write({...route,exit:false});};
   function pop(event:PopStateEvent){
    if(restoring){restoring=false;return;}
-   // Native Back dismisses the top dialog first, preserving its underlying page.
-   const dialog=[...document.querySelectorAll<HTMLDialogElement>('dialog[open]')].at(-1);
-   if(dialog){restoring=true;history.forward();dialog.dispatchEvent(new Event('cancel',{cancelable:true}));return;}
-   // Then an open panel that stands in for the keyboard (emoji picker).
-   const layer=[...document.querySelectorAll<HTMLElement>('[data-back-dismiss]')].at(-1);
-   if(layer){restoring=true;history.forward();layer.dispatchEvent(new Event('nd-back-dismiss'));return;}
+   // Native Back dismisses the top dialog first, then an open panel that stands in for the keyboard (emoji
+   // picker), preserving the underlying page: the history step is undone before the layer closes.
+   if(dismissTopLayer(()=>{restoring=true;history.forward();}))return;
    const route=readRoute(event.state);
    if(route?.exit&&guarded){
     // Stay on the base entry so the next *native* Back can leave normally.

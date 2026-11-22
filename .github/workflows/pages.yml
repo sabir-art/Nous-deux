@@ -55,6 +55,7 @@ jobs:
       - run: node tests/accessibility.test.mjs
       - run: node tests/design-system.test.mjs
       - run: node tests/mobile-ui.test.mjs
+      - run: node tests/android-build.test.mjs
       - name: WebKit and Chromium interface checks
         run: |
           npm install --prefix "$RUNNER_TEMP/nous-deux-browsers" --no-package-lock --ignore-scripts playwright@1.62.1 @electric-sql/pglite@0.3.14
@@ -67,6 +68,7 @@ jobs:
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/chat-controls-browser.test.mjs
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/chat-share-browser.test.mjs
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/app-navigation-browser.test.mjs
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/nous-deux-browsers/node_modules/playwright" node tests/access-form-browser.test.mjs
       - run: pnpm run build:web
       - uses: actions/upload-pages-artifact@v3
         with:
