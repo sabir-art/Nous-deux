@@ -55,8 +55,17 @@ Après chaque changement de l'interface : `pnpm run sync:android`, puis relancer
 - Serveur injoignable à la connexion : message et bouton « Réessayer » (le site garde « Actualisez la page »).
 - Pas de sauvegarde Android des données de l'appli (`allowBackup="false"`, règles d'extraction Android 12+) : la session ne part pas dans le cloud ni vers un autre téléphone.
 
+## Notifications (Firebase Cloud Messaging)
+
+- **Fichier Firebase** : `android/app/google-services.json` (projet Firebase « Nous deux », appli `fr.nousdeux.app`). Il reste sur l'ordinateur de développement : ignoré par Git, le dépôt est public. Sans lui, l'appli se construit mais ne reçoit pas de notification ; le récupérer dans la console Firebase (Paramètres du projet › Vos applications).
+- **Côté appli** : `lib/android-push-client.ts` remplace `lib/push-client.ts` dans le build Android, avec les mêmes fonctions, pour que l'écran des notifications reste commun. L'autorisation Android 13+ est demandée seulement au toucher de « Activer sur cet appareil ». Le jeton FCM est renvoyé au serveur à chaque ouverture et quand Firebase le renouvelle.
+- **Canaux Android** (créés par `web/android.ts`, réglables dans les paramètres du téléphone) : `messages` « Messages et invitations » (discussion, invitations, liste de courses terminée, essai), `appels` « Appels » (priorité maximale), `rappels` « Rappels » (agenda, missions, plantes, compagnons).
+- **Toucher une notification** : l'appli reçoit les mêmes messages que le service worker du site (`nousdeux-open` avec la page, `nousdeux-call` pour un appel) et ouvre la bonne page.
+- **Côté serveur** : un appareil Android est une fiche `{deviceId, member, preferences, fcm:{token}}` dans `nd_state.devices`. `deliver()` (`house-api/index.ts`) l'envoie par FCM HTTP v1 (`house-api/fcm.ts`, compte de service lu dans le secret Supabase `FCM_SERVICE_ACCOUNT`), toutes les autres règles restant celles du Web Push. Un jeton que Firebase ne connaît plus (`UNREGISTERED`) est retiré.
+- **Tester** : écran des notifications › « M'envoyer une notification d'essai » (appareils de la personne connectée seulement, 5 par heure).
+
 ## Pas encore
 
-- Notifications push : le Web Push n'existe pas dans la WebView Android (étape 2 : Firebase Cloud Messaging).
-- Appels natifs (étape 3).
+- Appels natifs : sonnerie plein écran, décrocher depuis l'écran verrouillé (étape 3). Pour l'instant un appel arrive comme une notification du canal « Appels ».
+- Photo de l'expéditeur dans la notification (le site l'affiche, l'appli pas encore).
 - Aucune clé de signature (`*.jks`, `*.keystore`, `keystore.properties`) ni mot de passe dans Git : ils sont ignorés par `.gitignore`. La signature pour le Play Store sera traitée au moment de la publication.
