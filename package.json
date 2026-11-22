@@ -14,11 +14,15 @@
     "db:generate": "drizzle-kit generate",
     "build:web": "vite build --config vite.web.config.ts",
     "check:web": "tsc -p tsconfig.web.json",
-    "build:essai": "vite build --config vite.essai.config.ts"
+    "build:essai": "vite build --config vite.essai.config.ts",
+    "build:android": "vite build --config vite.android.config.ts",
+    "sync:android": "vite build --config vite.android.config.ts && cap sync android"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
     "@block65/webcrypto-web-push": "^2.0.0",
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
     "@daily-co/daily-js": "0.93.0",
     "@hookform/resolvers": "^5.7.1",
     "@shadcn/react": "^0.3.0",
@@ -45,6 +49,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.6.2",
     "@cloudflare/vite-plugin": "1.37.1",
     "@cloudflare/workers-types": "4.20260515.1",
     "@tailwindcss/postcss": "4.2.1",

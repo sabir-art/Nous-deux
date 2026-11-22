@@ -49,6 +49,13 @@ next-env.d.ts
 
 /dist-web/
 /dist-essai/
+/dist-android/
+
+# Android (Capacitor): local IDE state and signing material never go to Git
+/.idea/
+*.jks
+*.keystore
+keystore.properties
 
 # Local Supabase CLI metadata
 /supabase/.temp/

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Nous deux: cream background (theme_color of the web app) and the pink of the icon. -->
+    <color name="colorPrimary">#D60B52</color>
+    <color name="colorPrimaryDark">#F6F3EF</color>
+    <color name="colorAccent">#D60B52</color>
+    <color name="nousdeux_background">#F6F3EF</color>
+</resources>
