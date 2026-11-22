@@ -16,6 +16,7 @@
     "check:web": "tsc -p tsconfig.web.json",
     "build:essai": "vite build --config vite.essai.config.ts",
     "build:android": "vite build --config vite.android.config.ts",
+    "build:android:essai": "vite build --config vite.android.config.ts --mode essai",
     "sync:android": "vite build --config vite.android.config.ts && cap sync android"
   },
   "dependencies": {

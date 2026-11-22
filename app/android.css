@@ -13,9 +13,10 @@
 @media (max-width:599px){
  .native-app body:has(.access-page)::before{background:var(--surface)}
  .native-app .access-page{display:block;padding:0;background:var(--surface)}
- .native-app .access-card{max-width:none;min-height:100%;margin:0;border-radius:0;box-shadow:none;justify-content:center;
-  padding:calc(var(--space-8) + env(safe-area-inset-top,0px)) max(var(--space-6),env(safe-area-inset-right,0px)) calc(var(--space-8) + env(safe-area-inset-bottom,0px)) max(var(--space-6),env(safe-area-inset-left,0px))}
- .native-app .access-decoration{top:calc(var(--space-8) + env(safe-area-inset-top,0px));right:max(var(--space-6),env(safe-area-inset-right,0px))}
+ /* Content from the top, the mascot beside the logo as on the card (12 px higher, like space-8 vs space-5). */
+ .native-app .access-card{max-width:none;min-height:100%;margin:0;border-radius:0;box-shadow:none;justify-content:flex-start;
+  padding:calc(var(--space-10) + var(--space-8) + env(safe-area-inset-top,0px)) max(var(--space-6),env(safe-area-inset-right,0px)) calc(var(--space-8) + env(safe-area-inset-bottom,0px)) max(var(--space-6),env(safe-area-inset-left,0px))}
+ .native-app .access-decoration{top:calc(var(--space-10) + var(--space-5) + env(safe-area-inset-top,0px));right:max(var(--space-6),env(safe-area-inset-right,0px))}
 }
 
 /* Connection problem in the app: the message and its « Réessayer » button (app/access-form.tsx). */
