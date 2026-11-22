@@ -2,6 +2,7 @@
 // The web build (GitHub Pages) never loads this file.
 import {SystemBars,SystemBarsStyle} from '@capacitor/core';
 import {App} from '@capacitor/app';
+import {dismissTopLayer} from '../app/back-layers';
 import '../app/android.css';
 
 const root=document.documentElement;
@@ -21,9 +22,6 @@ syncBars();
 // left, the app goes to the background like any Android 12+ app, keeping its state (and, later, an ongoing call).
 // The sheets are handled here because Chromium skips history entries created without a user gesture.
 App.addListener('backButton',({canGoBack})=>{
- const dialog=[...document.querySelectorAll<HTMLDialogElement>('dialog[open]')].at(-1);
- if(dialog){dialog.dispatchEvent(new Event('cancel',{cancelable:true}));return;}
- const layer=[...document.querySelectorAll<HTMLElement>('[data-back-dismiss]')].at(-1);
- if(layer){layer.dispatchEvent(new Event('nd-back-dismiss'));return;}
+ if(dismissTopLayer())return;
  if(canGoBack)history.back();else App.minimizeApp().catch(()=>{});
 }).catch(()=>{});

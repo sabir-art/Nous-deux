@@ -44,6 +44,18 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
+// The trial build (pnpm run sync:android:essai, fake house) leaves this marker in the web assets:
+// a release (Play Store) build must never contain it. Run `pnpm run sync:android` first.
+tasks.configureEach { task ->
+    if (task.name == 'preReleaseBuild') {
+        task.doFirst {
+            if (file('src/main/assets/public/ESSAI-NE-PAS-PUBLIER.txt').exists()) {
+                throw new GradleException('Build release refusé : l\'appli contient le mode essai. Lancer « pnpm run sync:android » puis recommencer.')
+            }
+        }
+    }
+}
+
 try {
     def servicesJSON = file('google-services.json')
     if (servicesJSON.text) {

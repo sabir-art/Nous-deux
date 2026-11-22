@@ -7,9 +7,9 @@ Le site GitHub Pages garde son build (`pnpm run build:web`, `vite.web.config.ts`
 | Élément | Rôle |
 | --- | --- |
 | `capacitor.config.ts` | identifiant `fr.nousdeux.app`, nom « Nous deux », dossier web `dist-android`, bord à bord (`SystemBars`) |
-| `vite.android.config.ts` | build séparé : chemins relatifs (`./`), sans manifeste ni service worker, injecte `web/android.ts` ; `--mode essai` pour les tests locaux |
+| `vite.android.config.ts` | build séparé : chemins relatifs (`./`), sans manifeste ni service worker, injecte `web/android.ts` ; le build échoue si le client du site (`lib/api-client.ts`) entre dans l'appli autrement que par `lib/android-api-client.ts` ; `--mode essai` pour les tests locaux, écrit dans `dist-android-essai/` |
 | `lib/android-api-client.ts` | même client que `lib/api-client.ts`, avec `APP_BASE='/'` (appli servie depuis la racine) et `NATIVE_APP=true` |
-| `web/android.ts` | classe `native-app`, icônes des barres système selon le thème, bouton Retour d'Android (`@capacitor/app`) |
+| `web/android.ts` | classe `native-app`, icônes des barres système selon le thème, bouton Retour d'Android (`@capacitor/app`, même ordre que l'appli web grâce à `app/back-layers.ts`) |
 | `app/android.css` | marges de sécurité (barre d'état, barre de navigation), fenêtres, écran de connexion pleine largeur sur téléphone |
 | `android/` | projet Android Studio ; icônes tirées de `public/icon-512.png`, rose `#D60B52`, démarrage crème `#F6F3EF`, `allowBackup="false"` |
 
@@ -34,7 +34,9 @@ L'APK de débogage est dans `android/app/build/outputs/apk/debug/app-debug.apk`.
 
 ### Tester sans les vraies données
 
-`pnpm run build:android:essai` puis `pnpm exec cap sync android` : l'appli embarque le mode essai (`lib/essai-api-client.ts`, fausse maison dans le stockage de la WebView, rien n'est envoyé à Supabase). Pratique pour vérifier l'accueil, la discussion ou les fenêtres sans compte. **Toujours reconstruire avec `pnpm run sync:android` ensuite** : ne jamais publier un APK d'essai.
+`pnpm run sync:android:essai` : l'appli embarque le mode essai (`lib/essai-api-client.ts`, fausse maison dans le stockage de la WebView, rien n'est envoyé à Supabase). Pratique pour vérifier l'accueil, la discussion ou les fenêtres sans compte.
+
+Garde-fous : le build d'essai va dans `dist-android-essai/`, jamais dans `dist-android/`, et seul `sync:android:essai` le copie dans le projet Android (`scripts/cap-sync-essai.mjs`, variable `NOUS_DEUX_ESSAI=1` lue par `capacitor.config.ts`). Un simple `pnpm exec cap sync android` reprend toujours la vraie appli. L'essai contient `ESSAI-NE-PAS-PUBLIER.txt` : Gradle refuse alors toute build `release`. **Toujours revenir avec `pnpm run sync:android` ensuite** : ne jamais publier un APK d'essai.
 
 ## Lancer
 
