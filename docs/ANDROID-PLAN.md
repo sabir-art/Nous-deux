@@ -33,5 +33,5 @@ L'agent d'Android Studio peut modifier et déployer le serveur, en respectant `A
 
 ## État au 22 novembre 2026
 
-- `house-api` v39 déployée avec l'origine `https://localhost` (PR #32). Retour arrière : redéployer `house-api` depuis `main` `82df13b` (v38).
+- `house-api` v40 déployée avec l’origine `https://localhost` (PR #32, commit `a6f509c`). Retour arrière : redéployer `house-api` depuis `main` `82df13b` (v38).
 - Appli Android : étape 1 en cours sur `android/capacitor` (PR #31, brouillon).
