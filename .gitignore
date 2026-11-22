@@ -57,6 +57,8 @@ next-env.d.ts
 *.jks
 *.keystore
 keystore.properties
+# Firebase config of the Android app: stays on the developer's machine (public repository)
+google-services.json
 
 # Local Supabase CLI metadata
 /supabase/.temp/

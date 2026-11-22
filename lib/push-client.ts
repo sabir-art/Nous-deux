@@ -29,6 +29,19 @@ export async function endpointHash(endpoint:string){
  const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(endpoint));
  return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('').slice(0,16);
 }
+export const permissionState=async():Promise<Permission>=>permission();
+// « Activer sur cet appareil »: asks the permission (right after the tap, required on iPhone), then returns what the
+// server needs to reach this browser. The Android app has its own version (lib/android-push-client.ts).
+export async function subscribeDevice(key:string):Promise<{subscription:PushSubscriptionJSON}>{
+ const answer=await Notification.requestPermission();if(answer!=='granted')throw new Error(answer==='denied'?'Notifications bloquées. Vous pouvez les autoriser dans les réglages de votre appareil.':'Les notifications restent désactivées.');
+ if(!key)throw new Error('Le service de notification n’est pas disponible. Réessayez.');
+ const registration=await navigator.serviceWorker.register(APP_BASE+'sw.js',{scope:APP_BASE});await navigator.serviceWorker.ready;
+ // An old subscription made with another key would be refused by the push service: renew it.
+ let sub=await registration.pushManager.getSubscription();if(sub&&!sameKey(sub,key)){await sub.unsubscribe();sub=null;}
+ sub??=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyBytes(key)});
+ return {subscription:sub.toJSON()};
+}
+export async function unsubscribeDevice(){const registration=await navigator.serviceWorker.getRegistration(APP_BASE);await(await registration?.pushManager.getSubscription())?.unsubscribe();}
 // On each opening: give the server this browser's current subscription. A push address renewed by the browser,
 // or a new device id after logging in again, then replaces the old record (no dead or duplicate device).
 // Silent: it never asks for a permission and never subscribes a browser that was not already subscribed.

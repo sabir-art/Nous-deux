@@ -35,9 +35,23 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- Notifications (Firebase Cloud Messaging): defaults when a message names no icon or channel.
+             house-api (fcm.ts) always sets them; the channels are created by web/android.ts. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_nousdeux" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/ic_launcher_background" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="messages" />
     </application>
 
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 13+: asked only when the person taps « Activer sur cet appareil » in the notifications screen. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

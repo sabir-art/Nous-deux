@@ -23,6 +23,8 @@ for(const f of ['sw.js','manifest.webmanifest','ESSAI-NE-PAS-PUBLIER.txt'])asser
 assert.ok(has(app.modules,'web/android.ts'),'web/android.ts is injected');
 assert.ok(has(app.modules,'lib/android-api-client.ts'),'Android client used');
 assert.ok(!has(app.modules,'lib/essai-api-client.ts'),'no trial client in the real app');
+assert.ok(has(app.modules,'lib/android-push-client.ts'),'notifications through Firebase in the app');
+assert.ok(app.js.includes('PushNotifications')&&!app.js.includes('applicationServerKey'),'no Web Push subscription code in the app');
 assert.ok(app.css.includes('.native-app'),'app/android.css bundled');
 assert.ok(!app.html.includes('/Nous-deux/')&&!app.js.includes('/Nous-deux/'),'no GitHub Pages path in the app');
 assert.ok(!/rel="manifest"/.test(app.html),'no manifest link');
@@ -47,6 +49,7 @@ await assert.rejects(viteBuild('vite.android.config.ts','production',{
 // The GitHub Pages build keeps none of the Android files.
 const web=await viteBuild('vite.web.config.ts','production');
 assert.ok(!has(web.modules,'web/android.ts')&&!has(web.modules,'lib/android-api-client.ts')&&!has(web.modules,'app/android.css'),'no Android module in the site');
+assert.ok(!has(web.modules,'lib/android-push-client.ts')&&!web.js.includes('PushNotifications'),'the site keeps Web Push only');
 assert.ok(!web.css.includes('.native-app'),'no Android styles in the site');
 assert.ok(web.files.includes('sw.js')&&web.files.includes('manifest.webmanifest'),'the site keeps its service worker and manifest');
 console.log('PASS: Android build (client, entry, no service worker, no /Nous-deux/), trial marker and title, web client guard, site without Android files.');
