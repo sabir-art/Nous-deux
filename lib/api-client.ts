@@ -1,4 +1,6 @@
 export const APP_BASE='/Nous-deux/';
+// true only in the Android app (lib/android-api-client.ts); the web build keeps its own wording and behaviour.
+export const NATIVE_APP=false;
 const API='https://jvjwyalusdygvkyzmiez.supabase.co/functions/v1/house-api';
 const PUBLIC_KEY='sb_publishable_Ypq0tRBQvFG8ULhxRTIcEQ_GADD-nYn';
 const TOKEN_KEY='nous-deux-session-v1';

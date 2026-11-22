@@ -3,3 +3,4 @@
 // instead of GitHub Pages' /Nous-deux/. Swapped in by vite.android.config.ts; the web build never imports it.
 export * from './api-client';
 export const APP_BASE='/';
+export const NATIVE_APP=true;

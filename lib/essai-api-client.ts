@@ -17,6 +17,7 @@ import {chatInput} from '../supabase/functions/house-api/validation.ts';
 import {buildChatCard,storeChatCard,dropChatCards,attachChatCards,stickerText,type ChatCardState} from '../supabase/functions/house-api/chat-cards.ts';
 
 export const APP_BASE=location.pathname.replace(/[^/]*$/,'');
+export const NATIVE_APP=false;
 const STATE_KEY='nous-deux-essai-state-v16',MEMBER_KEY='nous-deux-essai-member',PHOTOS_KEY='nous-deux-essai-photos-v1',CHAT_KEY='nous-deux-essai-chat-v1';
 const unavailable='Pas disponible en mode essai.';
 
