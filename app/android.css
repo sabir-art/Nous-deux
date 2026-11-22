@@ -1,0 +1,23 @@
+/* Android app (Capacitor) only, imported by web/android.ts. The web build never includes this file.
+   Edge to edge: the page runs under the status bar and the navigation bar; env(safe-area-inset-*) gives their
+   sizes (Capacitor SystemBars, viewport-fit=cover). Tokens come from design-system/tokens/tokens.css. */
+
+/* Status bar: a strip in the page colour, above the scrolling content and below the call overlay (z-index 130). */
+.native-app body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--canvas);z-index:120;pointer-events:none}
+.native-app .workspace{padding-top:env(safe-area-inset-top,0px);scroll-padding-top:calc(var(--space-4) + env(safe-area-inset-top,0px))}
+/* The chat header already adds the top inset itself (application.css). */
+.native-app .chat-view .workspace{padding-top:0}
+
+/* Sign-in screen: full width on a phone, like an app screen, instead of a small card in the middle.
+   Wider screens (tablets) keep the card. */
+@media (max-width:599px){
+ .native-app body:has(.access-page)::before{background:var(--surface)}
+ .native-app .access-page{display:block;padding:0;background:var(--surface)}
+ .native-app .access-card{max-width:none;min-height:100%;margin:0;border-radius:0;box-shadow:none;justify-content:center;
+  padding:calc(var(--space-8) + env(safe-area-inset-top,0px)) max(var(--space-6),env(safe-area-inset-right,0px)) calc(var(--space-8) + env(safe-area-inset-bottom,0px)) max(var(--space-6),env(safe-area-inset-left,0px))}
+ .native-app .access-decoration{top:calc(var(--space-8) + env(safe-area-inset-top,0px));right:max(var(--space-6),env(safe-area-inset-right,0px))}
+}
+
+/* Connection problem in the app: the message and its « Réessayer » button (app/access-form.tsx). */
+.access-retry{display:flex;flex-direction:column;gap:var(--space-3)}
+.access-retry .form-error{margin:0}
