@@ -15,6 +15,8 @@ const config:CapacitorConfig={
   // Edge to edge: the page draws under the system bars (index.html has viewport-fit=cover) and gets the
   // safe areas through env(safe-area-inset-*) and --safe-area-inset-*. Icons are set by web/android.ts.
   SystemBars:{insetsHandling:'css',initialViewportFitValueHint:'cover',style:'DEFAULT'},
+  // A notification arriving while the app is open is still shown by Android (FCM, house-api fcm.ts).
+  PushNotifications:{presentationOptions:['badge','sound','alert']},
  },
 };
 

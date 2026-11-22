@@ -1,18 +1,19 @@
 'use client';
-import {apiFetch,APP_BASE} from '../lib/api-client';
+import {apiFetch,NATIVE_APP} from '../lib/api-client';
 import {useEffect,useState,useCallback,useRef} from 'react';
 import {Bell,BellOff,Check,RefreshCw,Clock} from './icons';
 import {defaultPreferences,type Preferences} from '../lib/communication';
 import {deviceId} from '../lib/device';
-import {endpointHash,isInstalled,keyBytes,localSubscription,permission,platform,pushSupported,sameKey,type Permission} from '../lib/push-client';
+// lib/push-client.ts on the site (Web Push), lib/android-push-client.ts in the Android app (Firebase Cloud Messaging).
+import {endpointHash,isInstalled,localSubscription,permissionState,platform,pushSupported,subscribeDevice,unsubscribeDevice,type Permission} from '../lib/push-client';
 import {OFF,defaultReminderTimes,halfHours,reminderRanges,soonChoices,soonLabel,type ReminderTimes} from '../lib/reminder-settings';
 type Event={id:number;actor:number;category:string;message:string;createdAt:string};
-type Service='apple'|'google'|'mozilla'|'microsoft'|'other';
+type Service='apple'|'google'|'mozilla'|'microsoft'|'app'|'other';
 type TestResult={current:boolean;service:Service;ok:boolean;status:number|null;removed:boolean;reason?:string;error?:'endpoint'|'network'|'config'};
 // Only what can still ring: routine changes (expenses, appointment edits…) no longer send a push,
 // so their old switches ('expenses', 'calendar') are kept in the data but not shown.
 const labels={chat:'Messages privés',calls:'Invitations aux appels',ideas:'Invitations et réponses de « Nos idées »',reminders:'Rappels de l’agenda : la veille, le matin, et avant un rendez-vous santé',tasks:'Missions du jour, le matin',shopping:'Liste de courses terminée',plants:'Entretien des plantes',pets:'Soins de nos compagnons'} as const;
-const services:Record<Service,string>={apple:'iPhone ou iPad',google:'Android ou Chrome',mozilla:'Firefox',microsoft:'Edge',other:'Autre navigateur'};
+const services:Record<Service,string>={apple:'iPhone ou iPad',google:'Android ou Chrome',mozilla:'Firefox',microsoft:'Edge',app:'Appli Android',other:'Autre navigateur'};
 const permissionText:Record<Permission,string>={granted:'Accordée',denied:'Refusée',default:'À demander',unsupported:'Non prise en charge'};
 const jsonPost=async<T=Record<string,unknown>,>(body:unknown,path='/api/notifications')=>{const r=await apiFetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json() as T&{error?:string};if(!r.ok)throw new Error(data.error||'Enregistrement impossible.');return data;};
 // One readable line per device for « M'envoyer une notification d'essai ».
@@ -37,7 +38,7 @@ export default function HouseNotifications({active,names,petsMode,onNavigate}:{a
  const editing=useRef(false);
  const [test,setTest]=useState<{summary:string;results:TestResult[];failed?:boolean}|null>(null);
  // What this browser says about itself, compared with what the server knows (by a short fingerprint only).
- const inspect=useCallback(async(known:{hash:string}|null)=>{const sub=await localSubscription();setCheck({permission:permission(),installed:isInstalled(),local:!!sub,matches:sub&&known?await endpointHash(sub.endpoint)===known.hash:null});},[]);
+ const inspect=useCallback(async(known:{hash:string}|null)=>{const sub=await localSubscription();setCheck({permission:await permissionState(),installed:isInstalled(),local:!!sub,matches:sub&&known?await endpointHash(sub.endpoint)===known.hash:null});},[]);
  const load=useCallback(async()=>{const r=await apiFetch('/api/notifications?device='+deviceId(),{cache:'no-store'});if(!r.ok)throw new Error('Impossible de charger les notifications.');const d=await r.json() as {publicKey:string;enabled:boolean;preferences:Preferences;activity:Event[];times?:ReminderTimes;devices?:number;subscription?:{service:Service;hash:string}|null};
   setKey(d.publicKey);setEnabled(d.enabled);setPreferences({...defaultPreferences,...d.preferences});setEvents(d.activity);setDeviceCount(d.devices||0);setServer(d.subscription||null);
   // The form follows the saved times unless the person is editing them.
@@ -46,16 +47,11 @@ export default function HouseNotifications({active,names,petsMode,onNavigate}:{a
  useEffect(()=>{setSupported(pushSupported());try{setSeen(Number(localStorage.getItem('adeux-seen-'+active)||0));}catch{}load().catch(e=>setMessage(e.message));const timer=setInterval(()=>{if(document.visibilityState==='visible')load().catch(()=>{});},15000);return()=>clearInterval(timer);},[load,active]);
  const run=async(fn:()=>Promise<void>)=>{setBusy(true);setMessage('');try{await fn();}catch(e){setMessage(e instanceof Error?e.message:'Action impossible.');}finally{setBusy(false);}};
  async function enable(){
-  // The browser permission prompt must follow the user's tap immediately (required on iPhone).
-  const answer=await Notification.requestPermission();if(answer!=='granted')throw new Error(answer==='denied'?'Notifications bloquées. Vous pouvez les autoriser dans les réglages de votre appareil.':'Les notifications restent désactivées.');
-  if(!key)throw new Error('Le service de notification n’est pas disponible. Réessayez.');
-  const registration=await navigator.serviceWorker.register(APP_BASE+'sw.js',{scope:APP_BASE});await navigator.serviceWorker.ready;
-  // An old subscription made with another key would be refused by the push service: renew it.
-  let sub=await registration.pushManager.getSubscription();if(sub&&!sameKey(sub,key)){await sub.unsubscribe();sub=null;}
-  sub??=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyBytes(key)});
-  await jsonPost({action:'subscribe',deviceId:deviceId(),member:active,preferences,subscription:sub.toJSON()});setEnabled(true);setMessage('Notifications activées pour '+names[active]+' sur cet appareil.');await load();
+  // The permission prompt must follow the user's tap immediately (required on iPhone): subscribeDevice asks it first.
+  const target=await subscribeDevice(key);
+  await jsonPost({action:'subscribe',deviceId:deviceId(),member:active,preferences,...target});setEnabled(true);setMessage('Notifications activées pour '+names[active]+' sur cet appareil.');await load();
  }
- async function disable(){await jsonPost({action:'disable',deviceId:deviceId()});setEnabled(false);const registration=await navigator.serviceWorker.getRegistration(APP_BASE);await(await registration?.pushManager.getSubscription())?.unsubscribe();setMessage('Notifications désactivées sur cet appareil.');await load();}
+ async function disable(){await jsonPost({action:'disable',deviceId:deviceId()});setEnabled(false);await unsubscribeDevice();setMessage('Notifications désactivées sur cet appareil.');await load();}
  async function change(next:Preferences){await jsonPost({action:'preferences',deviceId:deviceId(),member:active,preferences:next});setPreferences(next);}
  async function sendTest(){
   // The answer (or the refusal: 5 per hour, trial mode…) stays in this block, next to the button.
@@ -67,7 +63,8 @@ export default function HouseNotifications({active,names,petsMode,onNavigate}:{a
  const markRead=()=>{const latest=events[0]?.id||0;setSeen(latest);try{localStorage.setItem('adeux-seen-'+active,String(latest));}catch{}};
  const shown=(Object.keys(labels) as (keyof typeof labels)[]).filter(k=>k!=='pets'||petsMode);
  const device=platform();
- const advice=device==='ios'?(check.installed?'Sur iPhone : dans Réglages › Notifications › Nous deux, laissez « Autoriser les notifications » activé (iOS 16.4 ou plus).':'Sur iPhone : ouvrez Nous deux dans Safari, Partager › « Sur l’écran d’accueil », puis rouvrez l’appli depuis son icône pour activer les notifications (iOS 16.4 ou plus).')
+ const advice=NATIVE_APP?'Dans l’appli Android : laissez les notifications de Nous deux autorisées dans les réglages du téléphone (Applis › Nous deux › Notifications), et évitez qu’une économie de batterie ne mette l’appli en veille.'
+  :device==='ios'?(check.installed?'Sur iPhone : dans Réglages › Notifications › Nous deux, laissez « Autoriser les notifications » activé (iOS 16.4 ou plus).':'Sur iPhone : ouvrez Nous deux dans Safari, Partager › « Sur l’écran d’accueil », puis rouvrez l’appli depuis son icône pour activer les notifications (iOS 16.4 ou plus).')
   :device==='android'?'Sur Android : autorisez les notifications de Chrome (ou de l’appli installée) et évitez qu’une économie de batterie ne la mette en veille.'
   :'Sur ordinateur : laissez le navigateur autoriser les notifications pour ce site.';
  const registered=enabled?(check.matches===false?'À renouveler':'Oui'):'Non';
