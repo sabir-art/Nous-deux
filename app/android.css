@@ -7,6 +7,12 @@
 .native-app .workspace{padding-top:env(safe-area-inset-top,0px);scroll-padding-top:calc(var(--space-4) + env(safe-area-inset-top,0px))}
 /* The chat header already adds the top inset itself (application.css). */
 .native-app .chat-view .workspace{padding-top:0}
+/* Local test build only (build:android:essai): the trial band sits at the top and takes the inset. */
+.native-app #essai-band{padding-top:calc(6px + env(safe-area-inset-top,0px))!important}
+.native-app:has(#essai-band) .workspace{padding-top:0}
+/* Sheets (dialog): below the status bar and above the navigation bar. */
+.native-app dialog{margin-top:calc(var(--space-4) + env(safe-area-inset-top,0px));max-height:calc(var(--dialog-viewport,100dvh) - var(--space-8) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+.native-app dialog.quick-shopping{height:calc(var(--dialog-viewport,100dvh) - var(--space-8) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
 
 /* Sign-in screen: full width on a phone, like an app screen, instead of a small card in the middle.
    Wider screens (tablets) keep the card. */
